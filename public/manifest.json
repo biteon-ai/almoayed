@@ -1,0 +1,11 @@
+{
+  "name": "المؤيد — Al-Moayed",
+  "short_name": "المؤيد",
+  "description": "حل بيدك ما حدا بفيدك",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f0fafa",
+  "theme_color": "#0d6e6e",
+  "lang": "ar",
+  "dir": "rtl"
+}
