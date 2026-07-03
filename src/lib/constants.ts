@@ -7,10 +7,16 @@ export const TEACHER_WHATSAPP =
 export const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-/** Demo student — matches supabase/seed.sql */
+/** Demo student — matches supabase seed */
 export const DEMO_STUDENT = {
   whatsapp_number: "963987654321",
   full_name: "أحمد الطالب",
+} as const;
+
+export const DEMO_TEACHER = {
+  whatsapp_number: "963912345678",
+  full_name: "أستاذ المؤيد",
+  teacher_code: "AlMoayed-DEMO",
 } as const;
 
 export function normalizeWhatsAppNumber(input: string): string {

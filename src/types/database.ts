@@ -1,4 +1,15 @@
 export type UserRole = "TEACHER" | "STUDENT";
+export type StudentTeacherStatus = "pending" | "active" | "deactivated";
+export type StudentTier = "free" | "pro";
+export type QuizType = "regular" | "session_group";
+
+export interface BankDetails {
+  bank_name?: string;
+  account_holder?: string;
+  account_number?: string;
+  iban?: string;
+  notes?: string;
+}
 
 export interface Profile {
   id: string;
@@ -7,16 +18,67 @@ export interface Profile {
   role: UserRole;
   is_subscribed: boolean;
   verification_token: string | null;
+  school_name: string;
+  address: string;
+  bank_details: BankDetails;
+  teacher_code: string | null;
+  last_session_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface StudentTeacher {
+  id: string;
+  student_id: string;
+  teacher_id: string;
+  status: StudentTeacherStatus;
+  tier: StudentTier;
+  upgrade_requested: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeacherGroup {
+  id: string;
+  teacher_id: string;
+  group_name: string;
+  created_at: string;
+}
+
+export interface Category {
+  id: string;
+  teacher_id: string | null;
+  name: string;
+  is_global: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface Topic {
+  id: string;
+  category_id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Quiz {
   id: string;
   title: string;
   created_by: string;
+  category_id: string | null;
+  topic_id: string | null;
+  is_active: boolean;
+  is_free: boolean;
+  quiz_type: QuizType;
+  target_group_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface QuizListItem extends Quiz {
+  isAccessible: boolean;
+  isLocked: boolean;
 }
 
 export interface Question {
@@ -32,7 +94,6 @@ export interface Question {
   sort_order: number;
 }
 
-/** Question data safe to show during exam (no answers/explanations) */
 export type ExamQuestion = Pick<
   Question,
   "id" | "quiz_id" | "question_text" | "question_image_url" | "options" | "sort_order"
@@ -77,4 +138,35 @@ export interface QuizSubmitResult {
     questionText: string;
     questionImageUrl: string | null;
   }>;
+}
+
+export interface TeacherStudentRow {
+  linkId: string;
+  studentId: string;
+  fullName: string;
+  whatsappNumber: string;
+  status: StudentTeacherStatus;
+  tier: StudentTier;
+  upgradeRequested: boolean;
+  groupNames: string[];
+}
+
+export interface StudentTeacherOption {
+  teacherId: string;
+  teacherName: string;
+  schoolName: string;
+  teacherCode: string;
+  tier: StudentTier;
+  status: StudentTeacherStatus;
+}
+
+export interface ImportQuestionRow {
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: string;
+  explanation_text: string;
+  category_tag: string;
 }

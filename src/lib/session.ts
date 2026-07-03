@@ -7,6 +7,10 @@ export interface SessionData {
   fullName: string;
   role: UserRole;
   isLoggedIn: boolean;
+  /** Device-lock token — must match profiles.last_session_id */
+  sessionToken: string;
+  /** Active teacher context for multi-tenant students */
+  currentTeacherId: string | null;
 }
 
 export const defaultSession: SessionData = {
@@ -15,15 +19,19 @@ export const defaultSession: SessionData = {
   fullName: "",
   role: "STUDENT",
   isLoggedIn: false,
+  sessionToken: "",
+  currentTeacherId: null,
 };
 
 export const sessionOptions: SessionOptions = {
-  password: process.env.SESSION_SECRET ?? "complex_password_at_least_32_characters_long_dev_only",
+  password:
+    process.env.SESSION_SECRET ??
+    "complex_password_at_least_32_characters_long_dev_only",
   cookieName: "almoayed_session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * 30,
   },
 };

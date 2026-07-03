@@ -18,13 +18,26 @@ export const metadata: Metadata = {
   },
   description: APP_SLOGAN,
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#0d6e6e",
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0d6e6e" },
+    { media: "(prefers-color-scheme: dark)", color: "#042626" },
+  ],
 };
 
 export default function RootLayout({
@@ -33,9 +46,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={cn(tajawal.variable)}>
+    <html lang="ar" dir="rtl" className={cn(tajawal.variable, "h-full")}>
       <body
-        className="min-h-dvh font-[family-name:var(--font-arabic)] antialiased"
+        className={cn(
+          "min-h-dvh font-sans antialiased overscroll-y-none",
+          "bg-background text-foreground",
+          "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+        )}
         style={{ fontFamily: "var(--font-arabic), system-ui, sans-serif" }}
       >
         {children}

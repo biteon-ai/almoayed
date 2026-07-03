@@ -1,23 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
 import { submitQuiz } from "@/actions/quiz";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
 import { WhatsAppShare } from "@/components/quiz/WhatsAppShare";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Lock, Unlock, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Lock, Unlock, AlertCircle, CheckCircle2, ChevronRight, HelpCircle } from "lucide-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface QuizRunnerProps {
   quiz: Quiz;
@@ -50,7 +43,7 @@ export function QuizRunner({
 
   const handleSubmit = () => {
     if (answeredCount < questions.length) {
-      setError("لازم تجاوب على كل الأسئلة قبل ما تسلّم.");
+      setError("يرجى الإجابة على جميع الأسئلة قبل تسليم الاختبار.");
       return;
     }
     setError(null);
@@ -59,47 +52,73 @@ export function QuizRunner({
       try {
         const result = await submitQuiz(quiz.id, answers);
         setResults(result);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (e) {
-        setError(e instanceof Error ? e.message : "صار خطأ بالتسليم.");
+        setError(e instanceof Error ? e.message : "صار خطأ أثناء تسليم الإجابات.");
       }
     });
   };
 
-  const wrongAnswers = results?.answers.filter((a) => !a.isCorrect) ?? [];
+  const wrongAnswersCount = results ? results.totalQuestions - results.correctCount : 0;
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 px-4 py-6 pb-24">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-xl font-bold leading-tight">{quiz.title}</h1>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isSubmitted ? (
-            <>
-              <Unlock className="size-4 text-green-600" />
-              <span>الحلول مفتوحة — راجع إجاباتك</span>
-            </>
-          ) : (
-            <>
-              <Lock className="size-4 text-amber-600" />
-              <span>الحلول مقفولة لحد ما تسلّم إجاباتك</span>
-            </>
-          )}
-        </div>
-        {!isSubmitted && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>
-                {answeredCount} / {questions.length} أسئلة
-              </span>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <Progress value={progress} className="h-1.5" />
-          </div>
-        )}
+    <div className="mx-auto max-w-lg space-y-6 px-4 py-5 pb-28 animate-fade-in">
+      {/* Navigation Top strip */}
+      <div className="flex items-center justify-between">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-brand-700 transition-colors"
+        >
+          <ChevronRight className="size-4" />
+          <span>العودة للرئيسية</span>
+        </Link>
+        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">المؤيد للرياضيات</span>
       </div>
 
-      {/* Questions */}
-      <div className="space-y-4">
+      {/* Quiz Progress & Gatekeeper State Card */}
+      <Card className="border-brand-100/60 dark:border-brand-900/30 overflow-hidden bg-white/50 dark:bg-card/40 backdrop-blur-md">
+        <CardContent className="p-4 space-y-3.5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <h1 className="text-lg font-extrabold text-foreground text-start leading-tight">
+                {quiz.title}
+              </h1>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
+                {isSubmitted ? (
+                  <>
+                    <Unlock className="size-3.5 text-green-600 dark:text-green-500" />
+                    <span className="text-green-600 dark:text-green-500">تم فتح الحلول والشرح العلمي</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="size-3.5 text-amber-600" />
+                    <span>الحلول مقفلة حتى ترسل إجاباتك</span>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {/* Answer count pill */}
+            <div className="shrink-0 bg-brand-50 text-brand-800 text-xs font-bold px-3 py-1.5 rounded-full border border-brand-100/80 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-900/40">
+              {questions.length} أسئلة
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          {!isSubmitted && (
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between text-[11px] font-bold text-muted-foreground">
+                <span>الأسئلة المحلولة: {answeredCount} من {questions.length}</span>
+                <span className="font-mono">{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2 bg-brand-100/40 dark:bg-brand-950/20" />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Questions list */}
+      <div className="space-y-5">
         {questions.map((q, idx) => {
           const resultAnswer = results?.answers.find(
             (a) => a.questionId === q.id
@@ -119,31 +138,17 @@ export function QuizRunner({
               showResult={isSubmitted}
               correctAnswer={resultAnswer?.correctAnswer}
               categoryTag={resultAnswer?.categoryTag}
+              explanationText={resultAnswer?.explanationText}
+              explanationMediaUrl={resultAnswer?.explanationMediaUrl}
             />
           );
         })}
       </div>
 
-      {/* Submit or Results */}
-      {!isSubmitted ? (
-        <div className="sticky bottom-4 z-10">
-          {error && (
-            <p className="mb-2 flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              {error}
-            </p>
-          )}
-          <Button
-            size="lg"
-            className="w-full bg-brand-600 shadow-lg shadow-brand-900/20 hover:bg-brand-700"
-            onClick={handleSubmit}
-            disabled={isPending}
-          >
-            {isPending ? "عم يحسب النتيجة..." : "سلّم الإجابات"}
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-6">
+      {/* Post-submission Review and WhatsApp Share */}
+      {isSubmitted && (
+        <div className="space-y-6 pt-2 animate-slide-up">
+          {/* Main Grade Header Cards */}
           <WhatsAppShare
             score={results.score}
             quizId={quiz.id}
@@ -152,110 +157,79 @@ export function QuizRunner({
             totalQuestions={results.totalQuestions}
           />
 
-          {wrongAnswers.length > 0 && (
-            <section className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Unlock className="size-5 text-brand-600" />
-                <h2 className="text-lg font-bold">شرح الأسئلة اللي غلطت فيها</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                هلّق صار مسموح تشوف الحل — راجع بإيدك قبل ما تقرأ الشرح!
-              </p>
-
-              {wrongAnswers.map((a, idx) => (
-                <Card
-                  key={a.questionId}
-                  className="border-red-200/60 dark:border-red-900/40"
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">
-                        سؤال غلط #{idx + 1}
-                      </CardTitle>
-                      <Badge variant="outline">{a.categoryTag}</Badge>
-                    </div>
-                    <CardDescription className="text-start leading-relaxed text-foreground">
-                      {a.questionText}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {a.questionImageUrl && (
-                      <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
-                        <Image
-                          src={a.questionImageUrl}
-                          alt="صورة السؤال"
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 640px) 100vw"
-                        />
-                      </div>
-                    )}
-
-                    <div className="flex flex-col gap-2 text-sm">
-                      <div className="flex items-center gap-2 text-red-600">
-                        <XCircle className="size-4" />
-                        <span>إجابتك: {a.studentAnswer || "—"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-green-600">
-                        <CheckCircle2 className="size-4" />
-                        <span>الإجابة الصح: {a.correctAnswer}</span>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-brand-700 dark:text-brand-400">
-                        الشرح:
-                      </p>
-                      <p className="text-sm leading-relaxed">
-                        {a.explanationText}
-                      </p>
-                      {a.explanationMediaUrl && (
-                        <div className="mt-2 overflow-hidden rounded-lg">
-                          {/\.(mp4|webm|ogg)$/i.test(a.explanationMediaUrl) ? (
-                            <video
-                              src={a.explanationMediaUrl}
-                              controls
-                              preload="metadata"
-                              className="w-full"
-                              playsInline
-                            />
-                          ) : (
-                            <div className="relative aspect-video w-full bg-muted">
-                              <Image
-                                src={a.explanationMediaUrl}
-                                alt="شرح السؤال"
-                                fill
-                                className="object-contain"
-                                sizes="(max-width: 640px) 100vw"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </section>
-          )}
-
-          {wrongAnswers.length === 0 && (
-            <Card className="border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-950/30">
-              <CardContent className="flex items-center gap-3 p-4">
-                <CheckCircle2 className="size-8 text-green-600" />
-                <div>
-                  <p className="font-semibold text-green-800 dark:text-green-200">
-                    ممتاز! كل الإجابات صح
+          {/* Action guidance after submit */}
+          {wrongAnswersCount > 0 ? (
+            <Card className="border-amber-200 bg-amber-50/30 dark:border-amber-900/40 dark:bg-amber-950/10">
+              <CardContent className="flex items-start gap-3 p-4">
+                <HelpCircle className="size-6 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+                <div className="text-start">
+                  <h3 className="font-bold text-sm text-amber-900 dark:text-amber-300">
+                    راجع تفاصيل الأخطاء بالخلف
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-800/90 dark:text-amber-400/90">
+                    لقد قمنا بفتح شروحات جميع الأسئلة أعلاه. ابحث عن الأسئلة المحددة باللون الأحمر، وستجد شرح خطوات تفكيرها مفتوحاً تلقائياً لتتعلم الحل الصحيح بيدك.
                   </p>
-                  <p className="text-sm text-green-700 dark:text-green-300">
-                    استمر هيك — حل بيدك وما حدا بفيدك!
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-green-200 bg-green-50/40 dark:border-green-900/40 dark:bg-green-950/10">
+              <CardContent className="flex items-center gap-3.5 p-4 text-start">
+                <div className="flex size-9 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/60">
+                  <CheckCircle2 className="size-5 text-green-600 dark:text-green-500" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-green-900 dark:text-green-300">
+                    علامة كاملة، فخورين فيك!
+                  </h3>
+                  <p className="mt-0.5 text-xs text-green-800/80 dark:text-green-400/80">
+                    أحسنت جداً! لقد أجبت على جميع الأسئلة بشكل صحيح. استمر على هذا المستوى المتميز.
                   </p>
                 </div>
               </CardContent>
             </Card>
           )}
+
+          {/* Return Dashboard button */}
+          <div className="pt-2">
+            <Link href="/dashboard" className="block">
+              <Button
+                variant="outline"
+                className="h-12 w-full font-bold border-brand-200 hover:bg-brand-50 dark:border-brand-900 dark:hover:bg-brand-950/20"
+              >
+                العودة للوحة التحكم للطلاب
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky Bottom Actions Bar (During Quiz) */}
+      {!isSubmitted && (
+        <div className="fixed bottom-0 inset-x-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-t border-brand-100/50 dark:border-brand-950/40 p-4 z-30 shadow-lg safe-bottom animate-slide-up">
+          <div className="mx-auto max-w-md space-y-3">
+            {error && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-xl bg-destructive/10 px-4 py-2.5 text-xs text-destructive text-start"
+              >
+                <AlertCircle className="size-4 shrink-0 text-destructive mt-0.5" />
+                <span className="font-bold">{error}</span>
+              </div>
+            )}
+            <Button
+              size="lg"
+              className={cn(
+                "h-12 w-full text-base font-extrabold transition-all duration-300",
+                "bg-brand-600 text-white shadow-md hover:bg-brand-700 active:scale-[0.98]",
+                "disabled:opacity-50 disabled:active:scale-100"
+              )}
+              onClick={handleSubmit}
+              disabled={isPending}
+            >
+              {isPending ? "جاري تسليم الإجابات وحساب النتيجة..." : "تسليم الإجابات وإنهاء الاختبار 🏁"}
+            </Button>
+          </div>
         </div>
       )}
     </div>

@@ -3,16 +3,20 @@ import type { NextRequest } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions, type SessionData } from "@/lib/session";
 
-const protectedPaths = ["/dashboard", "/quiz"];
+const studentPaths = ["/dashboard", "/quiz"];
+const teacherPaths = ["/teacher"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isProtected = protectedPaths.some(
+  const isStudentRoute = studentPaths.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+  const isTeacherRoute = teacherPaths.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
 
-  if (!isProtected) {
+  if (!isStudentRoute && !isTeacherRoute) {
     return NextResponse.next();
   }
 
@@ -29,9 +33,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  if (isTeacherRoute && session.role !== "TEACHER") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  if (isStudentRoute && session.role === "TEACHER") {
+    return NextResponse.redirect(new URL("/teacher/dashboard", request.url));
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/quiz/:path*"],
+  matcher: ["/dashboard/:path*", "/quiz/:path*", "/teacher/:path*"],
 };

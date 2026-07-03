@@ -56,6 +56,10 @@ const config: Config = {
           900: "#0d3c3c",
           950: "#042626",
         },
+        slate: {
+          850: "#1a2332",
+          750: "#2a3544",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,6 +69,25 @@ const config: Config = {
       fontFamily: {
         arabic: ["var(--font-arabic)", "system-ui", "sans-serif"],
         sans: ["var(--font-arabic)", "system-ui", "sans-serif"],
+      },
+      animation: {
+        "fade-in": "fadeIn 0.3s ease-out forwards",
+        "slide-up": "slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "pulse-subtle": "pulseSubtle 2.5s infinite ease-in-out",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        slideUp: {
+          "0%": { transform: "translateY(12px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
+        pulseSubtle: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" },
+        },
       },
     },
   },

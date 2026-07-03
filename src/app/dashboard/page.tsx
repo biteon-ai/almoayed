@@ -5,11 +5,14 @@ import {
   getStudentProfile,
   getWeakPoints,
 } from "@/actions/quiz";
+import { getStudentTeachers } from "@/actions/student";
 import { logout } from "@/actions/auth";
 import { requireStudent } from "@/lib/auth";
 import { APP_SLOGAN } from "@/lib/constants";
 import { Logo } from "@/components/brand/Logo";
 import { WeakPointsCard } from "@/components/dashboard/WeakPointsCard";
+import { TeacherSwitcher } from "@/components/dashboard/TeacherSwitcher";
+import { ProUpgradeCard } from "@/components/dashboard/ProUpgradeCard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,14 +36,18 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const [quizzes, weakPoints] = await Promise.all([
+  const [quizzes, weakPoints, teachers] = await Promise.all([
     getAvailableQuizzes(),
     getWeakPoints(),
+    getStudentTeachers(),
   ]);
+
+  const accessible = quizzes.filter((q) => q.isAccessible);
+  const locked = quizzes.filter((q) => q.isLocked);
 
   return (
     <div className="mx-auto min-h-dvh max-w-lg px-4 py-6">
-      <header className="mb-8 flex items-center justify-between">
+      <header className="mb-6 flex items-center justify-between">
         <div>
           <Logo size="sm" />
           <p className="mt-1 text-xs text-muted-foreground">{APP_SLOGAN}</p>
@@ -51,6 +58,13 @@ export default async function DashboardPage() {
           </Button>
         </form>
       </header>
+
+      <div className="mb-6">
+        <TeacherSwitcher
+          teachers={teachers}
+          currentTeacherId={session.currentTeacherId}
+        />
+      </div>
 
       <section className="mb-8">
         <h1 className="text-xl font-bold">
@@ -67,28 +81,33 @@ export default async function DashboardPage() {
           الاختبارات المتاحة
         </h2>
 
-        {quizzes.length === 0 ? (
+        {accessible.length === 0 && locked.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center text-sm text-muted-foreground">
               ما في اختبارات حالياً — راجع الأستاذ قريباً.
             </CardContent>
           </Card>
         ) : (
-          quizzes.map((quiz) => (
-            <Link key={quiz.id} href={`/quiz/${quiz.id}`}>
-              <Card className="transition-colors hover:border-brand-300 hover:bg-brand-50/50 dark:hover:bg-brand-950/20">
-                <CardHeader className="flex-row items-center justify-between space-y-0 p-4">
-                  <div>
-                    <CardTitle className="text-base">{quiz.title}</CardTitle>
-                    <CardDescription className="text-xs">
-                      اضغط للبدء — الحلول مقفولة
-                    </CardDescription>
-                  </div>
-                  <ChevronLeft className="size-5 text-muted-foreground" />
-                </CardHeader>
-              </Card>
-            </Link>
-          ))
+          <>
+            {accessible.map((quiz) => (
+              <Link key={quiz.id} href={`/quiz/${quiz.id}`}>
+                <Card className="transition-colors hover:border-brand-300 hover:bg-brand-50/50">
+                  <CardHeader className="flex-row items-center justify-between space-y-0 p-4">
+                    <div>
+                      <CardTitle className="text-base">{quiz.title}</CardTitle>
+                      <CardDescription className="text-xs">
+                        اضغط للبدء — الحلول مقفولة
+                      </CardDescription>
+                    </div>
+                    <ChevronLeft className="size-5 text-muted-foreground" />
+                  </CardHeader>
+                </Card>
+              </Link>
+            ))}
+            {locked.map((quiz) => (
+              <ProUpgradeCard key={quiz.id} quizTitle={quiz.title} />
+            ))}
+          </>
         )}
       </section>
 

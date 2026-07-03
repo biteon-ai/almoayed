@@ -2,56 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    /* Slate + premium teal — mathematical brand */
+    --background: 210 20% 98%;
+    --foreground: 215 28% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 215 28% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 180 80% 24%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84% 60%;
+    --popover-foreground: 215 28% 12%;
+    --primary: 180 79% 24%;
+    --primary-foreground: 180 10% 98%;
+    --secondary: 210 18% 94%;
+    --secondary-foreground: 215 25% 18%;
+    --muted: 210 16% 95%;
+    --muted-foreground: 215 12% 42%;
+    --accent: 180 28% 94%;
+    --accent-foreground: 180 79% 20%;
+    --destructive: 354 75% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 180 60% 40%;
-    --radius: 0.625rem;
+    --border: 210 16% 88%;
+    --input: 210 16% 88%;
+    --ring: 180 79% 28%;
+    --radius: 0.875rem;
+    --slate-deep: 215 28% 12%;
+    --teal-rich: 180 79% 24%;
   }
 
   .dark {
-    --background: 0 0% 9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 180 50% 50%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 64%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62% 50%;
+    --background: 215 28% 7%;
+    --foreground: 210 18% 94%;
+    --card: 215 25% 10%;
+    --card-foreground: 210 18% 94%;
+    --popover: 215 25% 9%;
+    --popover-foreground: 210 18% 94%;
+    --primary: 180 65% 42%;
+    --primary-foreground: 215 28% 7%;
+    --secondary: 215 20% 14%;
+    --secondary-foreground: 210 15% 90%;
+    --muted: 215 18% 13%;
+    --muted-foreground: 215 12% 58%;
+    --accent: 180 35% 14%;
+    --accent-foreground: 180 55% 78%;
+    --destructive: 354 70% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 180 40% 50%;
+    --border: 215 15% 18%;
+    --input: 215 15% 18%;
+    --ring: 180 55% 42%;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
 
   * {
@@ -59,6 +61,117 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "kern" 1;
+    overscroll-behavior-y: none;
   }
+}
+
+@layer components {
+  /* ── PWA shell ── */
+  .mobile-shell {
+    @apply w-full max-w-md mx-auto overscroll-y-contain;
+  }
+
+  /* ── Touch inputs (16px = no iOS zoom) ── */
+  .input-touch {
+    @apply h-[52px] w-full min-w-0 rounded-xl border border-input bg-muted/50 px-3.5;
+    @apply text-base font-medium text-foreground placeholder:text-muted-foreground/70;
+    @apply transition-all duration-200 outline-none touch-manipulation;
+    @apply hover:border-brand-300/80 focus:border-brand-500 focus:bg-background;
+    @apply focus:ring-[3px] focus:ring-brand-500/15;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .input-touch-group {
+    @apply flex overflow-hidden rounded-xl border border-input bg-muted/50 transition-all duration-200;
+    @apply hover:border-brand-300/80 focus-within:border-brand-500 focus-within:bg-background;
+    @apply focus-within:ring-[3px] focus-within:ring-brand-500/15;
+  }
+
+  .input-touch-prefix {
+    @apply flex shrink-0 items-center gap-1.5 border-e border-input bg-slate-100/80 px-3;
+    @apply text-base font-semibold text-brand-700 select-none dark:bg-slate-900/40;
+  }
+
+  /* ── Native-feel buttons ── */
+  .btn-touch-primary {
+    @apply inline-flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl;
+    @apply bg-brand-600 text-base font-bold text-white shadow-lg shadow-brand-900/15;
+    @apply transition-transform duration-150 active:scale-[0.98] touch-manipulation;
+    @apply hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-60;
+  }
+
+  .btn-touch-secondary {
+    @apply inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border;
+    @apply border-brand-200/80 bg-white text-sm font-semibold text-brand-800;
+    @apply transition-transform duration-150 active:scale-[0.98] touch-manipulation;
+    @apply hover:bg-brand-50 dark:border-brand-900/40 dark:bg-slate-900/30 dark:text-brand-300;
+  }
+
+  .btn-touch-ghost {
+    @apply inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl;
+    @apply text-sm font-medium text-muted-foreground transition-colors;
+    @apply hover:bg-muted/60 active:scale-[0.98] touch-manipulation;
+  }
+
+  /* ── Cards ── */
+  .card-native {
+    @apply w-full overflow-hidden rounded-2xl border border-border/70 bg-card shadow-xl;
+    @apply shadow-slate-900/[0.06] dark:shadow-black/20;
+  }
+
+  .card-native-header {
+    @apply border-b border-border/50 bg-gradient-to-b from-muted/40 to-transparent px-5 py-5 text-center;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .touch-target {
+    @apply min-h-[48px] min-w-[48px];
+  }
+
+  .glow-teal {
+    box-shadow: 0 4px 24px -4px hsl(180 79% 24% / 0.18);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
 }

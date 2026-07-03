@@ -1,13 +1,52 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireStudent } from "@/lib/auth";
+import { requireStudent, getActiveTeacherId } from "@/lib/auth";
 import type {
   CategoryPerformance,
   ExamQuestion,
   Quiz,
+  QuizListItem,
   QuizSubmitResult,
 } from "@/types/database";
+
+async function getStudentContext(session: Awaited<ReturnType<typeof requireStudent>>) {
+  const supabase = createAdminClient();
+  const teacherId =
+    session.currentTeacherId ?? (await getActiveTeacherId(session));
+
+  if (!teacherId) {
+    return { teacherId: null, tier: "free" as const, groupIds: [] as string[] };
+  }
+
+  const { data: link } = await supabase
+    .from("student_teachers")
+    .select("tier, status")
+    .eq("student_id", session.profileId)
+    .eq("teacher_id", teacherId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const { data: groups } = await supabase
+    .from("teacher_group_members")
+    .select("group_id, teacher_groups!inner(teacher_id)")
+    .eq("student_id", session.profileId);
+
+  const groupIds =
+    groups
+      ?.filter(
+        (g) =>
+          (g.teacher_groups as unknown as { teacher_id: string })?.teacher_id ===
+          teacherId
+      )
+      .map((g) => g.group_id as string) ?? [];
+
+  return {
+    teacherId,
+    tier: (link?.tier as "free" | "pro") ?? "free",
+    groupIds,
+  };
+}
 
 export async function getQuizForStudent(quizId: string): Promise<{
   quiz: Quiz | null;
@@ -16,14 +55,9 @@ export async function getQuizForStudent(quizId: string): Promise<{
 }> {
   const session = await requireStudent();
   const supabase = createAdminClient();
+  const ctx = await getStudentContext(session);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_subscribed")
-    .eq("id", session.profileId)
-    .single();
-
-  if (!profile?.is_subscribed) {
+  if (!ctx.teacherId) {
     throw new Error("SUBSCRIPTION_REQUIRED");
   }
 
@@ -31,10 +65,22 @@ export async function getQuizForStudent(quizId: string): Promise<{
     .from("quizzes")
     .select("*")
     .eq("id", quizId)
+    .eq("created_by", ctx.teacherId)
+    .eq("is_active", true)
     .single<Quiz>();
 
   if (!quiz) {
     return { quiz: null, questions: [], existingSubmissionId: null };
+  }
+
+  if (ctx.tier === "free" && !quiz.is_free) {
+    throw new Error("PRO_REQUIRED");
+  }
+
+  if (quiz.quiz_type === "session_group" && quiz.target_group_id) {
+    if (!ctx.groupIds.includes(quiz.target_group_id)) {
+      throw new Error("GROUP_REQUIRED");
+    }
   }
 
   const { data: questions } = await supabase
@@ -133,6 +179,8 @@ export async function submitQuiz(
   answers: Record<string, string>
 ): Promise<QuizSubmitResult> {
   const session = await requireStudent();
+  await getQuizForStudent(quizId);
+
   const supabase = createAdminClient();
 
   const { data: existing } = await supabase
@@ -254,16 +302,37 @@ export async function getWeakPoints(): Promise<CategoryPerformance[]> {
     .sort((a, b) => a.success_percentage - b.success_percentage);
 }
 
-export async function getAvailableQuizzes(): Promise<Quiz[]> {
-  await requireStudent();
+export async function getAvailableQuizzes(): Promise<QuizListItem[]> {
+  const session = await requireStudent();
   const supabase = createAdminClient();
+  const ctx = await getStudentContext(session);
+
+  if (!ctx.teacherId) return [];
 
   const { data } = await supabase
     .from("quizzes")
     .select("*")
+    .eq("created_by", ctx.teacherId)
+    .eq("is_active", true)
     .order("created_at", { ascending: false });
 
-  return data ?? [];
+  if (!data) return [];
+
+  return (data as Quiz[]).map((quiz) => {
+    const isGroupOk =
+      quiz.quiz_type !== "session_group" ||
+      !quiz.target_group_id ||
+      ctx.groupIds.includes(quiz.target_group_id);
+
+    const isAccessible =
+      isGroupOk && (ctx.tier === "pro" || quiz.is_free);
+
+    return {
+      ...quiz,
+      isAccessible,
+      isLocked: !isAccessible && isGroupOk,
+    };
+  });
 }
 
 export async function getStudentProfile() {

@@ -2,10 +2,13 @@
   "name": "المؤيد — Al-Moayed",
   "short_name": "المؤيد",
   "description": "حل بيدك ما حدا بفيدك",
-  "start_url": "/dashboard",
+  "start_url": "/login",
   "display": "standalone",
-  "background_color": "#f0fafa",
+  "orientation": "portrait",
+  "background_color": "#f7f9fa",
   "theme_color": "#0d6e6e",
   "lang": "ar",
-  "dir": "rtl"
+  "dir": "rtl",
+  "categories": ["education"],
+  "icons": []
 }
