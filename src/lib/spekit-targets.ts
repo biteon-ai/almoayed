@@ -80,13 +80,20 @@ export const SPEKIT = {
   quizEditLink: "quiz-edit-link",
   teacherQuizCreateForm: "teacher-quiz-create-form",
   teacherQuizCreateFlags: "teacher-quiz-create-flags",
+  quizSetupImportBanner: "quiz-setup-import-banner",
 
   // ── TEACH-004 ────────────────────────────────────────────────
   teacherQuizEditPage: "teacher-quiz-edit-page",
   bulkImportZone: "bulk-import-zone",
   bulkImportSubmit: "bulk-import-submit",
+  docxImportPreview: "docx-import-preview",
+  docxImportConfirm: "docx-import-confirm",
   manualQuestionForm: "manual-question-form",
   teacherQuestionsList: "teacher-questions-list",
+  questionEditButton: "question-edit-button",
+  questionEditDialog: "question-edit-dialog",
+  questionEditForm: "question-edit-form",
+  questionListItem: "question-list-item",
 } as const;
 
 export type SpekitTarget = (typeof SPEKIT)[keyof typeof SPEKIT];

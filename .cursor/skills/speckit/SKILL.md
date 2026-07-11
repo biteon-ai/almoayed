@@ -69,7 +69,9 @@ Pure logic lives in `src/lib/quiz-gatekeeper.ts`, `quiz-access.ts`, `weak-points
 | QUIZ-001 | `tests/features/quiz-001-gatekeeper.test.ts`, `tests/integration/quiz-gatekeeper-action.test.ts` |
 | QUIZ-002 | `tests/features/quiz-002-weak-points.test.ts` |
 | TIER-001/002 | `tests/features/tier-001-gating.test.ts` |
-| TEACH-004 | `tests/features/teach-004-import.test.ts` |
+| TEACH-004 | `tests/features/teach-004-import.test.ts`, `tests/features/teach-004-docx-parse.test.ts` |
+| TEACH-003 | `tests/features/teach-003-quiz-flags.test.ts`, `e2e/teach-003-quiz-create.spec.ts` |
+| TEACH-006 | `tests/features/teach-006-question-edit.test.ts` |
 | AUTH-001 E2E | `e2e/auth-001-login.spec.ts` |
 
 Extract testable logic to `src/lib/*` rather than testing implementation details.

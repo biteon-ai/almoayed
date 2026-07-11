@@ -3,22 +3,23 @@ import {
   addQuestion,
   getQuizQuestions,
   getTeacherQuizzes,
-  importQuestions,
 } from "@/actions/teacher";
-import { FileUploadZone } from "@/components/teacher/FileUploadZone";
+import { EditQuizBulkImportSection } from "@/components/teacher/EditQuizBulkImportSection";
 import { QuestionAddForm } from "@/components/teacher/QuestionAddForm";
-import { Button } from "@/components/ui/button";
+import { TeacherQuestionsList } from "@/components/teacher/TeacherQuestionsList";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
-import { ArrowRight, Upload } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { notFound } from "next/navigation";
+import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
+import { Suspense } from "react";
 
 export const metadata = { title: "تحرير الاختبار | المؤيد" };
 
@@ -39,16 +40,14 @@ export default async function EditQuizPage({ params }: PageProps) {
     await addQuestion(id, formData);
   }
 
-  async function handleImport(formData: FormData) {
-    "use server";
-    await importQuestions(id, formData);
-  }
-
   return (
     <div
       className="mx-auto w-full max-w-3xl space-y-8"
       data-spekit={SPEKIT.teacherQuizEditPage}
     >
+      <Suspense fallback={null}>
+        <EditQuizImportToast />
+      </Suspense>
       <div className="flex items-center gap-3 text-start">
         <Link
           href="/teacher/quizzes"
@@ -60,27 +59,17 @@ export default async function EditQuizPage({ params }: PageProps) {
         <h1 className="text-xl font-bold tracking-tight">{quiz.title}</h1>
       </div>
 
-      <Card className="overflow-hidden border-border/70 shadow-sm">
-        <CardHeader className="space-y-1 p-6 pb-4 text-start">
-          <CardTitle className="text-base font-semibold">
-            استيراد أسئلة بالجملة
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 pt-0">
-          <form action={handleImport} className="space-y-4">
-            <FileUploadZone />
-            <Button
-              type="submit"
-              variant="outline"
-              className="h-11 gap-2 px-5"
-              data-spekit={SPEKIT.bulkImportSubmit}
-            >
-              <Upload className="size-4" />
-              استيراد
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <Suspense
+        fallback={
+          <Card className="overflow-hidden border-border/70 shadow-sm">
+            <CardContent className="p-6 text-sm text-muted-foreground">
+              جاري تحميل الاستيراد...
+            </CardContent>
+          </Card>
+        }
+      >
+        <EditQuizBulkImportSection quizId={id} quizTitle={quiz.title} />
+      </Suspense>
 
       <Card className="overflow-hidden border-border/70 shadow-sm">
         <CardHeader className="space-y-1 p-6 pb-4 text-start">
@@ -93,23 +82,7 @@ export default async function EditQuizPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
-      <div className="space-y-3" data-spekit={SPEKIT.teacherQuestionsList}>
-        <h2 className="text-start text-base font-semibold">
-          الأسئلة ({questions.length})
-        </h2>
-        {questions.map((q, i) => (
-          <Card key={q.id} className="border-border/70 shadow-sm">
-            <CardContent className="p-5 text-start">
-              <p className="text-sm font-medium leading-relaxed">
-                {i + 1}. {q.question_text}
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                الإجابة: {q.correct_answer} — {q.category_tag}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <TeacherQuestionsList quizId={id} questions={questions} />
     </div>
   );
 }

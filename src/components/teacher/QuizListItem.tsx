@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { updateQuizFlags } from "@/actions/teacher";
-import type { Quiz } from "@/types/database";
+import type { TeacherQuiz } from "@/types/database";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,11 +11,25 @@ import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
-export function QuizListItem({ quiz }: { quiz: Quiz }) {
+export function QuizListItem({ quiz }: { quiz: TeacherQuiz }) {
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const canActivate = quiz.question_count > 0;
 
   const toggle = (flags: Parameters<typeof updateQuizFlags>[1]) => {
-    startTransition(() => updateQuizFlags(quiz.id, flags));
+    setError(null);
+    startTransition(async () => {
+      try {
+        await updateQuizFlags(quiz.id, flags);
+      } catch (cause) {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "فشل تحديث الاختبار. جرّب مرة تانية."
+        );
+      }
+    });
   };
 
   return (
@@ -51,12 +65,25 @@ export function QuizListItem({ quiz }: { quiz: Quiz }) {
             className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0"
             {...spekit(SPEKIT.quizToggleActions)}
           >
+            {error && (
+              <p
+                role="alert"
+                className="w-full rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive"
+              >
+                {error}
+              </p>
+            )}
             <Button
               type="button"
               size="sm"
               variant="outline"
               className="h-9 px-3"
-              disabled={pending}
+              disabled={pending || (!quiz.is_active && !canActivate)}
+              title={
+                !quiz.is_active && !canActivate
+                  ? "أضف سؤالاً واحداً على الأقل قبل التفعيل"
+                  : undefined
+              }
               onClick={() => toggle({ is_active: !quiz.is_active })}
             >
               {quiz.is_active ? "إخفاء" : "تفعيل"}

@@ -198,14 +198,19 @@ features:
     routes: [/teacher/quizzes, /teacher/quizzes/new, /teacher/quizzes/[id]]
     files:
       - src/app/teacher/quizzes/page.tsx
+      - src/app/teacher/quizzes/new/page.tsx
       - src/components/teacher/QuizListItem.tsx
       - src/components/teacher/QuizCreateForm.tsx
+      - src/components/teacher/QuizCreateWizard.tsx
       - src/actions/teacher.ts
+      - tests/features/teach-003-quiz-flags.test.ts
+      - e2e/teach-003-quiz-create.spec.ts
     acceptance:
-      - Create quiz with title, category, type, group, is_active, is_free
-      - Toggle active, free/pro, regular/group on list
+      - Create quiz with title, category, type, group, is_free (starts inactive until ≥1 question)
+      - After create, redirect to /teacher/quizzes/[id]?setup=import (durable URL; no in-memory wizard step)
+      - Toggle active, free/pro, regular/group on list; block activation when question_count is 0
       - Edit quiz and manage questions
-    spekit: [quiz-list-item, quiz-status-badges, quiz-toggle-actions, teacher-quiz-create-form]
+    spekit: [quiz-list-item, quiz-status-badges, quiz-toggle-actions, teacher-quiz-create-form, quiz-setup-import-banner]
 
   - id: TEACH-004
     name: Bulk Question Import
@@ -213,14 +218,30 @@ features:
     persona: [TEACHER]
     routes: [/teacher/quizzes/[id]]
     files:
+      - src/components/teacher/BulkQuestionUpload.tsx
+      - src/components/teacher/DocxImportPreview.tsx
+      - src/components/teacher/EditQuizBulkImportSection.tsx
+      - src/components/teacher/EditQuizImportToast.tsx
       - src/components/teacher/FileUploadZone.tsx
       - src/components/teacher/QuestionAddForm.tsx
       - src/lib/import-questions.ts
+      - src/lib/docx-html-utils.ts
+      - src/lib/docx-file.ts
+      - src/lib/parse-docx-questions.ts
+      - src/actions/parse-docx.ts
       - src/actions/teacher.ts
+      - tests/features/teach-004-import.test.ts
+      - tests/features/teach-004-docx-parse.test.ts
     acceptance:
       - Import CSV, XLSX, TXT with required columns
+      - Import DOCX via mammoth HTML pipeline with table a-d grid parsing
+      - DOCX shows interactive staging preview before save; default correct answer أ
+      - Bulk upload inline on edit page; setup banner when ?setup=import after new quiz
+      - On import success, redirect to ?imported=N with toast showing question count; no inline activation prompt
+      - Skip setup clears ?setup=import for manual entry
+      - Re-import on existing quiz always appends rows (no duplicate blocking in v1)
       - Manual MCQ entry with 2x2 grid (أ–د)
-    spekit: [bulk-import-zone, manual-question-form]
+    spekit: [bulk-import-zone, bulk-import-submit, manual-question-form]
 
   - id: TEACH-005
     name: Teacher Dashboard Stats
@@ -234,6 +255,30 @@ features:
       - Shows student count, quiz count, pending Pro requests
       - Displays shareable teacher_code card
     spekit: [teacher-stats-grid, teacher-code-card]
+
+  - id: TEACH-006
+    name: Interactive Question Editing
+    status: implemented
+    persona: [TEACHER]
+    routes: [/teacher/quizzes/[id]]
+    files:
+      - src/app/teacher/quizzes/[id]/page.tsx
+      - src/components/teacher/TeacherQuestionsList.tsx
+      - src/components/teacher/QuestionEditDialog.tsx
+      - src/lib/question-options.ts
+      - src/actions/teacher.ts
+    acceptance:
+      - Each MCQ in edit list shows تحرير button opening prepopulated dialog
+      - Edit form supports question text, 2x2 options, correct letter radio, explanation, category tag
+      - Save calls updateQuestion and router.refresh without full page reload
+    spekit:
+      [
+        question-list-item,
+        question-edit-button,
+        question-edit-dialog,
+        question-edit-form,
+        teacher-questions-list,
+      ]
 
   # ── UI / PWA ────────────────────────────────────────────────────────────────
   - id: UI-001
@@ -270,8 +315,22 @@ features:
       - Registry documents selector → feature mapping
 
 # ─────────────────────────────────────────────────────────────────────────────
+clarifications:
+  - session: "2026-07-12"
+    scope: TEACH-003 + TEACH-004 quiz-create bulk-import flow
+    items:
+      - q: After step 1 creates the quiz, what happens if the teacher refreshes during bulk-import setup?
+        a: Redirect to /teacher/quizzes/[id] with bulk upload inline (single durable URL); ?setup=import resumes post-create setup
+      - q: If a teacher uploads a second file on a quiz that already has questions, should rows append or be blocked?
+        a: Always append imported rows; no duplicate detection in v1
+      - q: Can a quiz with zero questions be marked active (visible to students)?
+        a: Force inactive until at least one question exists; teacher toggles active from quiz list after
+      - q: After successful bulk import during setup, should the UI nudge the teacher to activate the quiz?
+        a: No activation nudge; teacher activates from quiz list when ready
+
+# ─────────────────────────────────────────────────────────────────────────────
 partial_features:
-  - id: TEACH-006
+  - id: TEACH-010
     name: Categories and Topics Taxonomy UI
     status: partial
     notes: DB + server actions exist; minimal UI on quiz create (category select only)

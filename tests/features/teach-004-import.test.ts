@@ -76,4 +76,18 @@ describe(`${FEATURE} Bulk question parser`, () => {
     expect(inserts[0]?.options).toEqual(["a", "b"]);
     expect(inserts[0]?.correct_answer).toBe("b");
   });
+
+  it("assigns sort_order from 1 per import batch (append adds new rows with local ordering)", () => {
+    const csvA =
+      "question_text,option_a,correct_answer\nQ-batch-a,a,a\nQ-batch-a2,b,b";
+    const csvB = "question_text,option_a,correct_answer\nQ-batch-b,c,c";
+
+    const batchA = importRowsToQuestionInserts(parseCsvQuestions(csvA));
+    const batchB = importRowsToQuestionInserts(parseCsvQuestions(csvB));
+
+    expect(batchA.map((row) => row.sort_order)).toEqual([1, 2]);
+    expect(batchB.map((row) => row.sort_order)).toEqual([1]);
+    expect(batchA[0]?.question_text).toBe("Q-batch-a");
+    expect(batchB[0]?.question_text).toBe("Q-batch-b");
+  });
 });

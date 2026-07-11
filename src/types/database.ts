@@ -76,6 +76,10 @@ export interface Quiz {
   updated_at: string;
 }
 
+export interface TeacherQuiz extends Quiz {
+  question_count: number;
+}
+
 export interface QuizListItem extends Quiz {
   isAccessible: boolean;
   isLocked: boolean;

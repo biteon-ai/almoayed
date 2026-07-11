@@ -11,11 +11,13 @@ import {
 } from "@/lib/import-questions";
 import type {
   Category,
+  ImportQuestionRow,
   Question,
   Quiz,
   StudentTeacherStatus,
   StudentTier,
   TeacherGroup,
+  TeacherQuiz,
   TeacherStudentRow,
   Topic,
 } from "@/types/database";
@@ -273,15 +275,24 @@ export async function createTopic(categoryId: string, name: string) {
   revalidatePath("/teacher/quizzes");
 }
 
-export async function getTeacherQuizzes(): Promise<Quiz[]> {
+export async function getTeacherQuizzes(): Promise<TeacherQuiz[]> {
   const session = await requireTeacher();
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("quizzes")
-    .select("*")
+    .select("*, questions(count)")
     .eq("created_by", session.profileId)
     .order("created_at", { ascending: false });
-  return (data as Quiz[]) ?? [];
+
+  return (data ?? []).map((row) => {
+    const { questions, ...quiz } = row as Quiz & {
+      questions: { count: number }[];
+    };
+    return {
+      ...(quiz as Quiz),
+      question_count: questions?.[0]?.count ?? 0,
+    };
+  });
 }
 
 export async function createQuiz(formData: FormData) {
@@ -298,7 +309,7 @@ export async function createQuiz(formData: FormData) {
       created_by: session.profileId,
       category_id: (formData.get("category_id") as string) || null,
       topic_id: (formData.get("topic_id") as string) || null,
-      is_active: formData.get("is_active") === "on",
+      is_active: false,
       is_free: formData.get("is_free") !== "off",
       quiz_type: (formData.get("quiz_type") as string) || "regular",
       target_group_id: (formData.get("target_group_id") as string) || null,
@@ -317,6 +328,19 @@ export async function updateQuizFlags(
 ) {
   const session = await requireTeacher();
   const supabase = createAdminClient();
+
+  if (flags.is_active === true) {
+    const { count, error: countError } = await supabase
+      .from("questions")
+      .select("id", { count: "exact", head: true })
+      .eq("quiz_id", quizId);
+
+    if (countError) throw new Error("فشل التحقق من الأسئلة.");
+    if (!count) {
+      throw new Error("أضف سؤالاً واحداً على الأقل قبل التفعيل.");
+    }
+  }
+
   const { error } = await supabase
     .from("quizzes")
     .update(flags)
@@ -383,18 +407,105 @@ export async function addQuestion(quizId: string, formData: FormData) {
   revalidatePath(`/teacher/quizzes/${quizId}`);
 }
 
-export async function importQuestions(quizId: string, formData: FormData) {
+export async function updateQuestion(
+  quizId: string,
+  questionId: string,
+  formData: FormData
+) {
   const session = await requireTeacher();
+  await assertQuizOwnedByTeacher(quizId, session.profileId);
+
   const supabase = createAdminClient();
 
+  const { data: existing } = await supabase
+    .from("questions")
+    .select("id")
+    .eq("id", questionId)
+    .eq("quiz_id", quizId)
+    .single();
+
+  if (!existing) throw new Error("السؤال غير موجود.");
+
+  const options = [
+    formData.get("option_a"),
+    formData.get("option_b"),
+    formData.get("option_c"),
+    formData.get("option_d"),
+  ]
+    .map((o) => (o as string)?.trim())
+    .filter(Boolean);
+
+  if (options.length < 2) {
+    throw new Error("أضف خيارين على الأقل.");
+  }
+
+  const question_text = (formData.get("question_text") as string)?.trim();
+  if (!question_text) throw new Error("نص السؤال مطلوب.");
+
+  const { error } = await supabase
+    .from("questions")
+    .update({
+      question_text,
+      options,
+      correct_answer: (formData.get("correct_answer") as string)?.trim(),
+      explanation_text:
+        (formData.get("explanation_text") as string)?.trim() ?? "",
+      category_tag:
+        (formData.get("category_tag") as string)?.trim() || "عام",
+    })
+    .eq("id", questionId)
+    .eq("quiz_id", quizId);
+
+  if (error) throw new Error("فشل تحديث السؤال.");
+  revalidatePath(`/teacher/quizzes/${quizId}`);
+}
+
+async function assertQuizOwnedByTeacher(quizId: string, profileId: string) {
+  const supabase = createAdminClient();
   const { data: quiz } = await supabase
     .from("quizzes")
     .select("id")
     .eq("id", quizId)
-    .eq("created_by", session.profileId)
+    .eq("created_by", profileId)
     .single();
 
   if (!quiz) throw new Error("الاختبار غير موجود.");
+}
+
+export async function importQuestionRows(
+  quizId: string,
+  rows: ImportQuestionRow[]
+) {
+  const session = await requireTeacher();
+  await assertQuizOwnedByTeacher(quizId, session.profileId);
+
+  const validRows = rows.filter(
+    (row) =>
+      row.question_text?.trim() &&
+      [row.option_a, row.option_b, row.option_c, row.option_d].filter((o) =>
+        o?.trim()
+      ).length >= 2
+  );
+
+  if (!validRows.length) {
+    throw new Error("ما في أسئلة صالحة للحفظ.");
+  }
+
+  const supabase = createAdminClient();
+  const inserts = importRowsToQuestionInserts(validRows).map((q) => ({
+    ...q,
+    quiz_id: quizId,
+  }));
+
+  const { error } = await supabase.from("questions").insert(inserts);
+  if (error) throw new Error("فشل استيراد الأسئلة.");
+  revalidatePath(`/teacher/quizzes/${quizId}`);
+  return { imported: inserts.length };
+}
+
+export async function importQuestions(quizId: string, formData: FormData) {
+  const session = await requireTeacher();
+  await assertQuizOwnedByTeacher(quizId, session.profileId);
 
   const file = formData.get("file") as File | null;
   if (!file) throw new Error("اختار ملف للاستيراد.");
@@ -408,12 +519,17 @@ export async function importQuestions(quizId: string, formData: FormData) {
     rows = parseCsvQuestions(text);
   } else if (ext === "xlsx" || ext === "xls") {
     rows = await parseXlsxQuestions(buffer);
-  } else if (ext === "doc" || ext === "docx" || ext === "txt") {
+  } else if (ext === "docx") {
+    throw new Error(
+      "ملفات Word تُعرَض للمعاينة في المتصفح. ارفع .docx من جديد وانتظر شاشة المراجعة."
+    );
+  } else if (ext === "doc" || ext === "txt") {
     rows = parseWordLikeText(text);
   } else {
-    throw new Error("صيغة غير مدعومة. استخدم CSV أو XLSX أو TXT.");
+    throw new Error("صيغة غير مدعومة. استخدم CSV أو XLSX أو TXT أو DOCX.");
   }
 
+  const supabase = createAdminClient();
   const inserts = importRowsToQuestionInserts(rows).map((q) => ({
     ...q,
     quiz_id: quizId,

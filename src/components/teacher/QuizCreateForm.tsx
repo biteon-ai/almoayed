@@ -24,18 +24,21 @@ const fieldSelectTriggerClass =
 interface QuizCreateFormProps {
   categories: Category[];
   groups: TeacherGroup[];
-  action: (formData: FormData) => void | Promise<void>;
+  action?: (formData: FormData) => void | Promise<void>;
+  onSubmit?: (formData: FormData) => void | Promise<void>;
+  isSubmitting?: boolean;
 }
 
 export function QuizCreateForm({
   categories,
   groups,
   action,
+  onSubmit,
+  isSubmitting = false,
 }: QuizCreateFormProps) {
   const [categoryId, setCategoryId] = useState<string>("");
   const [quizType, setQuizType] = useState<string>("regular");
   const [targetGroupId, setTargetGroupId] = useState<string>("");
-  const [isActive, setIsActive] = useState(true);
   const [isFree, setIsFree] = useState(true);
 
   const categoryLabel =
@@ -53,8 +56,19 @@ export function QuizCreateForm({
       : (groups.find((group) => group.id === targetGroupId)?.group_name ??
         "— الكل —");
 
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    if (!onSubmit) return;
+    event.preventDefault();
+    onSubmit(new FormData(event.currentTarget));
+  };
+
   return (
-    <form action={action} className="space-y-6" {...spekit(SPEKIT.teacherQuizCreateForm)}>
+    <form
+      action={onSubmit ? undefined : action}
+      onSubmit={onSubmit ? handleFormSubmit : undefined}
+      className="space-y-6"
+      {...spekit(SPEKIT.teacherQuizCreateForm)}
+    >
       <div className="flex flex-col gap-2">
         <Label
           htmlFor="title"
@@ -152,24 +166,10 @@ export function QuizCreateForm({
         className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4"
         {...spekit(SPEKIT.teacherQuizCreateFlags)}
       >
-        <div className="flex items-center gap-2.5 py-1">
-          <Checkbox
-            id="is_active"
-            checked={isActive}
-            onCheckedChange={(checked) => setIsActive(checked === true)}
-          />
-          <input
-            type="hidden"
-            name="is_active"
-            value={isActive ? "on" : ""}
-          />
-          <Label
-            htmlFor="is_active"
-            className="cursor-pointer text-sm font-normal text-foreground"
-          >
-            نشط (ظاهر للطلاب)
-          </Label>
-        </div>
+        <p className="text-xs text-muted-foreground">
+          الاختبار يبدأ مخفياً. فعّله من قائمة الاختبارات بعد إضافة سؤال واحد
+          على الأقل.
+        </p>
         <div className="flex items-center gap-2.5 py-1">
           <Checkbox
             id="is_free"
@@ -191,8 +191,9 @@ export function QuizCreateForm({
         variant="brand"
         size="lg"
         className="h-12 w-full active:scale-[0.98]"
+        disabled={isSubmitting}
       >
-        إنشاء والمتابعة لإضافة الأسئلة
+        {isSubmitting ? "جاري الإنشاء..." : "إنشاء والمتابعة لإضافة الأسئلة"}
       </Button>
     </form>
   );
