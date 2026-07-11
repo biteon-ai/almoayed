@@ -4,6 +4,7 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { canRequestProUpgrade } from "@/lib/tier-upgrade";
 import { requireStudent } from "@/lib/auth";
 import { sessionOptions, type SessionData } from "@/lib/session";
 import type { StudentTeacherOption } from "@/types/database";
@@ -71,6 +72,20 @@ export async function requestProUpgrade(): Promise<{ success: boolean; message: 
 
   if (!session.currentTeacherId) {
     return { success: false, message: "اختار أستاذك أولاً من القائمة." };
+  }
+
+  const { data: link } = await supabase
+    .from("student_teachers")
+    .select("tier, upgrade_requested")
+    .eq("student_id", session.profileId)
+    .eq("teacher_id", session.currentTeacherId)
+    .maybeSingle();
+
+  if (!link || !canRequestProUpgrade(link)) {
+    return {
+      success: false,
+      message: "ما في ترقية متاحة — إما أنت Pro أو الطلب مرسل مسبقاً.",
+    };
   }
 
   const { error } = await supabase

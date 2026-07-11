@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getIronSession } from "iron-session";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isDeviceSessionValid } from "@/lib/device-session";
 import { sessionOptions, type SessionData } from "@/lib/session";
 
 export async function getSession(): Promise<SessionData> {
@@ -17,11 +18,6 @@ export async function validateDeviceSession(
     return false;
   }
 
-  // Legacy sessions created before device-lock was added
-  if (!session.sessionToken) {
-    return true;
-  }
-
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("profiles")
@@ -29,11 +25,7 @@ export async function validateDeviceSession(
     .eq("id", session.profileId)
     .single();
 
-  if (!data?.last_session_id) {
-    return true;
-  }
-
-  return data.last_session_id === session.sessionToken;
+  return isDeviceSessionValid(session.sessionToken, data?.last_session_id);
 }
 
 async function enforceValidSession(session: SessionData): Promise<SessionData> {

@@ -2,6 +2,11 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireStudent, getActiveTeacherId } from "@/lib/auth";
+import { computeQuizListItem } from "@/lib/quiz-access";
+import {
+  EXAM_QUESTION_SELECT_FIELDS,
+} from "@/lib/quiz-gatekeeper";
+import { aggregateCategoryPerformance } from "@/lib/weak-points";
 import type {
   CategoryPerformance,
   ExamQuestion,
@@ -85,9 +90,7 @@ export async function getQuizForStudent(quizId: string): Promise<{
 
   const { data: questions } = await supabase
     .from("questions")
-    .select(
-      "id, quiz_id, question_text, question_image_url, options, sort_order"
-    )
+    .select(EXAM_QUESTION_SELECT_FIELDS)
     .eq("quiz_id", quizId)
     .order("sort_order", { ascending: true });
 
@@ -285,26 +288,14 @@ export async function getWeakPoints(): Promise<CategoryPerformance[]> {
 
   if (!answers?.length) return [];
 
-  const stats = new Map<string, { total: number; correct: number }>();
-
-  for (const row of answers) {
-    const tag =
+  const rows = answers.map((row) => ({
+    is_correct: row.is_correct as boolean,
+    category_tag:
       (row.questions as unknown as { category_tag: string })?.category_tag ??
-      "عام";
-    const current = stats.get(tag) ?? { total: 0, correct: 0 };
-    current.total += 1;
-    if (row.is_correct) current.correct += 1;
-    stats.set(tag, current);
-  }
+      "عام",
+  }));
 
-  return Array.from(stats.entries())
-    .map(([category_tag, { total, correct }]) => ({
-      category_tag,
-      total_attempted: total,
-      correct_count: correct,
-      success_percentage: Math.round((correct / total) * 1000) / 10,
-    }))
-    .sort((a, b) => a.success_percentage - b.success_percentage);
+  return aggregateCategoryPerformance(rows);
 }
 
 export async function getAvailableQuizzes(): Promise<QuizListItem[]> {
@@ -335,21 +326,12 @@ export async function getAvailableQuizzes(): Promise<QuizListItem[]> {
 
   return (data as Quiz[])
     .filter((quiz) => quizzesWithQuestions.has(quiz.id))
-    .map((quiz) => {
-    const isGroupOk =
-      quiz.quiz_type !== "session_group" ||
-      !quiz.target_group_id ||
-      ctx.groupIds.includes(quiz.target_group_id);
-
-    const isAccessible =
-      isGroupOk && (ctx.tier === "pro" || quiz.is_free);
-
-    return {
-      ...quiz,
-      isAccessible,
-      isLocked: !isAccessible && isGroupOk,
-    };
-  });
+    .map((quiz) =>
+      computeQuizListItem(quiz, {
+        tier: ctx.tier,
+        groupIds: ctx.groupIds,
+      })
+    );
 }
 
 export async function getStudentProfile() {
