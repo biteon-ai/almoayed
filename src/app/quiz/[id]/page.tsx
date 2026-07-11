@@ -5,8 +5,9 @@ import {
 } from "@/actions/quiz";
 import { QuizRunner } from "@/components/quiz/QuizRunner";
 import { buttonVariants } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, AlertCircle } from "lucide-react";
 import { SPEKIT } from "@/lib/spekit-targets";
+import { AppError, ErrorCode, toUserMessage } from "@/lib/app-errors";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
@@ -28,16 +29,36 @@ export default async function QuizPage({ params }: QuizPageProps) {
   const { id } = await params;
 
   let data;
+  let accessError: string | null = null;
+
   try {
     data = await getQuizForStudent(id);
   } catch (e) {
-    if (e instanceof Error && e.message === "SUBSCRIPTION_REQUIRED") {
+    if (e instanceof AppError && e.code === ErrorCode.SUBSCRIPTION_REQUIRED) {
       redirect("/login");
     }
-    throw e;
+    accessError = toUserMessage(e);
   }
 
-  const { quiz, questions, existingSubmissionId } = data;
+  if (accessError) {
+    return (
+      <div
+        className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center"
+        data-spekit={SPEKIT.quizPage}
+      >
+        <AlertCircle className="size-10 text-destructive" aria-hidden />
+        <p className="max-w-sm text-sm font-bold text-foreground" role="alert">
+          {accessError}
+        </p>
+        <a href="/dashboard" className={buttonVariants({ variant: "outline" })}>
+          <ArrowRight className="size-4" />
+          رجوع للرئيسية
+        </a>
+      </div>
+    );
+  }
+
+  const { quiz, questions, existingSubmissionId } = data!;
 
   if (!quiz) {
     notFound();

@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
-import { loginWithWhatsApp } from "@/actions/auth";
+import { loginWithWhatsApp } from "@/actions/login";
 import type { LoginState } from "@/types/auth";
 import { DEMO_STUDENT, DEMO_TEACHER } from "@/lib/constants";
 import { MobileShell, StickyBottomBar } from "@/components/layout/MobileShell";
+import { LoginLoadingOverlay } from "@/components/login/LoginLoadingOverlay";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,25 @@ import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 const initialState: LoginState | null = null;
+
+function FormPendingWatcher({
+  onPendingChange,
+  onSubmitStart,
+}: {
+  onPendingChange: (pending: boolean) => void;
+  onSubmitStart: () => void;
+}) {
+  const { pending } = useFormStatus();
+
+  useEffect(() => {
+    if (pending) {
+      onSubmitStart();
+    }
+    onPendingChange(pending);
+  }, [pending, onPendingChange, onSubmitStart]);
+
+  return null;
+}
 
 function PrimarySubmitButton() {
   const { pending } = useFormStatus();
@@ -72,28 +91,31 @@ function DemoButton({
       onClick={onClick}
       disabled={pending}
     >
-      <Icon className="size-4 opacity-80" />
-      {label}
+      {pending ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : (
+        <Icon className="size-4 opacity-80" />
+      )}
+      {pending ? "جاري الدخول..." : label}
     </Button>
   );
 }
 
 export function LoginForm() {
-  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction] = useFormState(loginWithWhatsApp, initialState);
   const [whatsapp, setWhatsapp] = useState("");
   const [fullName, setFullName] = useState("");
   const [teacherCode, setTeacherCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  /** Stays true after submit until error or page navigates away (server redirect). */
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
 
   useEffect(() => {
-    if (state?.status === "success") {
-      router.push(
-        state.role === "TEACHER" ? "/teacher/dashboard" : "/dashboard"
-      );
-      router.refresh();
+    if (state?.status === "error") {
+      setShowLoadingOverlay(false);
     }
-  }, [state, router]);
+  }, [state]);
 
   const submitDemo = (number: string, name: string) => {
     setWhatsapp(number);
@@ -102,8 +124,22 @@ export function LoginForm() {
     requestAnimationFrame(() => formRef.current?.requestSubmit());
   };
 
+  const loadingMessage = isSubmitting
+    ? "جاري التحقق من حسابك…"
+    : "جاري فتح لوحتك…";
+
+  const loadingSubMessage = isSubmitting
+    ? "يتم التحقق عبر واتساب"
+    : "لحظة من فضلك…";
+
   return (
     <MobileShell className="min-h-dvh bg-gradient-to-b from-slate-50 via-background to-background dark:from-slate-950 dark:via-background">
+      <LoginLoadingOverlay
+        show={showLoadingOverlay}
+        message={loadingMessage}
+        subMessage={loadingSubMessage}
+      />
+
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-brand-100/40 to-transparent dark:from-brand-950/25"
         aria-hidden
@@ -115,8 +151,18 @@ export function LoginForm() {
         className="relative flex min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col"
         {...spekit(SPEKIT.loginForm)}
       >
+        <FormPendingWatcher
+          onPendingChange={setIsSubmitting}
+          onSubmitStart={() => setShowLoadingOverlay(true)}
+        />
+
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto overscroll-y-contain pb-36">
+        <div
+          className={cn(
+            "flex-1 overflow-y-auto overscroll-y-contain pb-36 transition-opacity duration-300",
+            showLoadingOverlay && "pointer-events-none opacity-40"
+          )}
+        >
           <header className="animate-fade-in px-2 pb-6 pt-2">
             <BrandHeader />
           </header>
@@ -167,6 +213,7 @@ export function LoginForm() {
                       className="h-[52px] rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0"
                       dir="ltr"
                       required
+                      disabled={showLoadingOverlay}
                       aria-describedby="phone-hint"
                     />
                   </div>
@@ -202,6 +249,7 @@ export function LoginForm() {
                     onChange={(e) => setTeacherCode(e.target.value)}
                     className="font-mono tracking-wide"
                     dir="ltr"
+                    disabled={showLoadingOverlay}
                   />
                 </div>
 
@@ -221,10 +269,11 @@ export function LoginForm() {
                     placeholder="مثال: أحمد الخطيب"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
+                    disabled={showLoadingOverlay}
                   />
                 </div>
 
-                {state?.status === "error" && (
+                {state?.status === "error" && !isSubmitting && (
                   <div
                     role="alert"
                     className="rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-xs font-semibold text-destructive"
@@ -330,7 +379,12 @@ export function LoginForm() {
         </div>
 
         {/* Fixed bottom CTA */}
-        <StickyBottomBar className="fixed inset-x-0 bottom-0 mx-auto max-w-md px-4">
+        <StickyBottomBar
+          className={cn(
+            "fixed inset-x-0 bottom-0 mx-auto max-w-md px-4 transition-opacity duration-300",
+            showLoadingOverlay && "pointer-events-none opacity-40"
+          )}
+        >
           <PrimarySubmitButton />
           <p className="mt-2 text-center text-[10px] text-muted-foreground">
             بالضغط أنت توافق على استخدام رقمك للدخول فقط

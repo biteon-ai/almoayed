@@ -4,6 +4,12 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  appError,
+  ErrorCode,
+  logRequestError,
+  uiMessage,
+} from "@/lib/app-errors";
 import { canRequestProUpgrade } from "@/lib/tier-upgrade";
 import { requireStudent } from "@/lib/auth";
 import { sessionOptions, type SessionData } from "@/lib/session";
@@ -55,7 +61,9 @@ export async function switchTeacher(teacherId: string): Promise<void> {
     .eq("status", "active")
     .maybeSingle();
 
-  if (!link) throw new Error("ما عندك صلاحية للتبديل لهاد الأستاذ.");
+  if (!link) {
+    throw appError(ErrorCode.TEACHER_SWITCH_DENIED);
+  }
 
   const cookieStore = await cookies();
   const iron = await getIronSession<SessionData>(cookieStore, sessionOptions);
@@ -95,7 +103,11 @@ export async function requestProUpgrade(): Promise<{ success: boolean; message: 
     .eq("teacher_id", session.currentTeacherId);
 
   if (error) {
-    return { success: false, message: "ما قدرنا نرسل طلب الترقية. جرّب مرة تانية." };
+    logRequestError("PRO_UPGRADE_REQUEST_FAILED", error);
+    return {
+      success: false,
+      message: uiMessage(ErrorCode.PRO_UPGRADE_REQUEST_FAILED),
+    };
   }
 
   revalidatePath("/dashboard");

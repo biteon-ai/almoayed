@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 58
+  total_targets: 59
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -45,6 +45,7 @@ AUTH-001:
   login-whatsapp-field: "WhatsApp number input"
   login-name-field: "Student name field (optional)"
   login-submit: "Primary login button"
+  login-loading: "Full-screen login / redirect loading overlay"
   login-demo-student: "Demo student login button"
   login-demo-teacher: "Demo teacher login button"
   login-verification-panel: "Pending verification WhatsApp panel"

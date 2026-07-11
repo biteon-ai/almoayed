@@ -5,7 +5,7 @@ import {
   normalizeWhatsAppNumber,
 } from "@/lib/constants";
 import { isDeviceSessionValid } from "@/lib/device-session";
-import { generateSessionToken } from "@/lib/import-questions";
+import { generateSessionToken } from "@/lib/session-token";
 
 const FEATURE_LOGIN = "[AUTH-001]";
 const FEATURE_LOCK = "[AUTH-003]";

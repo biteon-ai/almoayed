@@ -1,6 +1,11 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  appError,
+  ErrorCode,
+  logRequestError,
+} from "@/lib/app-errors";
 import { requireStudent, getActiveTeacherId } from "@/lib/auth";
 import { computeQuizListItem } from "@/lib/quiz-access";
 import {
@@ -63,7 +68,7 @@ export async function getQuizForStudent(quizId: string): Promise<{
   const ctx = await getStudentContext(session);
 
   if (!ctx.teacherId) {
-    throw new Error("SUBSCRIPTION_REQUIRED");
+    throw appError(ErrorCode.SUBSCRIPTION_REQUIRED);
   }
 
   const { data: quiz } = await supabase
@@ -79,12 +84,12 @@ export async function getQuizForStudent(quizId: string): Promise<{
   }
 
   if (ctx.tier === "free" && !quiz.is_free) {
-    throw new Error("PRO_REQUIRED");
+    throw appError(ErrorCode.PRO_REQUIRED);
   }
 
   if (quiz.quiz_type === "session_group" && quiz.target_group_id) {
     if (!ctx.groupIds.includes(quiz.target_group_id)) {
-      throw new Error("GROUP_REQUIRED");
+      throw appError(ErrorCode.GROUP_REQUIRED);
     }
   }
 
@@ -207,11 +212,12 @@ export async function submitQuiz(
     .order("sort_order", { ascending: true });
 
   if (qError) {
-    throw new Error("صار خطأ بجلب أسئلة الاختبار. جرّب مرة تانية.");
+    logRequestError("QUIZ_QUESTIONS_FETCH_FAILED", qError);
+    throw appError(ErrorCode.QUIZ_QUESTIONS_FETCH_FAILED);
   }
 
   if (!questions?.length) {
-    throw new Error("هذا الاختبار ما فيه أسئلة بعد. راجع الأستاذ.");
+    throw appError(ErrorCode.QUIZ_EMPTY);
   }
 
   const graded = questions.map((q) => {
@@ -234,7 +240,8 @@ export async function submitQuiz(
     .single();
 
   if (subError || !submission) {
-    throw new Error("ما قدرنا نحفظ إجاباتك. جرّب مرة تانية.");
+    logRequestError("QUIZ_SUBMIT_SAVE_FAILED", subError);
+    throw appError(ErrorCode.QUIZ_SUBMIT_SAVE_FAILED);
   }
 
   const answerRows = graded.map((g) => ({
@@ -249,7 +256,8 @@ export async function submitQuiz(
     .insert(answerRows);
 
   if (ansError) {
-    throw new Error("صار خطأ بحفظ الإجابات.");
+    logRequestError("QUIZ_ANSWERS_SAVE_FAILED", ansError);
+    throw appError(ErrorCode.QUIZ_ANSWERS_SAVE_FAILED);
   }
 
   return {

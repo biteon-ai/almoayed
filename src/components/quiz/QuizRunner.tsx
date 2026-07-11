@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Lock, Unlock, AlertCircle, CheckCircle2, ChevronRight, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { toUserMessage, uiMessage, ErrorCode } from "@/lib/app-errors";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface QuizRunnerProps {
@@ -44,7 +45,7 @@ export function QuizRunner({
 
   const handleSubmit = () => {
     if (questions.length === 0) {
-      setError("هذا الاختبار ما فيه أسئلة بعد. راجع الأستاذ.");
+      setError(uiMessage(ErrorCode.QUIZ_EMPTY));
       return;
     }
     if (answeredCount < questions.length) {
@@ -59,7 +60,7 @@ export function QuizRunner({
         setResults(result);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (e) {
-        setError(e instanceof Error ? e.message : "صار خطأ أثناء تسليم الإجابات.");
+        setError(toUserMessage(e, "صار خطأ أثناء تسليم الإجابات."));
       }
     });
   };

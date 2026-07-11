@@ -14,6 +14,7 @@ export const SPEKIT = {
   loginDemoStudent: "login-demo-student",
   loginDemoTeacher: "login-demo-teacher",
   loginVerificationPanel: "login-verification-panel",
+  loginLoading: "login-loading-overlay",
 
   // ── MT-001 / MT-002 ──────────────────────────────────────────
   teacherSwitcher: "teacher-switcher",

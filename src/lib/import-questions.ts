@@ -1,9 +1,6 @@
-import { randomBytes } from "crypto";
 import type { ImportQuestionRow } from "@/types/database";
 
-export function generateSessionToken(): string {
-  return randomBytes(32).toString("hex");
-}
+export { generateSessionToken } from "@/lib/session-token";
 
 export function parseCsvQuestions(content: string): ImportQuestionRow[] {
   const lines = content
