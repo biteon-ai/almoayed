@@ -6,13 +6,13 @@ const LOGIN_UI_AR: Record<AuthErrorCode, string> = {
   [AuthErrorCode.INVALID_WHATSAPP]:
     "رقم واتساب غير صالح. تأكد من إدخال الرقم مع رمز البلد (مثال: 9639xxxxxxxx).",
   [AuthErrorCode.SUPABASE_ENV_MISSING]:
-    "صار في مشكلة بالاتصال. جرّب مرة تانية.",
+    "ما قدرنا نتصل بالخادم. جرّب مرة تانية بعد شوي.",
   [AuthErrorCode.SUPABASE_CONNECTION_ERROR]:
     "صار في مشكلة بالاتصال. جرّب مرة تانية.",
   [AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED]:
-    "صار في مشكلة بالاتصال. جرّب مرة تانية.",
+    "ما قدرنا نتحقق من حسابك. تأكد من رقم واتسابك وجرب مرة تانية.",
   [AuthErrorCode.TEACHER_CODE_REQUIRED]:
-    "رجاءً أدخل رمز الأستاذ (teacher code) للتسجيل كطالب جديد.",
+    "رجاءً أدخل رمز الأستاذ للتسجيل كطالب جديد.",
   [AuthErrorCode.INVALID_TEACHER_CODE]:
     "رمز الأستاذ غير صحيح. تأكد من الكود اللي أعطاك ياه الأستاذ.",
   [AuthErrorCode.SUPABASE_PROFILE_CREATE_FAILED]:

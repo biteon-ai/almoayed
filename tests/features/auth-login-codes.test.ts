@@ -7,9 +7,19 @@ describe("[AUTH-001] login error code mapping", () => {
     expect(loginMessageForCode(AuthErrorCode.INVALID_TEACHER_CODE)).toContain(
       "رمز الأستاذ"
     );
+    expect(
+      loginMessageForCode(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED)
+    ).toContain("ما قدرنا نتحقق من حسابك");
     expect(loginMessageForCode(AuthErrorCode.SUPABASE_CONNECTION_ERROR)).toContain(
       "الاتصال"
     );
+  });
+
+  it("UI messages never mention Supabase or other backend vendor names", () => {
+    for (const code of Object.values(AuthErrorCode)) {
+      const text = loginMessageForCode(code);
+      expect(text.toLowerCase()).not.toContain("supabase");
+    }
   });
 
   it("falls back for unknown codes", () => {
