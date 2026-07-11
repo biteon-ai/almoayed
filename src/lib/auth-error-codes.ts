@@ -1,0 +1,30 @@
+/** ASCII-only codes returned in login Server Action payloads (Flight-safe). */
+export const AuthErrorCode = {
+  MISSING_WHATSAPP: "MISSING_WHATSAPP",
+  INVALID_WHATSAPP: "INVALID_WHATSAPP",
+  SUPABASE_ENV_MISSING: "SUPABASE_ENV_MISSING",
+  SUPABASE_CONNECTION_ERROR: "SUPABASE_CONNECTION_ERROR",
+  SUPABASE_PROFILE_FETCH_FAILED: "SUPABASE_PROFILE_FETCH_FAILED",
+  TEACHER_CODE_REQUIRED: "TEACHER_CODE_REQUIRED",
+  INVALID_TEACHER_CODE: "INVALID_TEACHER_CODE",
+  SUPABASE_PROFILE_CREATE_FAILED: "SUPABASE_PROFILE_CREATE_FAILED",
+  SUPABASE_STUDENT_LINK_FAILED: "SUPABASE_STUDENT_LINK_FAILED",
+  SUPABASE_SESSION_UPDATE_FAILED: "SUPABASE_SESSION_UPDATE_FAILED",
+  SESSION_SAVE_FAILED: "SESSION_SAVE_FAILED",
+  LOGIN_UNEXPECTED: "LOGIN_UNEXPECTED",
+  ACCOUNT_PENDING_VERIFICATION: "ACCOUNT_PENDING_VERIFICATION",
+} as const;
+
+export type AuthErrorCode =
+  (typeof AuthErrorCode)[keyof typeof AuthErrorCode];
+
+export function logAuthFailure(context: string, error: unknown): void {
+  console.error("SERVER_AUTH_FAILURE:", context, error);
+}
+
+export function authError(code: AuthErrorCode): {
+  status: "error";
+  code: AuthErrorCode;
+} {
+  return { status: "error", code };
+}

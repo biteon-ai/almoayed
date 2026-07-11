@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { loginWithWhatsApp } from "@/actions/login";
 import type { LoginState } from "@/types/auth";
+import { loginMessageForCode } from "@/lib/login-ui-messages";
 import { DEMO_STUDENT, DEMO_TEACHER } from "@/lib/constants";
 import { MobileShell, StickyBottomBar } from "@/components/layout/MobileShell";
 import { LoginLoadingOverlay } from "@/components/login/LoginLoadingOverlay";
@@ -300,7 +301,7 @@ export function LoginForm() {
                     role="alert"
                     className="rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-xs font-semibold text-destructive"
                   >
-                    {state.message}
+                    {loginMessageForCode(state.code)}
                   </div>
                 )}
               </div>
@@ -366,7 +367,7 @@ export function LoginForm() {
                     حسابك بانتظار التفعيل
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-amber-800/80">
-                    {state.message}
+                    {loginMessageForCode(state.code)}
                   </p>
                 </div>
               </div>
