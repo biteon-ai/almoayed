@@ -110,10 +110,22 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   /** Stays true after submit until error or page navigates away (server redirect). */
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+  const [redirectRole, setRedirectRole] = useState<"TEACHER" | "STUDENT" | null>(
+    null
+  );
 
   useEffect(() => {
+    if (state?.status === "success") {
+      setRedirectRole(state.role);
+      setShowLoadingOverlay(true);
+      const path =
+        state.role === "TEACHER" ? "/teacher/dashboard" : "/dashboard";
+      window.location.assign(path);
+      return;
+    }
     if (state?.status === "error") {
       setShowLoadingOverlay(false);
+      setRedirectRole(null);
     }
   }, [state]);
 
@@ -124,13 +136,23 @@ export function LoginForm() {
     requestAnimationFrame(() => formRef.current?.requestSubmit());
   };
 
-  const loadingMessage = isSubmitting
-    ? "جاري التحقق من حسابك…"
-    : "جاري فتح لوحتك…";
+  const loadingMessage =
+    redirectRole === "TEACHER"
+      ? "جاري فتح لوحة الأستاذ…"
+      : redirectRole === "STUDENT"
+        ? "جاري فتح لوحة الطالب…"
+        : isSubmitting
+          ? "جاري التحقق من حسابك…"
+          : "جاري فتح لوحتك…";
 
-  const loadingSubMessage = isSubmitting
-    ? "يتم التحقق عبر واتساب"
-    : "لحظة من فضلك…";
+  const loadingSubMessage =
+    redirectRole === "TEACHER"
+      ? "نحضّر إحصائياتك واختباراتك"
+      : redirectRole === "STUDENT"
+        ? "نحضّر اختباراتك ونتائجك"
+        : isSubmitting
+          ? "يتم التحقق عبر واتساب"
+          : "لحظة من فضلك…";
 
   return (
     <MobileShell className="min-h-dvh bg-gradient-to-b from-slate-50 via-background to-background dark:from-slate-950 dark:via-background">

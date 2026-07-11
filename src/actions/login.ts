@@ -2,7 +2,6 @@
 
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ErrorCode,
@@ -49,6 +48,20 @@ async function establishSession(
 
 export async function loginWithWhatsApp(
   _prev: LoginState | null,
+  formData: FormData
+): Promise<LoginState> {
+  try {
+    return await loginWithWhatsAppImpl(formData);
+  } catch (cause) {
+    logRequestError("LOGIN_UNEXPECTED", cause);
+    return {
+      status: "error",
+      message: uiMessage(ErrorCode.AUTH_PROFILE_FETCH_FAILED),
+    };
+  }
+}
+
+async function loginWithWhatsAppImpl(
   formData: FormData
 ): Promise<LoginState> {
   const rawNumber = formData.get("whatsapp_number");
@@ -205,5 +218,5 @@ export async function loginWithWhatsApp(
   }
 
   const role = await establishSession(profile, linkedTeacherId);
-  redirect(role === "TEACHER" ? "/teacher/dashboard" : "/dashboard");
+  return { status: "success", role };
 }
