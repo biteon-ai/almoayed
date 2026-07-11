@@ -42,6 +42,10 @@ export function QuizRunner({
   };
 
   const handleSubmit = () => {
+    if (questions.length === 0) {
+      setError("هذا الاختبار ما فيه أسئلة بعد. راجع الأستاذ.");
+      return;
+    }
     if (answeredCount < questions.length) {
       setError("يرجى الإجابة على جميع الأسئلة قبل تسليم الاختبار.");
       return;
@@ -119,30 +123,49 @@ export function QuizRunner({
 
       {/* Questions list */}
       <div className="space-y-5">
-        {questions.map((q, idx) => {
-          const resultAnswer = results?.answers.find(
-            (a) => a.questionId === q.id
-          );
-          return (
-            <QuestionCard
-              key={q.id}
-              question={q}
-              index={idx}
-              value={
-                isSubmitted
-                  ? resultAnswer?.studentAnswer
-                  : answers[q.id]
-              }
-              onChange={(v) => handleAnswer(q.id, v)}
-              disabled={isSubmitted}
-              showResult={isSubmitted}
-              correctAnswer={resultAnswer?.correctAnswer}
-              categoryTag={resultAnswer?.categoryTag}
-              explanationText={resultAnswer?.explanationText}
-              explanationMediaUrl={resultAnswer?.explanationMediaUrl}
-            />
-          );
-        })}
+        {questions.length === 0 ? (
+          <Card className="border-dashed border-border/80">
+            <CardContent className="space-y-3 p-6 text-center">
+              <AlertCircle className="mx-auto size-8 text-muted-foreground" />
+              <p className="text-sm font-semibold text-foreground">
+                هذا الاختبار فاضي — ما في أسئلة بعد
+              </p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                الأستاذ لسه ما أضاف أسئلة. ارجع للوحة التحكم وجرب لاحقاً.
+              </p>
+              <Link href="/dashboard">
+                <Button variant="outline" className="mt-2 h-11">
+                  العودة للوحة التحكم
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          questions.map((q, idx) => {
+            const resultAnswer = results?.answers.find(
+              (a) => a.questionId === q.id
+            );
+            return (
+              <QuestionCard
+                key={q.id}
+                question={q}
+                index={idx}
+                value={
+                  isSubmitted
+                    ? resultAnswer?.studentAnswer
+                    : answers[q.id]
+                }
+                onChange={(v) => handleAnswer(q.id, v)}
+                disabled={isSubmitted}
+                showResult={isSubmitted}
+                correctAnswer={resultAnswer?.correctAnswer}
+                categoryTag={resultAnswer?.categoryTag}
+                explanationText={resultAnswer?.explanationText}
+                explanationMediaUrl={resultAnswer?.explanationMediaUrl}
+              />
+            );
+          })
+        )}
       </div>
 
       {/* Post-submission Review and WhatsApp Share */}
@@ -205,7 +228,7 @@ export function QuizRunner({
       )}
 
       {/* Sticky Bottom Actions Bar (During Quiz) */}
-      {!isSubmitted && (
+      {!isSubmitted && questions.length > 0 && (
         <div className="fixed bottom-0 inset-x-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-t border-brand-100/50 dark:border-brand-950/40 p-4 z-30 shadow-lg safe-bottom animate-slide-up">
           <div className="mx-auto max-w-md space-y-3">
             {error && (

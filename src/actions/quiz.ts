@@ -200,10 +200,15 @@ export async function submitQuiz(
     .select(
       "id, correct_answer, explanation_text, explanation_media_url, category_tag, question_text, question_image_url"
     )
-    .eq("quiz_id", quizId);
+    .eq("quiz_id", quizId)
+    .order("sort_order", { ascending: true });
 
-  if (qError || !questions?.length) {
-    throw new Error("ما لقينا أسئلة لهاد الاختبار.");
+  if (qError) {
+    throw new Error("صار خطأ بجلب أسئلة الاختبار. جرّب مرة تانية.");
+  }
+
+  if (!questions?.length) {
+    throw new Error("هذا الاختبار ما فيه أسئلة بعد. راجع الأستاذ.");
   }
 
   const graded = questions.map((q) => {
@@ -316,9 +321,21 @@ export async function getAvailableQuizzes(): Promise<QuizListItem[]> {
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
-  if (!data) return [];
+  if (!data?.length) return [];
 
-  return (data as Quiz[]).map((quiz) => {
+  const quizIds = data.map((q) => q.id);
+  const { data: questionRows } = await supabase
+    .from("questions")
+    .select("quiz_id")
+    .in("quiz_id", quizIds);
+
+  const quizzesWithQuestions = new Set(
+    questionRows?.map((row) => row.quiz_id as string) ?? []
+  );
+
+  return (data as Quiz[])
+    .filter((quiz) => quizzesWithQuestions.has(quiz.id))
+    .map((quiz) => {
     const isGroupOk =
       quiz.quiz_type !== "session_group" ||
       !quiz.target_group_id ||
