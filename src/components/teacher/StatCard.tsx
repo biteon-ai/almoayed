@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { SpekitTarget } from "@/lib/spekit-targets";
 import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
@@ -7,6 +8,7 @@ interface StatCardProps {
   value: number | string;
   icon: LucideIcon;
   valueClassName?: string;
+  spekitId?: SpekitTarget;
 }
 
 export function StatCard({
@@ -14,9 +16,13 @@ export function StatCard({
   value,
   icon: Icon,
   valueClassName,
+  spekitId,
 }: StatCardProps) {
   return (
-    <Card className="overflow-hidden border-border/70 shadow-sm">
+    <Card
+      className="overflow-hidden border-border/70 shadow-sm"
+      {...(spekitId ? { "data-spekit": spekitId } : {})}
+    >
       <CardContent className="p-6">
         <div className="flex items-center justify-between gap-3 text-muted-foreground">
           <span className="text-sm font-medium leading-none">{label}</span>

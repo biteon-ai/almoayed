@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 export function QuizListItem({ quiz }: { quiz: Quiz }) {
   const [pending, startTransition] = useTransition();
@@ -18,14 +19,20 @@ export function QuizListItem({ quiz }: { quiz: Quiz }) {
   };
 
   return (
-    <Card className="overflow-hidden border-border/70 shadow-sm">
+    <Card
+      className="overflow-hidden border-border/70 shadow-sm"
+      {...spekit(SPEKIT.quizListItem)}
+    >
       <CardContent className="p-5">
         <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1 space-y-2.5 text-start">
             <h3 className="text-base font-semibold leading-snug text-foreground">
               {quiz.title}
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2"
+              {...spekit(SPEKIT.quizStatusBadges)}
+            >
               <StatusBadge tone={quiz.is_active ? "active" : "hidden"}>
                 {quiz.is_active ? "نشط" : "مخفي"}
               </StatusBadge>
@@ -40,7 +47,10 @@ export function QuizListItem({ quiz }: { quiz: Quiz }) {
             </div>
           </div>
 
-          <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0">
+          <div
+            className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0"
+            {...spekit(SPEKIT.quizToggleActions)}
+          >
             <Button
               type="button"
               size="sm"
@@ -82,6 +92,7 @@ export function QuizListItem({ quiz }: { quiz: Quiz }) {
                 buttonVariants({ variant: "link", size: "sm" }),
                 "inline-flex h-9 items-center gap-1 px-2 font-semibold text-brand-700"
               )}
+              {...spekit(SPEKIT.quizEditLink)}
             >
               تحرير
               <ChevronLeft className="size-4 shrink-0" aria-hidden />

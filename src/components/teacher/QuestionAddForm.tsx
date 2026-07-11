@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 const fieldClass =
   "h-11 min-h-[44px] bg-muted/40 px-4 text-start text-sm shadow-none";
@@ -21,7 +22,7 @@ interface QuestionAddFormProps {
 
 export function QuestionAddForm({ action }: QuestionAddFormProps) {
   return (
-    <form action={action} className="space-y-6">
+    <form action={action} className="space-y-6" {...spekit(SPEKIT.manualQuestionForm)}>
       <div className="space-y-2">
         <Label
           htmlFor="question_text"

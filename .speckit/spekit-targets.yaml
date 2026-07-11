@@ -1,0 +1,132 @@
+# Spekit DOM targeting registry — Al-Moayed (المؤيد)
+# Selector: [data-spekit="<id>"]
+# Source of truth: src/lib/spekit-targets.ts
+
+meta:
+  app: Al-Moayed
+  language: ar
+  direction: rtl
+  total_targets: 58
+
+# ── Core Spots (priority — wire these first in Spekit) ───────────
+core_spots:
+  - feature: AUTH-001/002
+    selector: '[data-spekit="login-form"]'
+    file: src/app/login/login-form.tsx
+
+  - feature: MT-002
+    selector: '[data-spekit="teacher-switcher"]'
+    file: src/components/dashboard/TeacherSwitcher.tsx
+
+  - feature: QUIZ-001
+    selector: '[data-spekit="quiz-gatekeeper"]'
+    file: src/components/quiz/QuizRunner.tsx
+
+  - feature: QUIZ-002
+    selector: '[data-spekit="weak-points-card"]'
+    file: src/components/dashboard/WeakPointsCard.tsx
+
+  - feature: TIER-001
+    selector: '[data-spekit="pro-upgrade-card"]'
+    file: src/components/dashboard/ProUpgradeCard.tsx
+
+  - feature: TIER-002
+    selector: '[data-spekit="pro-approval-panel"]'
+    file: src/components/teacher/StudentManagement.tsx
+
+  - feature: TEACH-004
+    selector: '[data-spekit="bulk-import-zone"]'
+    file: src/components/teacher/FileUploadZone.tsx
+
+# ── AUTH ────────────────────────────────────────────────────────
+AUTH-001:
+  login-brand-header: "Login page — logo and slogan"
+  login-form: "Login form wrapper"
+  login-whatsapp-field: "WhatsApp number input"
+  login-name-field: "Student name field (optional)"
+  login-submit: "Primary login button"
+  login-demo-student: "Demo student login button"
+  login-demo-teacher: "Demo teacher login button"
+  login-verification-panel: "Pending verification WhatsApp panel"
+
+AUTH-002:
+  login-teacher-code: "Teacher code field for new students"
+  teacher-code-card: "Teacher dashboard — shareable code card"
+
+# ── Multi-tenant ────────────────────────────────────────────────
+MT-002:
+  teacher-switcher: "Student dashboard — switch active teacher"
+
+# ── Student dashboard ───────────────────────────────────────────
+UI-001:
+  student-dashboard: "Student dashboard page root"
+  student-welcome: "Welcome greeting section"
+  student-quiz-list: "Available quizzes section"
+  student-quiz-item: "Single accessible quiz card link"
+  student-quiz-empty: "Empty state when no quizzes"
+  student-logout: "Logout button"
+
+# ── Quiz experience ─────────────────────────────────────────────
+QUIZ-001:
+  quiz-page: "Quiz runner page root"
+  quiz-gatekeeper: "Locked/unlocked answers banner"
+  quiz-progress: "Answer progress bar"
+  quiz-empty-state: "No questions in quiz message"
+  quiz-question-list: "Questions container"
+  question-card: "Individual MCQ question card"
+  quiz-submit-button: "Submit quiz button"
+  quiz-results-share: "WhatsApp share results card"
+  quiz-results-review: "Post-submit review guidance"
+
+QUIZ-002:
+  weak-points-card: "Category performance rings"
+  weak-points-recommendations: "Smart recommendations block"
+
+# ── Tier gating ─────────────────────────────────────────────────
+TIER-001:
+  pro-upgrade-card: "Locked Pro quiz card"
+  pro-upgrade-request-button: "Request Pro upgrade CTA"
+
+TIER-002:
+  pro-approval-panel: "Student row with pending Pro badge"
+  pro-approve-button: "Accept Pro upgrade button"
+
+# ── Teacher ─────────────────────────────────────────────────────
+TEACH-000:
+  teacher-layout-nav: "Desktop teacher navigation"
+  teacher-layout-nav-mobile: "Mobile teacher navigation"
+  teacher-dashboard: "Teacher dashboard page root"
+  teacher-stats-grid: "Stats cards row"
+  teacher-stat-students: "Student count stat"
+  teacher-stat-quizzes: "Quiz count stat"
+  teacher-stat-pro-requests: "Pending Pro requests stat"
+  teacher-quick-actions: "Manage students / quizzes links"
+
+TEACH-001:
+  teacher-students-page: "Student management page root"
+  student-filters: "Tier and status filter buttons"
+  student-card: "Individual student row card"
+  student-activate-button: "Activate student button"
+  student-deactivate-button: "Deactivate student button"
+  student-manual-pro-upgrade: "Manual Pro upgrade button"
+
+TEACH-002:
+  create-group-form: "Create study group card"
+  student-group-select: "Assign student to group dropdown"
+
+TEACH-003:
+  teacher-quizzes-page: "Quiz management page root"
+  teacher-quiz-new-button: "Create new quiz button"
+  quiz-list-item: "Single quiz row card"
+  quiz-status-badges: "Quiz status badges (نشط/Pro/عادي)"
+  quiz-toggle-actions: "Quiz flag toggle buttons"
+  quiz-edit-link: "Edit quiz link"
+  teacher-quiz-create-form: "New quiz creation form"
+  teacher-quiz-create-flags: "Active / free checkboxes on create form"
+
+TEACH-004:
+  teacher-quiz-edit-page: "Edit quiz page root"
+  bulk-import-zone: "Drag-and-drop file upload"
+  bulk-import-submit: "Import file submit button"
+  manual-question-form: "Manual question entry form"
+  teacher-questions-list: "Existing questions list"

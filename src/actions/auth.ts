@@ -17,11 +17,9 @@ import {
   normalizeWhatsAppNumber,
 } from "@/lib/constants";
 import type { Profile } from "@/types/database";
+import type { LoginState } from "@/types/auth";
 
-export type LoginState =
-  | { status: "success"; role: "TEACHER" | "STUDENT" }
-  | { status: "needs_verification"; verificationUrl: string; message: string }
-  | { status: "error"; message: string };
+export type { LoginState };
 
 async function establishSession(
   profile: Profile,

@@ -1,0 +1,305 @@
+# Al-Moayed (المؤيد) — Feature Specification Registry
+# Source of truth for implemented capabilities. Update when behavior changes.
+
+product:
+  name: المؤيد
+  name_en: Al-Moayed
+  slogan: حل بيدك ما حدا بفيدك
+  locale: ar-SY
+  direction: rtl
+  stack: Next.js 14 · Supabase · iron-session · Tailwind · Shadcn
+
+status_legend:
+  implemented: Shipped and in production codebase
+  partial: Backend or actions exist; UI incomplete
+  pending: Not started
+
+# ─────────────────────────────────────────────────────────────────────────────
+features:
+  # ── Authentication ──────────────────────────────────────────────────────────
+  - id: AUTH-001
+    name: WhatsApp Login
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    routes: [/login]
+    files:
+      - src/app/login/login-form.tsx
+      - src/actions/auth.ts
+      - src/lib/session.ts
+    acceptance:
+      - User logs in with WhatsApp number only (no password)
+      - Session cookie stores profileId, role, sessionToken, currentTeacherId
+      - Demo student and demo teacher one-click login work
+    spekit: [login-form, login-whatsapp-field, login-submit]
+
+  - id: AUTH-002
+    name: Teacher Code Registration
+    status: implemented
+    persona: [STUDENT]
+    routes: [/login]
+    files:
+      - src/app/login/login-form.tsx
+      - src/actions/auth.ts
+    acceptance:
+      - New students MUST provide valid teacher_code unless demo account
+      - Invalid code returns Arabic error message
+      - Creates student_teachers link with pending/active flow
+    spekit: [login-teacher-code, teacher-code-card]
+
+  - id: AUTH-003
+    name: Device Session Lock
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    files:
+      - src/actions/auth.ts
+      - src/lib/auth.ts
+      - supabase/migrations/003_teacher_dashboard.sql
+    acceptance:
+      - profiles.last_session_id updated on each login
+      - Mismatch redirects without breaking Server Components
+
+  - id: AUTH-004
+    name: Logout
+    status: implemented
+    routes: [/dashboard, /teacher/*]
+    files:
+      - src/actions/auth.ts
+    acceptance:
+      - Clears iron-session and redirects to /login
+
+  # ── Multi-tenant ────────────────────────────────────────────────────────────
+  - id: MT-001
+    name: Multi-Tenant Teacher Linking
+    status: implemented
+    persona: [STUDENT]
+    files:
+      - supabase/migrations/003_teacher_dashboard.sql
+      - src/actions/auth.ts
+      - src/actions/student.ts
+    acceptance:
+      - student_teachers many-to-many with status, tier, upgrade_requested
+      - Student data scoped to active teacher
+
+  - id: MT-002
+    name: Teacher Switcher
+    status: implemented
+    persona: [STUDENT]
+    routes: [/dashboard]
+    files:
+      - src/components/dashboard/TeacherSwitcher.tsx
+      - src/actions/student.ts
+    acceptance:
+      - Student with multiple teachers can switch currentTeacherId
+      - Dashboard quizzes refresh for selected teacher
+    spekit: [teacher-switcher]
+
+  # ── Quiz (student) ──────────────────────────────────────────────────────────
+  - id: QUIZ-001
+    name: Gatekeeper Quiz Flow
+    status: implemented
+    persona: [STUDENT]
+    routes: [/quiz/[id]]
+    files:
+      - src/actions/quiz.ts
+      - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuestionCard.tsx
+    acceptance:
+      - Questions load without correct_answer before submit
+      - Single submission per student per quiz (DB unique constraint)
+      - Explanations visible only after submitQuiz succeeds
+      - Empty quiz shows message; submit blocked (no 500)
+    spekit: [quiz-gatekeeper, quiz-submit-button, question-card]
+
+  - id: QUIZ-002
+    name: Weak Points Analysis
+    status: implemented
+    persona: [STUDENT]
+    routes: [/dashboard]
+    files:
+      - src/actions/quiz.ts
+      - src/components/dashboard/WeakPointsCard.tsx
+    acceptance:
+      - Aggregates student_answers by category_tag
+      - Shows success percentage per category + recommendations
+    spekit: [weak-points-card, weak-points-recommendations]
+
+  - id: QUIZ-003
+    name: WhatsApp Results Share
+    status: implemented
+    persona: [STUDENT]
+    routes: [/quiz/[id]]
+    files:
+      - src/components/quiz/WhatsAppShare.tsx
+    acceptance:
+      - Post-submit share link with score and quiz URL
+    spekit: [quiz-results-share]
+
+  # ── Tier gating ─────────────────────────────────────────────────────────────
+  - id: TIER-001
+    name: Free vs Pro Quiz Gating
+    status: implemented
+    persona: [STUDENT]
+    routes: [/dashboard, /quiz/[id]]
+    files:
+      - src/actions/quiz.ts
+      - src/components/dashboard/ProUpgradeCard.tsx
+    acceptance:
+      - is_free=false quizzes locked for free tier students
+      - Pro tier students access all active quizzes (group rules apply)
+    spekit: [pro-upgrade-card]
+
+  - id: TIER-002
+    name: Pro Upgrade Request Workflow
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    routes: [/dashboard, /teacher/students, /teacher/dashboard]
+    files:
+      - src/actions/student.ts
+      - src/actions/teacher.ts
+      - src/components/dashboard/ProUpgradeCard.tsx
+      - src/components/teacher/StudentManagement.tsx
+    acceptance:
+      - Student requests upgrade via requestProUpgrade
+      - Teacher sees pending count on dashboard stats
+      - Teacher approves via approveProUpgrade
+    spekit: [pro-upgrade-request-button, pro-approval-panel, pro-approve-button]
+
+  # ── Teacher admin ───────────────────────────────────────────────────────────
+  - id: TEACH-001
+    name: Student Management
+    status: implemented
+    persona: [TEACHER]
+    routes: [/teacher/students]
+    files:
+      - src/components/teacher/StudentManagement.tsx
+      - src/actions/teacher.ts
+    acceptance:
+      - Filter by tier (free/pro) and status (active/pending/deactivated)
+      - Activate, deactivate, manual Pro upgrade
+    spekit: [student-filters, student-card, student-activate-button, student-deactivate-button]
+
+  - id: TEACH-002
+    name: Study Groups
+    status: implemented
+    persona: [TEACHER]
+    routes: [/teacher/students]
+    files:
+      - src/components/teacher/StudentGroupSelect.tsx
+      - src/actions/teacher.ts
+    acceptance:
+      - Create teacher_groups
+      - Assign students via Shadcn Select
+    spekit: [create-group-form, student-group-select]
+
+  - id: TEACH-003
+    name: Quiz CRUD and Flags
+    status: implemented
+    persona: [TEACHER]
+    routes: [/teacher/quizzes, /teacher/quizzes/new, /teacher/quizzes/[id]]
+    files:
+      - src/app/teacher/quizzes/page.tsx
+      - src/components/teacher/QuizListItem.tsx
+      - src/components/teacher/QuizCreateForm.tsx
+      - src/actions/teacher.ts
+    acceptance:
+      - Create quiz with title, category, type, group, is_active, is_free
+      - Toggle active, free/pro, regular/group on list
+      - Edit quiz and manage questions
+    spekit: [quiz-list-item, quiz-status-badges, quiz-toggle-actions, teacher-quiz-create-form]
+
+  - id: TEACH-004
+    name: Bulk Question Import
+    status: implemented
+    persona: [TEACHER]
+    routes: [/teacher/quizzes/[id]]
+    files:
+      - src/components/teacher/FileUploadZone.tsx
+      - src/components/teacher/QuestionAddForm.tsx
+      - src/lib/import-questions.ts
+      - src/actions/teacher.ts
+    acceptance:
+      - Import CSV, XLSX, TXT with required columns
+      - Manual MCQ entry with 2x2 grid (أ–د)
+    spekit: [bulk-import-zone, manual-question-form]
+
+  - id: TEACH-005
+    name: Teacher Dashboard Stats
+    status: implemented
+    persona: [TEACHER]
+    routes: [/teacher/dashboard]
+    files:
+      - src/app/teacher/dashboard/page.tsx
+      - src/components/teacher/StatCard.tsx
+    acceptance:
+      - Shows student count, quiz count, pending Pro requests
+      - Displays shareable teacher_code card
+    spekit: [teacher-stats-grid, teacher-code-card]
+
+  # ── UI / PWA ────────────────────────────────────────────────────────────────
+  - id: UI-001
+    name: RTL Mobile PWA Shell
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    files:
+      - src/app/layout.tsx
+      - src/components/layout/MobileShell.tsx
+      - public/manifest.json
+      - public/sw.js
+    acceptance:
+      - RTL html lang=ar, safe-area insets, touch-friendly inputs
+      - manifest + mobile-web-app-capable meta
+
+  - id: UI-002
+    name: Unified Status Badges
+    status: implemented
+    files:
+      - src/components/ui/status-badge.tsx
+      - src/components/teacher/QuizListItem.tsx
+    acceptance:
+      - Consistent emerald/amber/slate badge tones across quiz and student views
+
+  # ── Enablement ──────────────────────────────────────────────────────────────
+  - id: ENABLE-001
+    name: Spekit DOM Target Hooks
+    status: implemented
+    files:
+      - src/lib/spekit-targets.ts
+      - .speckit/spekit-targets.yaml
+    acceptance:
+      - 58 data-spekit hooks across login, student, quiz, teacher flows
+      - Registry documents selector → feature mapping
+
+# ─────────────────────────────────────────────────────────────────────────────
+partial_features:
+  - id: TEACH-006
+    name: Categories and Topics Taxonomy UI
+    status: partial
+    notes: DB + server actions exist; minimal UI on quiz create (category select only)
+
+  - id: TEACH-007
+    name: Delete Question UI
+    status: partial
+    notes: deleteQuestion action exists; no button in edit page UI
+
+  - id: TEACH-008
+    name: Teacher Profile Editor
+    status: partial
+    notes: school_name, bank_details in DB; no settings page
+
+  - id: UI-003
+    name: PWA Icons
+    status: partial
+    notes: manifest.json icons array empty
+
+# ─────────────────────────────────────────────────────────────────────────────
+demo_accounts:
+  teacher:
+    whatsapp: "963912345678"
+    teacher_code: AlMoayed-DEMO
+  student:
+    whatsapp: "963987654321"
+
+routes:
+  public: [/login]
+  student: [/dashboard, /quiz/[id]]
+  teacher: [/teacher/dashboard, /teacher/students, /teacher/quizzes, /teacher/quizzes/new, /teacher/quizzes/[id]]

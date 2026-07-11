@@ -17,6 +17,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPEKIT } from "@/lib/spekit-targets";
 import { notFound } from "next/navigation";
 
 export const metadata = { title: "تحرير الاختبار | المؤيد" };
@@ -44,7 +45,10 @@ export default async function EditQuizPage({ params }: PageProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-8">
+    <div
+      className="mx-auto w-full max-w-3xl space-y-8"
+      data-spekit={SPEKIT.teacherQuizEditPage}
+    >
       <div className="flex items-center gap-3 text-start">
         <Link
           href="/teacher/quizzes"
@@ -65,7 +69,12 @@ export default async function EditQuizPage({ params }: PageProps) {
         <CardContent className="p-6 pt-0">
           <form action={handleImport} className="space-y-4">
             <FileUploadZone />
-            <Button type="submit" variant="outline" className="h-11 gap-2 px-5">
+            <Button
+              type="submit"
+              variant="outline"
+              className="h-11 gap-2 px-5"
+              data-spekit={SPEKIT.bulkImportSubmit}
+            >
               <Upload className="size-4" />
               استيراد
             </Button>
@@ -84,7 +93,7 @@ export default async function EditQuizPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
-      <div className="space-y-3">
+      <div className="space-y-3" data-spekit={SPEKIT.teacherQuestionsList}>
         <h2 className="text-start text-base font-semibold">
           الأسئلة ({questions.length})
         </h2>

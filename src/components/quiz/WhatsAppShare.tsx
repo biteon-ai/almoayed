@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/brand/Logo";
 import { MessageCircle, Share2, Trophy } from "lucide-react";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface WhatsAppShareProps {
   score: number;
@@ -26,7 +27,10 @@ export function WhatsAppShare({
   const shareUrl = buildResultShareUrl(score, quizUrl);
 
   return (
-    <Card className="overflow-hidden border-brand-200 bg-gradient-to-br from-brand-50 via-white to-amber-50 dark:from-brand-950/40 dark:via-card dark:to-amber-950/20">
+    <Card
+      className="overflow-hidden border-brand-200 bg-gradient-to-br from-brand-50 via-white to-amber-50 dark:from-brand-950/40 dark:via-card dark:to-amber-950/20"
+      {...spekit(SPEKIT.quizResultsShare)}
+    >
       <CardContent className="p-6 text-center">
         <Logo size="md" className="mx-auto mb-2" />
         <p className="mb-4 text-sm text-muted-foreground">{APP_SLOGAN}</p>

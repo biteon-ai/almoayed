@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BookOpen, LogOut, ChevronLeft } from "lucide-react";
+import { SPEKIT } from "@/lib/spekit-targets";
 
 export const metadata = {
   title: "لوحة الطالب | المؤيد",
@@ -46,14 +47,23 @@ export default async function DashboardPage() {
   const locked = quizzes.filter((q) => q.isLocked);
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg px-4 py-6">
+    <div
+      className="mx-auto min-h-dvh max-w-lg px-4 py-6"
+      data-spekit={SPEKIT.studentDashboard}
+    >
       <header className="mb-6 flex items-center justify-between">
         <div>
           <Logo size="sm" />
           <p className="mt-1 text-xs text-muted-foreground">{APP_SLOGAN}</p>
         </div>
         <form action={logout}>
-          <Button type="submit" variant="ghost" size="icon" aria-label="خروج">
+          <Button
+            type="submit"
+            variant="ghost"
+            size="icon"
+            aria-label="خروج"
+            data-spekit={SPEKIT.studentLogout}
+          >
             <LogOut className="size-5" />
           </Button>
         </form>
@@ -66,7 +76,7 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <section className="mb-8">
+      <section className="mb-8" data-spekit={SPEKIT.studentWelcome}>
         <h1 className="text-xl font-bold">
           أهلاً {session.fullName || "بالطالب"} 👋
         </h1>
@@ -75,14 +85,14 @@ export default async function DashboardPage() {
         </p>
       </section>
 
-      <section className="mb-8 space-y-3">
+      <section className="mb-8 space-y-3" data-spekit={SPEKIT.studentQuizList}>
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <BookOpen className="size-5 text-brand-600" />
           الاختبارات المتاحة
         </h2>
 
         {accessible.length === 0 && locked.length === 0 ? (
-          <Card>
+          <Card data-spekit={SPEKIT.studentQuizEmpty}>
             <CardContent className="p-6 text-center text-sm text-muted-foreground">
               ما في اختبارات حالياً — راجع الأستاذ قريباً.
             </CardContent>
@@ -91,7 +101,10 @@ export default async function DashboardPage() {
           <>
             {accessible.map((quiz) => (
               <Link key={quiz.id} href={`/quiz/${quiz.id}`}>
-                <Card className="transition-colors hover:border-brand-300 hover:bg-brand-50/50">
+                <Card
+                  className="transition-colors hover:border-brand-300 hover:bg-brand-50/50"
+                  data-spekit={SPEKIT.studentQuizItem}
+                >
                   <CardHeader className="flex-row items-center justify-between space-y-0 p-4">
                     <div>
                       <CardTitle className="text-base">{quiz.title}</CardTitle>

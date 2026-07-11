@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Target, Sparkles, Trophy, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface WeakPointsCardProps {
   categories: CategoryPerformance[];
@@ -20,7 +21,10 @@ const STRONG_THRESHOLD = 80;
 export function WeakPointsCard({ categories }: WeakPointsCardProps) {
   if (categories.length === 0) {
     return (
-      <Card className="border border-dashed border-brand-200 dark:border-brand-900 bg-brand-50/10 dark:bg-brand-950/5 text-center p-6 rounded-2xl animate-fade-in">
+      <Card
+        className="border border-dashed border-brand-200 dark:border-brand-900 bg-brand-50/10 dark:bg-brand-950/5 text-center p-6 rounded-2xl animate-fade-in"
+        {...spekit(SPEKIT.weakPointsCard)}
+      >
         <CardHeader className="pb-2">
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-950/50 mb-3 border border-brand-100 dark:border-brand-900/30">
             <Target className="size-6 text-brand-600 dark:text-brand-400 animate-pulse" />
@@ -49,8 +53,10 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
 
   return (
     <div className="space-y-5 animate-slide-up">
-      {/* Skill Summary Visualization Card */}
-      <Card className="border-brand-100/60 dark:border-brand-900/30 bg-white dark:bg-card/90 shadow-md rounded-2xl overflow-hidden">
+      <Card
+        className="border-brand-100/60 dark:border-brand-900/30 bg-white dark:bg-card/90 shadow-md rounded-2xl overflow-hidden"
+        {...spekit(SPEKIT.weakPointsCard)}
+      >
         <CardHeader className="pb-3 border-b border-brand-50/50 dark:border-brand-950/30 px-5 py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="space-y-0.5">
@@ -149,26 +155,28 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
       </Card>
 
       {/* Smart Recommendations Section */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-extrabold text-foreground flex items-center gap-1.5 px-1">
-          <Sparkles className="size-4 text-amber-500 fill-amber-500/10" />
+      <div className="space-y-3" {...spekit(SPEKIT.weakPointsRecommendations)}>
+        <h3 className="flex items-center gap-1.5 px-1 text-sm font-extrabold text-foreground">
+          <Sparkles className="size-4 fill-amber-500/10 text-amber-500" />
           <span>توصيات ذكية مخصصة إلك</span>
         </h3>
 
-        {/* Dynamic Alerts based on scores */}
         <div className="space-y-2.5">
           {/* 1. Weak category warnings */}
           {weakCategories.map((cat) => (
             <Card
               key={cat.category_tag}
-              className="border-destructive/20 bg-destructive/5 rounded-xl transition-all duration-300"
+              className="rounded-xl border-destructive/20 bg-destructive/5 transition-all duration-300"
             >
               <CardContent className="flex items-start gap-3 p-4">
                 <AlertCircle className="mt-0.5 size-5 shrink-0 text-destructive" />
                 <div className="text-start">
-                  <h4 className="text-xs font-black text-destructive">تنبيه مراجعة هامة: قسم {cat.category_tag}</h4>
-                  <p className="mt-1 text-xs leading-relaxed text-destructive/80 font-medium">
-                    مستواك فيه {cat.success_percentage}%. شوية مراجعة للحلول والشروحات رح تعوض النقص وتثبت معلوماتك. ركز وحل بإيدك!
+                  <h4 className="text-xs font-black text-destructive">
+                    تنبيه مراجعة هامة: قسم {cat.category_tag}
+                  </h4>
+                  <p className="mt-1 text-xs font-medium leading-relaxed text-destructive/80">
+                    مستواك فيه {cat.success_percentage}%. شوية مراجعة للحلول
+                    والشروحات رح تعوض النقص وتثبت معلوماتك. ركز وحل بإيدك!
                   </p>
                 </div>
               </CardContent>
@@ -179,20 +187,31 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
           {sortedCategories.length > 0 && (
             <Card
               className={cn(
-                "border bg-gradient-to-l rounded-xl overflow-hidden",
-                sortedCategories[sortedCategories.length - 1].success_percentage >= STRONG_THRESHOLD
+                "overflow-hidden rounded-xl border bg-gradient-to-l",
+                sortedCategories[sortedCategories.length - 1].success_percentage >=
+                  STRONG_THRESHOLD
                   ? "border-green-200/60 from-green-50/20 to-transparent dark:border-green-950/45"
                   : "border-brand-100/60 from-brand-50/10 to-transparent dark:border-brand-900/30"
               )}
             >
               <CardContent className="flex items-start gap-3 p-4 text-start">
-                {sortedCategories[sortedCategories.length - 1].success_percentage >= STRONG_THRESHOLD ? (
+                {sortedCategories[sortedCategories.length - 1].success_percentage >=
+                STRONG_THRESHOLD ? (
                   <>
-                    <Trophy className="mt-0.5 size-5 shrink-0 text-green-600 dark:text-green-500 animate-bounce" />
+                    <Trophy className="mt-0.5 size-5 shrink-0 animate-bounce text-green-600 dark:text-green-500" />
                     <div>
-                      <h4 className="text-xs font-black text-green-700 dark:text-green-400">نجم اللوحة اليوم 🌟</h4>
-                      <p className="mt-1 text-xs leading-relaxed text-green-700/80 dark:text-green-400/80 font-medium">
-                        أداؤك متميز ببحث **{sortedCategories[sortedCategories.length - 1].category_tag}** بنسبة تمكن {sortedCategories[sortedCategories.length - 1].success_percentage}%. استمر بنشر شغفك وسرّع من وتيرتك!
+                      <h4 className="text-xs font-black text-green-700 dark:text-green-400">
+                        نجم اللوحة اليوم 🌟
+                      </h4>
+                      <p className="mt-1 text-xs font-medium leading-relaxed text-green-700/80 dark:text-green-400/80">
+                        أداؤك متميز ببحث **
+                        {sortedCategories[sortedCategories.length - 1].category_tag}**
+                        بنسبة تمكن{" "}
+                        {
+                          sortedCategories[sortedCategories.length - 1]
+                            .success_percentage
+                        }
+                        %. استمر بنشر شغفك وسرّع من وتيرتك!
                       </p>
                     </div>
                   </>
@@ -200,9 +219,14 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
                   <>
                     <BookOpen className="mt-0.5 size-5 shrink-0 text-brand-600 dark:text-brand-400" />
                     <div>
-                      <h4 className="text-xs font-black text-brand-800 dark:text-brand-300">ملاحظة الأستاذ للتقدم</h4>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground font-medium">
-                        أفضل نقاط قوتك تكمن في قسم **{sortedCategories[sortedCategories.length - 1].category_tag}**. عم تبذل جهد طيب، تابع حلّ الاختبارات لترفع بقية الأبحاث للـ 600 علامة كاملة.
+                      <h4 className="text-xs font-black text-brand-800 dark:text-brand-300">
+                        ملاحظة الأستاذ للتقدم
+                      </h4>
+                      <p className="mt-1 text-xs font-medium leading-relaxed text-muted-foreground">
+                        أفضل نقاط قوتك تكمن في قسم **
+                        {sortedCategories[sortedCategories.length - 1].category_tag}
+                        **. عم تبذل جهد طيب، تابع حلّ الاختبارات لترفع بقية
+                        الأبحاث للـ 600 علامة كاملة.
                       </p>
                     </div>
                   </>

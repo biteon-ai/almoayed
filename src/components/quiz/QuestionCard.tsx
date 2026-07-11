@@ -10,6 +10,7 @@ import type { ExamQuestion } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { MathText } from "@/components/ui/MathText";
 import { Check, X, HelpCircle } from "lucide-react";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface QuestionCardProps {
   question: ExamQuestion;
@@ -47,10 +48,13 @@ export function QuestionCard({
   }, [showResult, isQuestionWrong]);
 
   return (
-    <Card className={cn(
-      "overflow-hidden border bg-white shadow-md transition-all duration-300 animate-slide-up",
-      "border-brand-100/60 dark:border-brand-900/30 dark:bg-card/90"
-    )}>
+    <Card
+      className={cn(
+        "overflow-hidden border bg-white shadow-md transition-all duration-300 animate-slide-up",
+        "border-brand-100/60 dark:border-brand-900/30 dark:bg-card/90"
+      )}
+      {...spekit(SPEKIT.questionCard)}
+    >
       {/* Question Card Header */}
       <CardHeader className="flex-row items-center justify-between gap-3 space-y-0 pb-3 bg-gradient-to-l from-brand-50/20 to-transparent px-5 py-4 border-b border-brand-50/20 dark:border-brand-950/20">
         <Badge variant="secondary" className="bg-brand-50 text-brand-800 border border-brand-100 font-bold px-3 py-1 text-xs dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-900/30">

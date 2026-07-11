@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { loginWithWhatsApp, type LoginState } from "@/actions/auth";
+import { loginWithWhatsApp } from "@/actions/auth";
+import type { LoginState } from "@/types/auth";
 import { DEMO_STUDENT, DEMO_TEACHER } from "@/lib/constants";
 import { MobileShell, StickyBottomBar } from "@/components/layout/MobileShell";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 const initialState: LoginState | null = null;
 
@@ -34,6 +36,7 @@ function PrimarySubmitButton() {
       size="touch"
       className="w-full shadow-brand-900/20"
       disabled={pending}
+      data-spekit={SPEKIT.loginSubmit}
     >
       {pending ? (
         <>
@@ -110,6 +113,7 @@ export function LoginForm() {
         ref={formRef}
         action={formAction}
         className="relative flex min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col"
+        {...spekit(SPEKIT.loginForm)}
       >
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto overscroll-y-contain pb-36">
@@ -132,7 +136,7 @@ export function LoginForm() {
             <div className="space-y-5 p-5">
               <div className="space-y-5">
                 {/* WhatsApp */}
-                <div className="space-y-2">
+                <div className="space-y-2" {...spekit(SPEKIT.loginWhatsappField)}>
                   <Label
                     htmlFor="whatsapp_number"
                     className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300"
@@ -179,7 +183,7 @@ export function LoginForm() {
                 </div>
 
                 {/* Teacher code */}
-                <div className="space-y-2">
+                <div className="space-y-2" {...spekit(SPEKIT.loginTeacherCode)}>
                   <Label
                     htmlFor="teacher_code"
                     className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300"
@@ -202,7 +206,7 @@ export function LoginForm() {
                 </div>
 
                 {/* Name */}
-                <div className="space-y-2">
+                <div className="space-y-2" {...spekit(SPEKIT.loginNameField)}>
                   <Label
                     htmlFor="full_name"
                     className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300"
@@ -236,7 +240,10 @@ export function LoginForm() {
                   أو جرّب الحسابات التجريبية
                 </p>
 
-                <div className="space-y-2.5 rounded-xl border border-dashed border-brand-200/70 bg-brand-50/30 p-3.5 dark:border-brand-900/40 dark:bg-brand-950/10">
+                <div
+                  className="space-y-2.5 rounded-xl border border-dashed border-brand-200/70 bg-brand-50/30 p-3.5 dark:border-brand-900/40 dark:bg-brand-950/10"
+                  {...spekit(SPEKIT.loginDemoStudent)}
+                >
                   <p className="flex items-center gap-1.5 text-xs font-bold text-brand-800 dark:text-brand-300">
                     <GraduationCap className="size-3.5" />
                     طالب زائر؟ تصفح الحساب التجريبي
@@ -253,7 +260,10 @@ export function LoginForm() {
                   />
                 </div>
 
-                <div className="space-y-2.5 rounded-xl border border-dashed border-amber-200/70 bg-amber-50/25 p-3.5 dark:border-amber-900/40 dark:bg-amber-950/10">
+                <div
+                  className="space-y-2.5 rounded-xl border border-dashed border-amber-200/70 bg-amber-50/25 p-3.5 dark:border-amber-900/40 dark:bg-amber-950/10"
+                  {...spekit(SPEKIT.loginDemoTeacher)}
+                >
                   <p className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-300">
                     <School className="size-3.5" />
                     مدرس؟ تصفح الحساب التجريبي
@@ -274,7 +284,10 @@ export function LoginForm() {
           </div>
 
           {state?.status === "needs_verification" && (
-            <div className="mt-4 space-y-3 rounded-xl border border-amber-200/80 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-950/15">
+            <div
+              className="mt-4 space-y-3 rounded-xl border border-amber-200/80 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-950/15"
+              {...spekit(SPEKIT.loginVerificationPanel)}
+            >
               <div className="flex gap-2.5 text-start">
                 <ShieldCheck className="mt-0.5 size-5 shrink-0 text-amber-600" />
                 <div>

@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UsersRound } from "lucide-react";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface StudentGroupSelectProps {
   studentId: string;
@@ -36,6 +37,7 @@ export function StudentGroupSelect({
       <SelectTrigger
         size="sm"
         className="h-9 w-full min-w-[10rem] max-w-xs bg-muted/40 px-3 text-start shadow-none"
+        {...spekit(SPEKIT.studentGroupSelect)}
       >
         <UsersRound className="size-3.5 shrink-0 text-muted-foreground" />
         <SelectValue placeholder="اختار مجموعة..." className="text-start" />

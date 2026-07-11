@@ -1,6 +1,9 @@
+"use client";
+
 import { Sparkles } from "lucide-react";
 import { APP_NAME, APP_SLOGAN } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface BrandHeaderProps {
   showSlogan?: boolean;
@@ -14,6 +17,7 @@ export function BrandHeader({ showSlogan = true, className }: BrandHeaderProps) 
         "flex flex-col items-center justify-center space-y-4 text-center",
         className
       )}
+      {...spekit(SPEKIT.loginBrandHeader)}
     >
       <div className="flex flex-row flex-wrap items-center justify-center gap-3">
         <span className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">

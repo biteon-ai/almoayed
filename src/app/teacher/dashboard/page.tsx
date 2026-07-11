@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { Users, BookOpen, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPEKIT } from "@/lib/spekit-targets";
 
 export const metadata = { title: "لوحة الأستاذ | المؤيد" };
 
@@ -17,7 +18,10 @@ export default async function TeacherDashboardPage() {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
+    <div
+      className="mx-auto w-full max-w-6xl space-y-6"
+      data-spekit={SPEKIT.teacherDashboard}
+    >
       <div className="text-start">
         <h1 className="text-2xl font-bold tracking-tight">
           أهلاً أستاذ {session.fullName} 👋
@@ -28,7 +32,10 @@ export default async function TeacherDashboardPage() {
       </div>
 
       {profile?.teacher_code && (
-        <Card className="border-brand-200/80 bg-brand-50/40 shadow-sm">
+        <Card
+          className="border-brand-200/80 bg-brand-50/40 shadow-sm"
+          data-spekit={SPEKIT.teacherCodeCard}
+        >
           <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6 text-start">
             <div className="space-y-1">
               <p className="text-xs font-medium text-muted-foreground">
@@ -48,26 +55,29 @@ export default async function TeacherDashboardPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" data-spekit={SPEKIT.teacherStatsGrid}>
         <StatCard
           label="الطلاب"
           value={stats.studentCount}
           icon={Users}
+          spekitId={SPEKIT.teacherStatStudents}
         />
         <StatCard
           label="الاختبارات"
           value={stats.quizCount}
           icon={BookOpen}
+          spekitId={SPEKIT.teacherStatQuizzes}
         />
         <StatCard
           label="طلبات Pro"
           value={stats.pendingUpgrades}
           icon={Crown}
           valueClassName="text-amber-600"
+          spekitId={SPEKIT.teacherStatProRequests}
         />
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3" data-spekit={SPEKIT.teacherQuickActions}>
         <Link
           href="/teacher/students"
           className={cn(

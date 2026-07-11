@@ -1,0 +1,39 @@
+---
+description: Al-Moayed Spec Kit — feature registry, RTL PWA rules, multi-tenant and gatekeeper constraints
+alwaysApply: true
+---
+
+# Al-Moayed (المؤيد) Spec Kit
+
+**Read first:** `.speckit/spec.yaml` · `.speckit/constitution.md`
+
+## Product
+
+Arabic RTL PWA for Syrian Baccalaureate math. Stack: Next.js 14 App Router, Supabase, iron-session, Tailwind, Shadcn/UI.
+
+## Implemented features (do not break)
+
+- **AUTH-001/002/003** — WhatsApp login, teacher code, session lock
+- **MT-001/002** — Multi-tenant `student_teachers`, teacher switcher
+- **QUIZ-001** — Gatekeeper: no answers/explanations until submit
+- **QUIZ-002/003** — Weak points + WhatsApp share
+- **TIER-001/002** — Pro gating + upgrade approval
+- **TEACH-001–005** — Students, groups, quizzes, bulk import, dashboard stats
+- **UI-001/002** — RTL mobile shell, StatusBadge
+- **ENABLE-001** — `data-spekit` hooks via `src/lib/spekit-targets.ts`
+
+## Code rules
+
+1. Scope queries to active `currentTeacherId` for teacher data.
+2. Quiz exam API: never return grading fields pre-submission.
+3. RTL + touch-friendly UI; no raw native selects/files in new UI.
+4. Server Actions only for DB writes; admin Supabase client.
+5. Minimal focused diffs; match existing patterns.
+
+## Spekit hooks
+
+Add new targets to `SPEKIT` constant + `.speckit/spekit-targets.yaml`. Use `{...spekit(SPEKIT.id)}` or `data-spekit={SPEKIT.id}`.
+
+## Verify
+
+`npm run build` after changes. Update `.speckit/spec.yaml` when behavior changes.

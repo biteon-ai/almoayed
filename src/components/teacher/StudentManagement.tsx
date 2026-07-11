@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Crown, UserCheck, UserX } from "lucide-react";
 import { StudentGroupSelect } from "@/components/teacher/StudentGroupSelect";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface StudentManagementProps {
   students: TeacherStudentRow[];
@@ -52,7 +53,7 @@ export function StudentManagement({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" {...spekit(SPEKIT.studentFilters)}>
         {(["all", "free", "pro"] as const).map((t) => (
           <Button
             key={t}
@@ -81,7 +82,10 @@ export function StudentManagement({
         ))}
       </div>
 
-      <Card className="overflow-hidden border-border/70 shadow-sm">
+      <Card
+        className="overflow-hidden border-border/70 shadow-sm"
+        {...spekit(SPEKIT.createGroupForm)}
+      >
         <CardHeader className="p-6 pb-4 text-start">
           <CardTitle className="text-base font-semibold">
             إنشاء مجموعة دراسية
@@ -117,6 +121,7 @@ export function StudentManagement({
           <Card
             key={student.linkId}
             className="overflow-hidden border-border/70 shadow-sm"
+            {...spekit(SPEKIT.studentCard)}
           >
             <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
               <div className="min-w-0 flex-1 space-y-3 text-start">
@@ -130,7 +135,12 @@ export function StudentManagement({
                   >
                     {student.whatsappNumber}
                   </p>
-                  <div className="flex flex-wrap gap-2 pt-0.5">
+                  <div
+                    className="flex flex-wrap gap-2 pt-0.5"
+                    {...(student.upgradeRequested
+                      ? spekit(SPEKIT.proApprovalPanel)
+                      : {})}
+                  >
                     <StatusBadge tone={student.tier === "pro" ? "pro" : "free"}>
                       {student.tier === "pro" ? "Pro" : "مجاني"}
                     </StatusBadge>
@@ -181,6 +191,7 @@ export function StudentManagement({
                     variant="outline"
                     className="h-9 px-3"
                     disabled={pending}
+                    {...spekit(SPEKIT.studentActivateButton)}
                     onClick={() =>
                       startTransition(async () => {
                         await updateStudentStatus(student.linkId, "active");
@@ -197,6 +208,7 @@ export function StudentManagement({
                     variant="outline"
                     className="h-9 px-3"
                     disabled={pending}
+                    {...spekit(SPEKIT.studentDeactivateButton)}
                     onClick={() =>
                       startTransition(async () => {
                         await updateStudentStatus(
@@ -217,6 +229,7 @@ export function StudentManagement({
                     size="sm"
                     className="h-9 bg-amber-600 px-3 hover:bg-amber-700"
                     disabled={pending}
+                    {...spekit(SPEKIT.proApproveButton)}
                     onClick={() =>
                       startTransition(async () => {
                         await approveProUpgrade(student.linkId);
@@ -236,6 +249,7 @@ export function StudentManagement({
                     variant="secondary"
                     className="h-9 px-3"
                     disabled={pending}
+                    {...spekit(SPEKIT.studentManualProUpgrade)}
                     onClick={() =>
                       startTransition(async () => {
                         await updateStudentTier(student.linkId, "pro");

@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Crown, Lock } from "lucide-react";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface ProUpgradeCardProps {
   quizTitle: string;
@@ -28,7 +29,10 @@ export function ProUpgradeCard({ quizTitle }: ProUpgradeCardProps) {
   };
 
   return (
-    <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+    <Card
+      className="border-amber-200 bg-gradient-to-br from-amber-50 to-white"
+      {...spekit(SPEKIT.proUpgradeCard)}
+    >
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <Lock className="size-5 text-amber-600" />
@@ -45,6 +49,7 @@ export function ProUpgradeCard({ quizTitle }: ProUpgradeCardProps) {
           className="w-full gap-2 bg-amber-600 hover:bg-amber-700"
           onClick={handleUpgrade}
           disabled={pending}
+          {...spekit(SPEKIT.proUpgradeRequestButton)}
         >
           <Crown className="size-4" />
           {pending ? "عم يُرسل الطلب..." : "طلب الترقية إلى الحساب المتقدم"}

@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 const fieldInputClass =
   "h-11 min-h-[44px] bg-muted/40 px-4 text-start text-sm shadow-none";
@@ -38,7 +39,7 @@ export function QuizCreateForm({
   const [isFree, setIsFree] = useState(true);
 
   return (
-    <form action={action} className="space-y-6">
+    <form action={action} className="space-y-6" {...spekit(SPEKIT.teacherQuizCreateForm)}>
       <div className="flex flex-col gap-2">
         <Label
           htmlFor="title"
@@ -132,7 +133,10 @@ export function QuizCreateForm({
         </Select>
       </div>
 
-      <div className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+      <div
+        className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4"
+        {...spekit(SPEKIT.teacherQuizCreateFlags)}
+      >
         <div className="flex items-center gap-2.5 py-1">
           <Checkbox
             id="is_active"

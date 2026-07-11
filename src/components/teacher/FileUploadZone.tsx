@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { FileSpreadsheet, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface FileUploadZoneProps {
   name?: string;
@@ -28,7 +29,7 @@ export function FileUploadZone({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" {...spekit(SPEKIT.bulkImportZone)}>
       <input
         ref={inputRef}
         type="file"

@@ -6,6 +6,7 @@ import {
 import { QuizRunner } from "@/components/quiz/QuizRunner";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { SPEKIT } from "@/lib/spekit-targets";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
@@ -47,7 +48,10 @@ export default async function QuizPage({ params }: QuizPageProps) {
     : null;
 
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-brand-50/30 to-background dark:from-brand-950/20">
+    <div
+      className="min-h-dvh bg-gradient-to-b from-brand-50/30 to-background dark:from-brand-950/20"
+      data-spekit={SPEKIT.quizPage}
+    >
       <nav className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-lg items-center px-4 py-3">
           <a

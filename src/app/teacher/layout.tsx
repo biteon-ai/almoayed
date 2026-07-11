@@ -12,6 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPEKIT } from "@/lib/spekit-targets";
 
 const navItems = [
   { href: "/teacher/dashboard", label: "الرئيسية", icon: LayoutDashboard },
@@ -37,7 +38,10 @@ export default async function TeacherLayout({
               <p className="text-[10px] text-muted-foreground">{APP_SLOGAN}</p>
             </div>
           </div>
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav
+            className="hidden items-center gap-1 md:flex"
+            data-spekit={SPEKIT.teacherLayoutNav}
+          >
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -55,7 +59,10 @@ export default async function TeacherLayout({
             </Button>
           </form>
         </div>
-        <nav className="flex gap-1 overflow-x-auto border-t px-4 py-2 md:hidden">
+        <nav
+          className="flex gap-1 overflow-x-auto border-t px-4 py-2 md:hidden"
+          data-spekit={SPEKIT.teacherLayoutNavMobile}
+        >
           {navItems.map((item) => (
             <Link
               key={item.href}

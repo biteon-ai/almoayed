@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Lock, Unlock, AlertCircle, CheckCircle2, ChevronRight, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface QuizRunnerProps {
   quiz: Quiz;
@@ -66,7 +67,7 @@ export function QuizRunner({
   const wrongAnswersCount = results ? results.totalQuestions - results.correctCount : 0;
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 px-4 py-5 pb-28 animate-fade-in">
+    <div className="mx-auto max-w-lg space-y-6 px-4 py-5 pb-28 animate-fade-in" {...spekit(SPEKIT.quizPage)}>
       {/* Navigation Top strip */}
       <div className="flex items-center justify-between">
         <Link
@@ -80,7 +81,10 @@ export function QuizRunner({
       </div>
 
       {/* Quiz Progress & Gatekeeper State Card */}
-      <Card className="border-brand-100/60 dark:border-brand-900/30 overflow-hidden bg-white/50 dark:bg-card/40 backdrop-blur-md">
+      <Card
+        className="border-brand-100/60 dark:border-brand-900/30 overflow-hidden bg-white/50 dark:bg-card/40 backdrop-blur-md"
+        {...spekit(SPEKIT.quizGatekeeper)}
+      >
         <CardContent className="p-4 space-y-3.5">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
@@ -110,7 +114,7 @@ export function QuizRunner({
 
           {/* Progress bar */}
           {!isSubmitted && (
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-1.5 pt-1" {...spekit(SPEKIT.quizProgress)}>
               <div className="flex justify-between text-[11px] font-bold text-muted-foreground">
                 <span>الأسئلة المحلولة: {answeredCount} من {questions.length}</span>
                 <span className="font-mono">{Math.round(progress)}%</span>
@@ -122,9 +126,9 @@ export function QuizRunner({
       </Card>
 
       {/* Questions list */}
-      <div className="space-y-5">
+      <div className="space-y-5" {...spekit(SPEKIT.quizQuestionList)}>
         {questions.length === 0 ? (
-          <Card className="border-dashed border-border/80">
+          <Card className="border-dashed border-border/80" {...spekit(SPEKIT.quizEmptyState)}>
             <CardContent className="space-y-3 p-6 text-center">
               <AlertCircle className="mx-auto size-8 text-muted-foreground" />
               <p className="text-sm font-semibold text-foreground">
@@ -170,7 +174,7 @@ export function QuizRunner({
 
       {/* Post-submission Review and WhatsApp Share */}
       {isSubmitted && (
-        <div className="space-y-6 pt-2 animate-slide-up">
+        <div className="space-y-6 pt-2 animate-slide-up" {...spekit(SPEKIT.quizResultsReview)}>
           {/* Main Grade Header Cards */}
           <WhatsAppShare
             score={results.score}
@@ -249,6 +253,7 @@ export function QuizRunner({
               )}
               onClick={handleSubmit}
               disabled={isPending}
+              {...spekit(SPEKIT.quizSubmitButton)}
             >
               {isPending ? "جاري تسليم الإجابات وحساب النتيجة..." : "تسليم الإجابات وإنهاء الاختبار 🏁"}
             </Button>

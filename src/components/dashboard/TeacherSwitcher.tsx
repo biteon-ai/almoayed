@@ -6,6 +6,7 @@ import { switchTeacher } from "@/actions/student";
 import type { StudentTeacherOption } from "@/types/database";
 import { GraduationCap, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface TeacherSwitcherProps {
   teachers: StudentTeacherOption[];
@@ -23,7 +24,10 @@ export function TeacherSwitcher({
     const t = teachers[0];
     if (!t) return null;
     return (
-      <div className="flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-2 text-xs">
+      <div
+        className="flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-2 text-xs"
+        {...spekit(SPEKIT.teacherSwitcher)}
+      >
         <GraduationCap className="size-4 text-brand-600" />
         <span className="font-medium">{t.teacherName}</span>
         {t.schoolName && (
@@ -34,7 +38,7 @@ export function TeacherSwitcher({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" {...spekit(SPEKIT.teacherSwitcher)}>
       <label className="mb-1 block text-xs text-muted-foreground">
         الأستاذ الحالي
       </label>
