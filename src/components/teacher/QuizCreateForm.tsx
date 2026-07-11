@@ -38,6 +38,21 @@ export function QuizCreateForm({
   const [isActive, setIsActive] = useState(true);
   const [isFree, setIsFree] = useState(true);
 
+  const categoryLabel =
+    categoryId === ""
+      ? "— بدون قسم —"
+      : (categories.find((category) => category.id === categoryId)?.name ??
+        "— بدون قسم —");
+
+  const quizTypeLabel =
+    quizType === "session_group" ? "مجموعة خاصة" : "عادي — لكل الطلاب";
+
+  const targetGroupLabel =
+    targetGroupId === ""
+      ? "— الكل —"
+      : (groups.find((group) => group.id === targetGroupId)?.group_name ??
+        "— الكل —");
+
   return (
     <form action={action} className="space-y-6" {...spekit(SPEKIT.teacherQuizCreateForm)}>
       <div className="flex flex-col gap-2">
@@ -69,7 +84,7 @@ export function QuizCreateForm({
           onValueChange={(value) => setCategoryId(value ?? "")}
         >
           <SelectTrigger id="category_id" className={fieldSelectTriggerClass}>
-            <SelectValue placeholder="— بدون قسم —" className="text-start" />
+            <SelectValue className="text-start">{categoryLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent align="start">
             <SelectItem value="">— بدون قسم —</SelectItem>
@@ -95,7 +110,7 @@ export function QuizCreateForm({
           onValueChange={(value) => setQuizType(value ?? "regular")}
         >
           <SelectTrigger id="quiz_type" className={fieldSelectTriggerClass}>
-            <SelectValue className="text-start" />
+            <SelectValue className="text-start">{quizTypeLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent align="start">
             <SelectItem value="regular">عادي — لكل الطلاب</SelectItem>
@@ -120,7 +135,7 @@ export function QuizCreateForm({
             id="target_group_id"
             className={fieldSelectTriggerClass}
           >
-            <SelectValue placeholder="— الكل —" className="text-start" />
+            <SelectValue className="text-start">{targetGroupLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent align="start">
             <SelectItem value="">— الكل —</SelectItem>
