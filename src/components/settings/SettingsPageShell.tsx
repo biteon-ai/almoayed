@@ -41,11 +41,10 @@ function NavButton({
       onClick={onClick}
       aria-current={isActive ? "true" : undefined}
       className={cn(
-        "shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200",
-        "border border-transparent",
+        "w-full shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-start text-sm font-semibold transition-all duration-200",
         isActive
           ? "border-brand-200/80 bg-brand-50 text-brand-800 shadow-sm ring-1 ring-brand-100/80"
-          : "text-slate-600 hover:border-slate-200 hover:bg-white hover:text-brand-700",
+          : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-brand-700",
         className
       )}
     >
@@ -128,45 +127,33 @@ export function SettingsPageShell({
         </div>
       </header>
 
-      {/* Mobile: horizontal scroll tabs */}
-      <nav
-        aria-label="أقسام الإعدادات"
-        className="mb-5 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
-      >
-        {navItems.map((item) => (
-          <NavButton
-            key={item.id}
-            item={item}
-            isActive={activeId === item.id}
-            onClick={() => scrollToSection(item.id)}
-          />
-        ))}
-      </nav>
-
-      {/* Desktop grid + mobile single column */}
       <div className="md:grid md:grid-cols-12 md:gap-8 lg:gap-10">
-        {/* Sidebar — desktop only */}
+        {/* Sidebar — hidden on mobile, visible from md up (Option B) */}
         <aside className="hidden md:col-span-4 md:block lg:col-span-3">
           <nav
             aria-label="أقسام الإعدادات"
-            className="sticky top-8 space-y-1.5 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm ring-1 ring-slate-900/[0.03]"
+            className={cn(
+              "sticky top-8 rounded-2xl border border-slate-200/80 bg-white p-3",
+              "shadow-md ring-1 ring-slate-900/[0.03]"
+            )}
           >
-            <p className="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <p className="border-b border-slate-100 px-3 pb-2.5 pt-1 text-xs font-bold uppercase tracking-wider text-slate-400">
               الأقسام
             </p>
-            {navItems.map((item) => (
-              <NavButton
-                key={item.id}
-                item={item}
-                isActive={activeId === item.id}
-                onClick={() => scrollToSection(item.id)}
-                className="w-full text-start"
-              />
-            ))}
+            <div className="space-y-1 pt-1">
+              {navItems.map((item) => (
+                <NavButton
+                  key={item.id}
+                  item={item}
+                  isActive={activeId === item.id}
+                  onClick={() => scrollToSection(item.id)}
+                />
+              ))}
+            </div>
           </nav>
         </aside>
 
-        {/* Main content */}
+        {/* Main content — full width on mobile, scrollable sections */}
         <main className="min-w-0 space-y-5 md:col-span-8 md:space-y-6 lg:col-span-9 lg:space-y-8">
           {children}
         </main>
