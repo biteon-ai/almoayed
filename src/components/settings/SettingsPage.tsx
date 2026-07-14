@@ -17,6 +17,7 @@ import { TeacherCodeSection } from "@/components/settings/TeacherCodeSection";
 interface SettingsPageProps {
   backHref: string;
   backLabel?: string;
+  hideBackLink?: boolean;
 }
 
 const STUDENT_NAV: SettingsNavItem[] = [
@@ -37,6 +38,7 @@ const TEACHER_NAV: SettingsNavItem[] = [
 export async function SettingsPage({
   backHref,
   backLabel = "رجوع",
+  hideBackLink = false,
 }: SettingsPageProps) {
   await requireAuthenticated();
   const profile = await getSettingsProfile();
@@ -47,6 +49,7 @@ export async function SettingsPage({
       backHref={backHref}
       backLabel={backLabel}
       navItems={navItems}
+      hideBackLink={hideBackLink}
     >
       <SettingsSection id="profile">
         <ProfileForm

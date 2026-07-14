@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { APP_NAME, APP_SLOGAN } from "@/lib/constants";
+import { APP_NAME, APP_SLOGAN, APP_THEME_COLOR } from "@/lib/constants";
 import "./globals.css";
 
 const tajawal = Tajawal({
@@ -18,6 +18,18 @@ export const metadata: Metadata = {
   },
   description: APP_SLOGAN,
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -38,7 +50,7 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0d6e6e" },
+    { media: "(prefers-color-scheme: light)", color: APP_THEME_COLOR },
     { media: "(prefers-color-scheme: dark)", color: "#042626" },
   ],
 };

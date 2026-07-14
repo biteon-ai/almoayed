@@ -85,6 +85,38 @@ export interface QuizListItem extends Quiz {
   isLocked: boolean;
 }
 
+/** [DASH-001] Quick stats for student dashboard header */
+export interface DashboardStats {
+  tier: StudentTier;
+  completedQuizCount: number;
+  overallAverageScore: number;
+}
+
+/** [DASH-001] Recent completed quiz row for My Scores tab */
+export interface RecentScoreRow {
+  quizId: string;
+  quizTitle: string;
+  score: number;
+  submittedAt: string;
+}
+
+/** [DASH-001] Quiz card in horizontal carousel */
+export interface QuizCarouselItem extends QuizListItem {
+  questionCount: number;
+  hasSubmission: boolean;
+  /** Latest submission timestamp when the student has activity on this quiz */
+  lastActivityAt: string | null;
+}
+
+/** [DASH-001] Bundled dashboard read model */
+export interface StudentDashboardData {
+  stats: DashboardStats;
+  recentScores: RecentScoreRow[];
+  quizzes: QuizCarouselItem[];
+  weakPoints: CategoryPerformance[];
+  teachers: StudentTeacherOption[];
+}
+
 export interface Question {
   id: string;
   quiz_id: string;

@@ -11,13 +11,21 @@ import { computeQuizListItem } from "@/lib/quiz-access";
 import {
   EXAM_QUESTION_SELECT_FIELDS,
 } from "@/lib/quiz-gatekeeper";
+import {
+  computeDashboardStats,
+  filterScoresByTeacherQuizIds,
+} from "@/lib/dashboard-stats";
 import { aggregateCategoryPerformance } from "@/lib/weak-points";
+import { getStudentTeachers } from "@/actions/student";
 import type {
   CategoryPerformance,
   ExamQuestion,
   Quiz,
+  QuizCarouselItem,
   QuizListItem,
   QuizSubmitResult,
+  RecentScoreRow,
+  StudentDashboardData,
 } from "@/types/database";
 
 async function getStudentContext(session: Awaited<ReturnType<typeof requireStudent>>) {
@@ -304,6 +312,120 @@ export async function getWeakPoints(): Promise<CategoryPerformance[]> {
   }));
 
   return aggregateCategoryPerformance(rows);
+}
+
+export async function getStudentDashboardData(): Promise<StudentDashboardData> {
+  const session = await requireStudent();
+  const ctx = await getStudentContext(session);
+
+  const [weakPoints, teachers] = await Promise.all([
+    getWeakPoints(),
+    getStudentTeachers(),
+  ]);
+
+  const emptyReturn = (): StudentDashboardData => ({
+    stats: {
+      tier: ctx.tier,
+      completedQuizCount: 0,
+      overallAverageScore: 0,
+    },
+    recentScores: [],
+    quizzes: [],
+    weakPoints,
+    teachers,
+  });
+
+  if (!ctx.teacherId) {
+    return emptyReturn();
+  }
+
+  const supabase = createAdminClient();
+
+  const { data: quizRows } = await supabase
+    .from("quizzes")
+    .select("*")
+    .eq("created_by", ctx.teacherId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (!quizRows?.length) {
+    return emptyReturn();
+  }
+
+  const quizIds = (quizRows as Quiz[]).map((q) => q.id);
+
+  const [{ data: questionRows }, { data: submissionRows }] = await Promise.all([
+    supabase.from("questions").select("quiz_id").in("quiz_id", quizIds),
+    supabase
+      .from("exam_submissions")
+      .select("score, submitted_at, quiz_id")
+      .eq("student_id", session.profileId)
+      .in("quiz_id", quizIds)
+      .order("submitted_at", { ascending: false }),
+  ]);
+
+  const questionCountByQuiz = new Map<string, number>();
+  for (const row of questionRows ?? []) {
+    const id = row.quiz_id as string;
+    questionCountByQuiz.set(id, (questionCountByQuiz.get(id) ?? 0) + 1);
+  }
+
+  const quizzesWithQuestions = new Set(questionCountByQuiz.keys());
+  const submissionByQuiz = new Map(
+    (submissionRows ?? []).map((row) => [row.quiz_id as string, row])
+  );
+
+  const quizzes: QuizCarouselItem[] = (quizRows as Quiz[])
+    .filter((quiz) => quizzesWithQuestions.has(quiz.id))
+    .map((quiz) => {
+      const listItem = computeQuizListItem(quiz, {
+        tier: ctx.tier,
+        groupIds: ctx.groupIds,
+      });
+      return {
+        ...listItem,
+        questionCount: questionCountByQuiz.get(quiz.id) ?? 0,
+        hasSubmission: submissionByQuiz.has(quiz.id),
+        lastActivityAt:
+          (submissionByQuiz.get(quiz.id)?.submitted_at as string | undefined) ??
+          null,
+      };
+    });
+
+  const teacherQuizIds = new Set(quizzes.map((q) => q.id));
+  const teacherScores = filterScoresByTeacherQuizIds(
+    (submissionRows ?? []).map((row) => ({
+      quiz_id: row.quiz_id as string,
+      score: row.score as number,
+    })),
+    teacherQuizIds
+  );
+  const { completedQuizCount, overallAverageScore } =
+    computeDashboardStats(teacherScores);
+
+  const quizTitleById = new Map(quizzes.map((q) => [q.id, q.title]));
+
+  const recentScores: RecentScoreRow[] = (submissionRows ?? [])
+    .filter((row) => teacherQuizIds.has(row.quiz_id as string))
+    .slice(0, 5)
+    .map((row) => ({
+      quizId: row.quiz_id as string,
+      quizTitle: quizTitleById.get(row.quiz_id as string) ?? "اختبار",
+      score: row.score as number,
+      submittedAt: row.submitted_at as string,
+    }));
+
+  return {
+    stats: {
+      tier: ctx.tier,
+      completedQuizCount,
+      overallAverageScore,
+    },
+    recentScores,
+    quizzes,
+    weakPoints,
+    teachers,
+  };
 }
 
 export async function getAvailableQuizzes(): Promise<QuizListItem[]> {

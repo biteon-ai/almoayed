@@ -43,7 +43,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
   if (accessError) {
     return (
       <div
-        className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center"
+        className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center"
         data-spekit={SPEKIT.quizPage}
       >
         <AlertCircle className="size-10 text-destructive" aria-hidden />
@@ -69,22 +69,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
     : null;
 
   return (
-    <div
-      className="min-h-dvh bg-gradient-to-b from-brand-50/30 to-background dark:from-brand-950/20"
-      data-spekit={SPEKIT.quizPage}
-    >
-      <nav className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-lg items-center px-4 py-3">
-          <a
-            href="/dashboard"
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-          >
-            <ArrowRight className="size-4" />
-            رجوع
-          </a>
-        </div>
-      </nav>
-
+    <div data-spekit={SPEKIT.quizPage}>
       <QuizRunner
         quiz={quiz}
         questions={questions}
