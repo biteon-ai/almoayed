@@ -4,5 +4,14 @@ alwaysApply: true
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+shell commands, and other important information, read the current plan:
+
+**Active plan**: `specs/001-profile-settings/plan.md`
+
+Related artifacts:
+- Spec: `specs/001-profile-settings/spec.md`
+- Research: `specs/001-profile-settings/research.md`
+- Data model: `specs/001-profile-settings/data-model.md`
+- Contracts: `specs/001-profile-settings/contracts/`
+- Quickstart: `specs/001-profile-settings/quickstart.md`
 <!-- SPECKIT END -->
