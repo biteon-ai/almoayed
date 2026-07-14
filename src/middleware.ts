@@ -9,6 +9,26 @@ const teacherPaths = ["/teacher"];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const isSettingsRoute =
+    pathname === "/settings" || pathname.startsWith("/settings/");
+
+  if (isSettingsRoute) {
+    const response = NextResponse.next();
+    const session = await getIronSession<SessionData>(
+      request,
+      response,
+      sessionOptions
+    );
+
+    if (!session.isLoggedIn) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("from", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    return response;
+  }
+
   const isStudentRoute = studentPaths.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
@@ -45,5 +65,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/quiz/:path*", "/teacher/:path*"],
+  matcher: ["/dashboard/:path*", "/quiz/:path*", "/teacher/:path*", "/settings"],
 };

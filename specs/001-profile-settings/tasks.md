@@ -10,6 +10,8 @@ description: "Task list for PROFILE-001 user profile & settings page"
 
 **Organization**: Tasks grouped by user story for independent verification.
 
+**Status**: ✅ Completed 2026-07-14
+
 ## Format: `[ID] [P?] [Story] Description`
 
 ---
@@ -18,9 +20,9 @@ description: "Task list for PROFILE-001 user profile & settings page"
 
 **Purpose**: Confirm design artifacts and environment before implementation
 
-- [ ] T001 Review acceptance criteria in `specs/001-profile-settings/spec.md` and contracts in `specs/001-profile-settings/contracts/`
-- [ ] T002 [P] Confirm dev server and demo logins work per `.speckit/spec.yaml` → `demo_accounts` (student + teacher)
-- [ ] T003 [P] Read implementation map and file layout in `specs/001-profile-settings/plan.md`
+- [x] T001 Review acceptance criteria in `specs/001-profile-settings/spec.md` and contracts in `specs/001-profile-settings/contracts/`
+- [x] T002 [P] Confirm dev server and demo logins work per `.speckit/spec.yaml` → `demo_accounts` (student + teacher)
+- [x] T003 [P] Read implementation map and file layout in `specs/001-profile-settings/plan.md`
 
 ---
 
@@ -30,12 +32,12 @@ description: "Task list for PROFILE-001 user profile & settings page"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Add `profileTierInfo`, `profileTeacherCode`, `profileSessionManagement` to `SPEKIT` in `src/lib/spekit-targets.ts`
-- [ ] T005 [P] Register the three profile Spekit targets with descriptions in `.speckit/spekit-targets.yaml`
-- [ ] T006 [P] Add `SettingsProfile` type (or export from actions) matching `specs/001-profile-settings/data-model.md` in `src/types/database.ts` or `src/actions/profile.ts`
-- [ ] T007 Implement `getSettingsProfile()` read action (profile + student link join by `currentTeacherId`) in `src/actions/profile.ts`
-- [ ] T008 Extend `src/middleware.ts` to protect `/settings` for any logged-in role (do not redirect teachers away from `/settings`)
-- [ ] T009 [P] Add Shadcn `AlertDialog` component if missing in `src/components/ui/alert-dialog.tsx` (needed for logout confirmation)
+- [x] T004 Add `profileTierInfo`, `profileTeacherCode`, `profileSessionManagement` to `SPEKIT` in `src/lib/spekit-targets.ts`
+- [x] T005 [P] Register the three profile Spekit targets with descriptions in `.speckit/spekit-targets.yaml`
+- [x] T006 [P] Add `SettingsProfile` type (or export from actions) matching `specs/001-profile-settings/data-model.md` in `src/types/database.ts` or `src/actions/profile.ts`
+- [x] T007 Implement `getSettingsProfile()` read action (profile + student link join by `currentTeacherId`) in `src/actions/profile.ts`
+- [x] T008 Extend `src/middleware.ts` to protect `/settings` for any logged-in role (do not redirect teachers away from `/settings`)
+- [x] T009 [P] Add Shadcn `AlertDialog` component if missing in `src/components/ui/alert-dialog.tsx` (needed for logout confirmation)
 
 **Checkpoint**: Foundation ready — profile data loads; routes protected; Spekit IDs registered
 
@@ -49,11 +51,11 @@ description: "Task list for PROFILE-001 user profile & settings page"
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Create client `ProfileForm` with editable name, disabled WhatsApp `Input`, and Save button in `src/components/settings/ProfileForm.tsx`
-- [ ] T011 [US1] Implement `updateProfileName(formData)` with trim validation, DB update, `session.fullName` sync, and `revalidatePath` in `src/actions/profile.ts`
-- [ ] T012 [US1] Create server `SettingsPage` shell (header, profile card, RTL mobile layout) in `src/components/settings/SettingsPage.tsx`
-- [ ] T013 [US1] Mount `SettingsPage` at `src/app/settings/page.tsx` with auth via `getSession()` + `validateDeviceSession()` or shared helper
-- [ ] T014 [US1] Mount shared `SettingsPage` at `src/app/teacher/settings/page.tsx` under teacher layout
+- [x] T010 [P] [US1] Create client `ProfileForm` with editable name, disabled WhatsApp `Input`, and Save button in `src/components/settings/ProfileForm.tsx`
+- [x] T011 [US1] Implement `updateProfileName(formData)` with trim validation, DB update, `session.fullName` sync, and `revalidatePath` in `src/actions/profile.ts`
+- [x] T012 [US1] Create server `SettingsPage` shell (header, profile card, RTL mobile layout) in `src/components/settings/SettingsPage.tsx`
+- [x] T013 [US1] Mount `SettingsPage` at `src/app/settings/page.tsx` with auth via `getSession()` + `validateDeviceSession()` or shared helper
+- [x] T014 [US1] Mount shared `SettingsPage` at `src/app/teacher/settings/page.tsx` under teacher layout
 
 **Checkpoint**: US1 complete — name edit works for both roles on both routes
 
@@ -67,10 +69,10 @@ description: "Task list for PROFILE-001 user profile & settings page"
 
 ### Implementation for User Story 2
 
-- [ ] T015 [P] [US2] Create `StudentProfileExtras` with tier `Badge` (`data-spekit="profile-tier-info"`), read-only teacher code, and `requestProUpgrade` button/pending state in `src/components/settings/StudentProfileExtras.tsx`
-- [ ] T016 [P] [US2] Create `TeacherCodeSection` with monospace code display, copy button, and clipboard fallback toast in `src/components/settings/TeacherCodeSection.tsx`
-- [ ] T017 [US2] Wire role-conditional sections in `src/components/settings/SettingsPage.tsx` using `session.role` and `SettingsProfile` data
-- [ ] T018 [US2] Apply `data-spekit={SPEKIT.profileTeacherCode}` on teacher code blocks (student read-only + teacher copy) in `src/components/settings/StudentProfileExtras.tsx` and `src/components/settings/TeacherCodeSection.tsx`
+- [x] T015 [P] [US2] Create `StudentProfileExtras` with tier `Badge` (`data-spekit="profile-tier-info"`), read-only teacher code, and `requestProUpgrade` button/pending state in `src/components/settings/StudentProfileExtras.tsx`
+- [x] T016 [P] [US2] Create `TeacherCodeSection` with monospace code display, copy button, and clipboard fallback toast in `src/components/settings/TeacherCodeSection.tsx`
+- [x] T017 [US2] Wire role-conditional sections in `src/components/settings/SettingsPage.tsx` using `session.role` and `SettingsProfile` data
+- [x] T018 [US2] Apply `data-spekit={SPEKIT.profileTeacherCode}` on teacher code blocks (student read-only + teacher copy) in `src/components/settings/StudentProfileExtras.tsx` and `src/components/settings/TeacherCodeSection.tsx`
 
 **Checkpoint**: US2 complete — dual-role adaptive UI with Spekit tier/teacher-code hooks
 
@@ -84,10 +86,10 @@ description: "Task list for PROFILE-001 user profile & settings page"
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Implement `logoutOtherDevices()` (rotate `last_session_id`, update cookie `sessionToken`) in `src/actions/profile.ts`
-- [ ] T020 [P] [US3] Create `ActiveSessionsCard` with active status UI and logout-others action (`data-spekit="profile-session-management"`) in `src/components/settings/ActiveSessionsCard.tsx`
-- [ ] T021 [P] [US3] Create `LogoutConfirmButton` using `AlertDialog` + existing `logout()` form action in `src/components/settings/LogoutConfirmButton.tsx`
-- [ ] T022 [US3] Integrate `ActiveSessionsCard` and `LogoutConfirmButton` into `src/components/settings/SettingsPage.tsx`
+- [x] T019 [US3] Implement `logoutOtherDevices()` (rotate `last_session_id`, update cookie `sessionToken`) in `src/actions/profile.ts`
+- [x] T020 [P] [US3] Create `ActiveSessionsCard` with active status UI and logout-others action (`data-spekit="profile-session-management"`) in `src/components/settings/ActiveSessionsCard.tsx`
+- [x] T021 [P] [US3] Create `LogoutConfirmButton` using `AlertDialog` + existing `logout()` form action in `src/components/settings/LogoutConfirmButton.tsx`
+- [x] T022 [US3] Integrate `ActiveSessionsCard` and `LogoutConfirmButton` into `src/components/settings/SettingsPage.tsx`
 
 **Checkpoint**: US3 complete — session management and confirmed logout work end-to-end
 
@@ -97,13 +99,13 @@ description: "Task list for PROFILE-001 user profile & settings page"
 
 **Purpose**: Navigation, tests, registry sync, and quality gates
 
-- [ ] T023 [P] Add settings nav link to student dashboard header in `src/app/dashboard/page.tsx`
-- [ ] T024 [P] Add settings nav item (`/teacher/settings`) to `navItems` in `src/app/teacher/layout.tsx`
-- [ ] T025 [P] Add Vitest tests for name validation and session token rotation logic in `tests/features/profile-001-settings.test.ts`
-- [ ] T026 [P] Add Playwright smoke tests for student and teacher settings in `e2e/profile-settings.spec.ts`
-- [ ] T027 Add `PROFILE-001` feature entry (implemented) and update `TEACH-008` notes in `.speckit/spec.yaml`
-- [ ] T028 Run manual verification steps in `specs/001-profile-settings/quickstart.md`
-- [ ] T029 Run `npm run lint && npm run typecheck && npm run test`
+- [x] T023 [P] Add settings nav link to student dashboard header in `src/app/dashboard/page.tsx`
+- [x] T024 [P] Add settings nav item (`/teacher/settings`) to `navItems` in `src/app/teacher/layout.tsx`
+- [x] T025 [P] Add Vitest tests for name validation and session token rotation logic in `tests/features/profile-001-settings.test.ts`
+- [x] T026 [P] Add Playwright smoke tests for student and teacher settings in `e2e/profile-settings.spec.ts`
+- [x] T027 Add `PROFILE-001` feature entry (implemented) and update `TEACH-008` notes in `.speckit/spec.yaml`
+- [x] T028 Run manual verification steps in `specs/001-profile-settings/quickstart.md`
+- [x] T029 Run `npm run lint && npm run typecheck && npm run test`
 
 ---
 

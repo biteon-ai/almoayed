@@ -94,6 +94,11 @@ export const SPEKIT = {
   questionEditDialog: "question-edit-dialog",
   questionEditForm: "question-edit-form",
   questionListItem: "question-list-item",
+
+  // ── PROFILE-001 ──────────────────────────────────────────────
+  profileTierInfo: "profile-tier-info",
+  profileTeacherCode: "profile-teacher-code",
+  profileSessionManagement: "profile-session-management",
 } as const;
 
 export type SpekitTarget = (typeof SPEKIT)[keyof typeof SPEKIT];

@@ -42,6 +42,10 @@ async function enforceValidSession(session: SessionData): Promise<SessionData> {
   return session;
 }
 
+export async function requireAuthenticated(): Promise<SessionData> {
+  return enforceValidSession(await getSession());
+}
+
 export async function requireStudent(): Promise<SessionData> {
   const session = await enforceValidSession(await getSession());
   if (session.role !== "STUDENT") {

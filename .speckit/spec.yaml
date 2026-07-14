@@ -67,6 +67,26 @@ features:
     acceptance:
       - Clears iron-session and redirects to /login
 
+  - id: PROFILE-001
+    name: User Profile & Settings
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    routes: [/settings, /teacher/settings]
+    files:
+      - src/app/settings/page.tsx
+      - src/app/teacher/settings/page.tsx
+      - src/actions/profile.ts
+      - src/components/settings/
+      - src/lib/profile-name.ts
+      - src/middleware.ts
+    acceptance:
+      - Editable display name with read-only WhatsApp on settings page
+      - Students see tier badge, active teacher code, Pro upgrade entry
+      - Teachers see copyable teacher code
+      - Active sessions card with logout-other-devices (AUTH-003)
+      - Logout with confirmation dialog
+    spekit: [profile-tier-info, profile-teacher-code, profile-session-management]
+
   # ── Multi-tenant ────────────────────────────────────────────────────────────
   - id: MT-001
     name: Multi-Tenant Teacher Linking
@@ -343,7 +363,7 @@ partial_features:
   - id: TEACH-008
     name: Teacher Profile Editor
     status: partial
-    notes: school_name, bank_details in DB; no settings page
+    notes: school_name, bank_details in DB; basic settings at PROFILE-001 (/settings)
 
   - id: UI-003
     name: PWA Icons

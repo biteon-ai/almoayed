@@ -10,6 +10,7 @@ import {
   Users,
   BookOpen,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPEKIT } from "@/lib/spekit-targets";
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/teacher/dashboard", label: "الرئيسية", icon: LayoutDashboard },
   { href: "/teacher/students", label: "الطلاب", icon: Users },
   { href: "/teacher/quizzes", label: "الاختبارات", icon: BookOpen },
+  { href: "/teacher/settings", label: "الإعدادات", icon: Settings },
 ];
 
 export default async function TeacherLayout({

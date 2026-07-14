@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 59
+  total_targets: 62
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -138,3 +138,9 @@ TEACH-004:
   question-edit-form: "Question edit form inside dialog"
   question-list-item: "Single question row on teacher edit page"
   teacher-questions-list: "Existing questions list"
+
+# ── Profile & settings ──────────────────────────────────────────
+PROFILE-001:
+  profile-tier-info: "Student settings — Free/Pro tier badge"
+  profile-teacher-code: "Settings — teacher code display or copy section"
+  profile-session-management: "Settings — active sessions and logout-other-devices"

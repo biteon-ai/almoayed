@@ -13,7 +13,7 @@ import { Logo } from "@/components/brand/Logo";
 import { WeakPointsCard } from "@/components/dashboard/WeakPointsCard";
 import { TeacherSwitcher } from "@/components/dashboard/TeacherSwitcher";
 import { ProUpgradeCard } from "@/components/dashboard/ProUpgradeCard";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -21,8 +21,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BookOpen, LogOut, ChevronLeft } from "lucide-react";
+import { BookOpen, LogOut, ChevronLeft, Settings } from "lucide-react";
 import { SPEKIT } from "@/lib/spekit-targets";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "لوحة الطالب | المؤيد",
@@ -56,7 +57,15 @@ export default async function DashboardPage() {
           <Logo size="sm" />
           <p className="mt-1 text-xs text-muted-foreground">{APP_SLOGAN}</p>
         </div>
-        <form action={logout}>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/settings"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+            aria-label="الإعدادات"
+          >
+            <Settings className="size-5" />
+          </Link>
+          <form action={logout}>
           <Button
             type="submit"
             variant="ghost"
@@ -66,7 +75,8 @@ export default async function DashboardPage() {
           >
             <LogOut className="size-5" />
           </Button>
-        </form>
+          </form>
+        </div>
       </header>
 
       <div className="mb-6">

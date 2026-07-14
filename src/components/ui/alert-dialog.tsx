@@ -1,0 +1,173 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
+import { cn } from "@/lib/utils";
+
+interface AlertDialogContextValue {
+  close: () => void;
+}
+
+const AlertDialogContext = createContext<AlertDialogContextValue | null>(null);
+
+interface AlertDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: ReactNode;
+}
+
+export function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  const close = useCallback(() => {
+    dialogRef.current?.close();
+    onOpenChange(false);
+  }, [onOpenChange]);
+
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    if (open && !el.open) {
+      el.showModal();
+    } else if (!open && el.open) {
+      el.close();
+    }
+  }, [open]);
+
+  return (
+    <AlertDialogContext.Provider value={{ close }}>
+      <dialog
+        ref={dialogRef}
+        className="fixed inset-0 z-50 m-auto w-[min(100%-2rem,24rem)] rounded-2xl border border-border bg-background p-0 shadow-xl backdrop:bg-black/50 open:animate-in"
+        onClose={() => onOpenChange(false)}
+      >
+        {children}
+      </dialog>
+    </AlertDialogContext.Provider>
+  );
+}
+
+export function AlertDialogContent({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return <div className={cn("p-6 text-start", className)}>{children}</div>;
+}
+
+export function AlertDialogHeader({ children }: { children: ReactNode }) {
+  return <div className="space-y-2">{children}</div>;
+}
+
+export function AlertDialogTitle({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <h2 className={cn("text-lg font-bold text-foreground", className)}>
+      {children}
+    </h2>
+  );
+}
+
+export function AlertDialogDescription({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <p className={cn("text-sm leading-relaxed text-muted-foreground", className)}>
+      {children}
+    </p>
+  );
+}
+
+export function AlertDialogFooter({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function AlertDialogCancel({
+  className,
+  children,
+  onClick,
+}: {
+  className?: string;
+  children: ReactNode;
+  onClick?: () => void;
+}) {
+  const ctx = useContext(AlertDialogContext);
+  return (
+    <button
+      type="button"
+      className={cn(
+        "inline-flex h-11 items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-muted",
+        className
+      )}
+      onClick={() => {
+        onClick?.();
+        ctx?.close();
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function AlertDialogAction({
+  className,
+  children,
+  onClick,
+  type = "button",
+}: {
+  className?: string;
+  children: ReactNode;
+  onClick?: () => void;
+  type?: "button" | "submit";
+}) {
+  const ctx = useContext(AlertDialogContext);
+  return (
+    <button
+      type={type}
+      className={cn(
+        "inline-flex h-11 items-center justify-center rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700",
+        className
+      )}
+      onClick={() => {
+        onClick?.();
+        if (type === "button") {
+          ctx?.close();
+        }
+      }}
+    >
+      {children}
+    </button>
+  );
+}

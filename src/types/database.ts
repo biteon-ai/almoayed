@@ -164,6 +164,17 @@ export interface StudentTeacherOption {
   status: StudentTeacherStatus;
 }
 
+/** [PROFILE-001] Aggregated settings page read model */
+export interface SettingsProfile {
+  fullName: string;
+  whatsappNumber: string;
+  role: UserRole;
+  activeTeacherCode: string | null;
+  tier: StudentTier | null;
+  upgradeRequested: boolean;
+  teacherCode: string | null;
+}
+
 export interface ImportQuestionRow {
   question_text: string;
   option_a: string;
