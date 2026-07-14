@@ -1,15 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { submitQuiz } from "@/actions/quiz";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
+import { QuizSidebar } from "@/components/quiz/QuizSidebar";
 import { WhatsAppShare } from "@/components/quiz/WhatsAppShare";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { Lock, Unlock, AlertCircle, CheckCircle2, ChevronRight, HelpCircle } from "lucide-react";
-import Link from "next/link";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  HelpCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toUserMessage, uiMessage, ErrorCode } from "@/lib/app-errors";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
@@ -29,6 +35,7 @@ export function QuizRunner({
   const [results, setResults] = useState<QuizSubmitResult | null>(
     initialResults ?? null
   );
+  const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -37,6 +44,12 @@ export function QuizRunner({
   const progress = questions.length
     ? (answeredCount / questions.length) * 100
     : 0;
+  const questionIds = questions.map((q) => q.id);
+
+  const activeQuestion = questions[activeIndex];
+  const activeResult = results?.answers.find(
+    (a) => a.questionId === activeQuestion?.id
+  );
 
   const handleAnswer = (questionId: string, value: string) => {
     if (isSubmitted) return;
@@ -65,198 +78,203 @@ export function QuizRunner({
     });
   };
 
-  const wrongAnswersCount = results ? results.totalQuestions - results.correctCount : 0;
+  const goToQuestion = (index: number) => {
+    setActiveIndex(Math.max(0, Math.min(index, questions.length - 1)));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const wrongAnswersCount = results
+    ? results.totalQuestions - results.correctCount
+    : 0;
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 px-4 py-5 pb-28 animate-fade-in" {...spekit(SPEKIT.quizPage)}>
-      {/* Navigation Top strip */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-brand-700 transition-colors"
+    <div
+      className="mx-auto max-w-7xl px-4 py-6 pb-36 md:py-8 md:pb-24"
+      {...spekit(SPEKIT.quizPage)}
+    >
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
+        {/* Main workspace — RTL: right column */}
+        <main
+          className="order-2 space-y-6 md:order-1 md:col-span-8 lg:col-span-8"
+          {...spekit(SPEKIT.quizQuestionList)}
         >
-          <ChevronRight className="size-4" />
-          <span>العودة للرئيسية</span>
-        </Link>
-        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">المؤيد للرياضيات</span>
-      </div>
-
-      {/* Quiz Progress & Gatekeeper State Card */}
-      <Card
-        className="border-brand-100/60 dark:border-brand-900/30 overflow-hidden bg-white/50 dark:bg-card/40 backdrop-blur-md"
-        {...spekit(SPEKIT.quizGatekeeper)}
-      >
-        <CardContent className="p-4 space-y-3.5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <h1 className="text-lg font-extrabold text-foreground text-start leading-tight">
-                {quiz.title}
-              </h1>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
-                {isSubmitted ? (
-                  <>
-                    <Unlock className="size-3.5 text-green-600 dark:text-green-500" />
-                    <span className="text-green-600 dark:text-green-500">تم فتح الحلول والشرح العلمي</span>
-                  </>
-                ) : (
-                  <>
-                    <Lock className="size-3.5 text-amber-600" />
-                    <span>الحلول مقفلة حتى ترسل إجاباتك</span>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            {/* Answer count pill */}
-            <div className="shrink-0 bg-brand-50 text-brand-800 text-xs font-bold px-3 py-1.5 rounded-full border border-brand-100/80 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-900/40">
-              {questions.length} أسئلة
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          {!isSubmitted && (
-            <div className="space-y-1.5 pt-1" {...spekit(SPEKIT.quizProgress)}>
-              <div className="flex justify-between text-[11px] font-bold text-muted-foreground">
-                <span>الأسئلة المحلولة: {answeredCount} من {questions.length}</span>
-                <span className="font-mono">{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2 bg-brand-100/40 dark:bg-brand-950/20" />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Questions list */}
-      <div className="space-y-5" {...spekit(SPEKIT.quizQuestionList)}>
-        {questions.length === 0 ? (
-          <Card className="border-dashed border-border/80" {...spekit(SPEKIT.quizEmptyState)}>
-            <CardContent className="space-y-3 p-6 text-center">
-              <AlertCircle className="mx-auto size-8 text-muted-foreground" />
-              <p className="text-sm font-semibold text-foreground">
-                هذا الاختبار فاضي — ما في أسئلة بعد
-              </p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                الأستاذ لسه ما أضاف أسئلة. ارجع للوحة التحكم وجرب لاحقاً.
-              </p>
-              <Link href="/dashboard">
-                <Button variant="outline" className="mt-2 h-11">
-                  العودة للوحة التحكم
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ) : (
-          questions.map((q, idx) => {
-            const resultAnswer = results?.answers.find(
-              (a) => a.questionId === q.id
-            );
-            return (
-              <QuestionCard
-                key={q.id}
-                question={q}
-                index={idx}
-                value={
-                  isSubmitted
-                    ? resultAnswer?.studentAnswer
-                    : answers[q.id]
-                }
-                onChange={(v) => handleAnswer(q.id, v)}
-                disabled={isSubmitted}
-                showResult={isSubmitted}
-                correctAnswer={resultAnswer?.correctAnswer}
-                categoryTag={resultAnswer?.categoryTag}
-                explanationText={resultAnswer?.explanationText}
-                explanationMediaUrl={resultAnswer?.explanationMediaUrl}
-              />
-            );
-          })
-        )}
-      </div>
-
-      {/* Post-submission Review and WhatsApp Share */}
-      {isSubmitted && (
-        <div className="space-y-6 pt-2 animate-slide-up" {...spekit(SPEKIT.quizResultsReview)}>
-          {/* Main Grade Header Cards */}
-          <WhatsAppShare
-            score={results.score}
-            quizId={quiz.id}
-            quizTitle={quiz.title}
-            correctCount={results.correctCount}
-            totalQuestions={results.totalQuestions}
-          />
-
-          {/* Action guidance after submit */}
-          {wrongAnswersCount > 0 ? (
-            <Card className="border-amber-200 bg-amber-50/30 dark:border-amber-900/40 dark:bg-amber-950/10">
-              <CardContent className="flex items-start gap-3 p-4">
-                <HelpCircle className="size-6 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
-                <div className="text-start">
-                  <h3 className="font-bold text-sm text-amber-900 dark:text-amber-300">
-                    راجع تفاصيل الأخطاء بالخلف
-                  </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-amber-800/90 dark:text-amber-400/90">
-                    لقد قمنا بفتح شروحات جميع الأسئلة أعلاه. ابحث عن الأسئلة المحددة باللون الأحمر، وستجد شرح خطوات تفكيرها مفتوحاً تلقائياً لتتعلم الحل الصحيح بيدك.
-                  </p>
-                </div>
+          {questions.length === 0 ? (
+            <Card
+              className="border-dashed border-slate-200"
+              {...spekit(SPEKIT.quizEmptyState)}
+            >
+              <CardContent className="space-y-3 p-8 text-center">
+                <AlertCircle className="mx-auto size-8 text-slate-400" />
+                <p className="text-sm font-semibold text-slate-800">
+                  هذا الاختبار فاضي — ما في أسئلة بعد
+                </p>
+                <p className="text-xs leading-relaxed text-slate-500">
+                  الأستاذ لسه ما أضاف أسئلة. ارجع للوحة التحكم وجرب لاحقاً.
+                </p>
+                <Link href="/dashboard">
+                  <Button variant="outline" className="mt-2 h-11">
+                    العودة للوحة التحكم
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-green-200 bg-green-50/40 dark:border-green-900/40 dark:bg-green-950/10">
-              <CardContent className="flex items-center gap-3.5 p-4 text-start">
-                <div className="flex size-9 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/60">
-                  <CheckCircle2 className="size-5 text-green-600 dark:text-green-500" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm text-green-900 dark:text-green-300">
-                    علامة كاملة، فخورين فيك!
-                  </h3>
-                  <p className="mt-0.5 text-xs text-green-800/80 dark:text-green-400/80">
-                    أحسنت جداً! لقد أجبت على جميع الأسئلة بشكل صحيح. استمر على هذا المستوى المتميز.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <>
+              <div className="mx-auto w-full max-w-3xl">
+                {activeQuestion && (
+                  <QuestionCard
+                    key={activeQuestion.id}
+                    question={activeQuestion}
+                    index={activeIndex}
+                    value={
+                      isSubmitted
+                        ? activeResult?.studentAnswer
+                        : answers[activeQuestion.id]
+                    }
+                    onChange={(v) => handleAnswer(activeQuestion.id, v)}
+                    disabled={isSubmitted}
+                    showResult={isSubmitted}
+                    correctAnswer={activeResult?.correctAnswer}
+                    categoryTag={activeResult?.categoryTag}
+                    explanationText={activeResult?.explanationText}
+                    explanationMediaUrl={activeResult?.explanationMediaUrl}
+                  />
+                )}
+              </div>
+
+              {/* Question pager */}
+              <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-10 gap-1 rounded-xl font-bold"
+                  disabled={activeIndex === 0}
+                  onClick={() => goToQuestion(activeIndex - 1)}
+                >
+                  <ChevronRight className="size-4" />
+                  السابق
+                </Button>
+                <span className="text-xs font-bold tabular-nums text-slate-500">
+                  {activeIndex + 1} / {questions.length}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-10 gap-1 rounded-xl font-bold"
+                  disabled={activeIndex >= questions.length - 1}
+                  onClick={() => goToQuestion(activeIndex + 1)}
+                >
+                  التالي
+                  <ChevronLeft className="size-4" />
+                </Button>
+              </div>
+            </>
           )}
 
-          {/* Return Dashboard button */}
-          <div className="pt-2">
-            <Link href="/dashboard" className="block">
-              <Button
-                variant="outline"
-                className="h-12 w-full font-bold border-brand-200 hover:bg-brand-50 dark:border-brand-900 dark:hover:bg-brand-950/20"
-              >
-                العودة للوحة التحكم للطلاب
-              </Button>
-            </Link>
-          </div>
-        </div>
-      )}
+          {isSubmitted && results && (
+            <div
+              className="mx-auto max-w-3xl space-y-6 animate-slide-up"
+              {...spekit(SPEKIT.quizResultsReview)}
+            >
+              <WhatsAppShare
+                score={results.score}
+                quizId={quiz.id}
+                quizTitle={quiz.title}
+                correctCount={results.correctCount}
+                totalQuestions={results.totalQuestions}
+              />
 
-      {/* Sticky Bottom Actions Bar (During Quiz) */}
+              {wrongAnswersCount > 0 ? (
+                <Card className="border-amber-100 bg-amber-50/50">
+                  <CardContent className="flex items-start gap-3 p-5">
+                    <HelpCircle className="mt-0.5 size-6 shrink-0 text-amber-600" />
+                    <div className="text-start">
+                      <h3 className="text-sm font-bold text-amber-900">
+                        راجع تفاصيل الأخطاء
+                      </h3>
+                      <p className="mt-1 text-xs leading-relaxed text-amber-800/90">
+                        استخدم شبكة التنقل لمراجعة الأسئلة الخاطئة — الشروحات
+                        مفتوحة لكل سؤال.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-green-100 bg-green-50/50">
+                  <CardContent className="flex items-center gap-3.5 p-5 text-start">
+                    <div className="flex size-9 items-center justify-center rounded-full bg-green-100">
+                      <CheckCircle2 className="size-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-extrabold text-green-900">
+                        علامة كاملة، فخورين فيك!
+                      </h3>
+                      <p className="mt-0.5 text-xs text-green-800/80">
+                        أحسنت جداً! لقد أجبت على جميع الأسئلة بشكل صحيح.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Link href="/dashboard" className="block">
+                <Button
+                  variant="outline"
+                  className="h-12 w-full rounded-xl font-bold border-slate-200 hover:bg-slate-50"
+                >
+                  العودة للوحة التحكم
+                </Button>
+              </Link>
+            </div>
+          )}
+        </main>
+
+        {/* Sidebar — RTL: left column; stacks above on mobile */}
+        <QuizSidebar
+          className="order-1 md:order-2 md:col-span-4 lg:col-span-4"
+          quiz={quiz}
+          questionCount={questions.length}
+          questionIds={questionIds}
+          answeredCount={answeredCount}
+          progress={progress}
+          isSubmitted={isSubmitted}
+          activeIndex={activeIndex}
+          answers={answers}
+          results={results}
+          onNavigate={goToQuestion}
+        />
+      </div>
+
+      {/* Sticky submit bar */}
       {!isSubmitted && questions.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-t border-brand-100/50 dark:border-brand-950/40 p-4 z-30 shadow-lg safe-bottom animate-slide-up">
-          <div className="mx-auto max-w-md space-y-3">
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-slate-100 bg-white/90 p-4 shadow-lg backdrop-blur-md safe-bottom md:bottom-0 md:z-30">
+          <div className="mx-auto max-w-3xl space-y-3">
             {error && (
               <div
                 role="alert"
-                className="flex items-start gap-2 rounded-xl bg-destructive/10 px-4 py-2.5 text-xs text-destructive text-start"
+                className="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-xs text-red-700"
               >
-                <AlertCircle className="size-4 shrink-0 text-destructive mt-0.5" />
+                <AlertCircle className="mt-0.5 size-4 shrink-0" />
                 <span className="font-bold">{error}</span>
               </div>
             )}
             <Button
               size="lg"
               className={cn(
-                "h-12 w-full text-base font-extrabold transition-all duration-300",
-                "bg-brand-600 text-white shadow-md hover:bg-brand-700 active:scale-[0.98]",
-                "disabled:opacity-50 disabled:active:scale-100"
+                "h-12 w-full rounded-xl text-base font-extrabold",
+                "bg-brand-600 text-white shadow-md transition-all hover:bg-brand-700",
+                "hover:scale-[1.01] active:scale-[0.99]",
+                "disabled:opacity-50 disabled:hover:scale-100"
               )}
               onClick={handleSubmit}
               disabled={isPending}
               {...spekit(SPEKIT.quizSubmitButton)}
             >
-              {isPending ? "جاري تسليم الإجابات وحساب النتيجة..." : "تسليم الإجابات وإنهاء الاختبار 🏁"}
+              {isPending
+                ? "جاري تسليم الإجابات وحساب النتيجة..."
+                : "تسليم الإجابات وإنهاء الاختبار 🏁"}
             </Button>
           </div>
         </div>

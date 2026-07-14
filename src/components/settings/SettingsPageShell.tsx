@@ -21,6 +21,7 @@ interface SettingsPageShellProps {
   backHref: string;
   backLabel: string;
   navItems: SettingsNavItem[];
+  hideBackLink?: boolean;
   children: ReactNode;
 }
 
@@ -57,6 +58,7 @@ export function SettingsPageShell({
   backHref,
   backLabel,
   navItems,
+  hideBackLink = false,
   children,
 }: SettingsPageShellProps) {
   const [activeId, setActiveId] = useState(navItems[0]?.id ?? "");
@@ -102,16 +104,18 @@ export function SettingsPageShell({
     <div dir="rtl" className="mx-auto w-full max-w-6xl px-4 py-6 pb-12 md:px-6 md:py-8">
       {/* Page header */}
       <header className="mb-6 space-y-5 md:mb-8">
-        <Link
-          href={backHref}
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "-me-1 gap-1 text-muted-foreground"
-          )}
-        >
-          <ChevronRight className="size-4" />
-          {backLabel}
-        </Link>
+        {!hideBackLink && (
+          <Link
+            href={backHref}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "-me-1 gap-1 text-muted-foreground"
+            )}
+          >
+            <ChevronRight className="size-4" />
+            {backLabel}
+          </Link>
+        )}
         <div className="flex items-center gap-3.5 text-start md:gap-4">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-100/80 text-brand-700 ring-1 ring-brand-200/60 md:size-14">
             <Settings className="size-5 md:size-6" aria-hidden />
