@@ -15,7 +15,8 @@
     "test:e2e:install": "playwright install chromium",
     "pretest:e2e": "playwright install chromium",
     "test:ci": "node scripts/run-quality-gates.mjs && npm run test:e2e",
-    "verify:migrations": "node scripts/verify-migrations.mjs"
+    "verify:migrations": "node scripts/verify-migrations.mjs",
+    "generate:brand": "node scripts/generate-brand-assets.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

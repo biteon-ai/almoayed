@@ -1,30 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   isStudentNavItemActive,
   STUDENT_NAV_ITEMS,
+  useStudentRouteHash,
 } from "@/lib/student-nav";
 import { cn } from "@/lib/utils";
-
-function useRouteHash() {
-  const [hash, setHash] = useState("");
-
-  useEffect(() => {
-    const read = () => setHash(window.location.hash);
-    read();
-    window.addEventListener("hashchange", read);
-    return () => window.removeEventListener("hashchange", read);
-  }, []);
-
-  return hash;
-}
+import {
+  StudentNavLink,
+  studentNavLinkClass,
+} from "@/components/layout/StudentNavLink";
+import { usePathname } from "next/navigation";
 
 export function StudentBottomNav() {
   const pathname = usePathname();
-  const hash = useRouteHash();
+  const hash = useStudentRouteHash();
   const items = STUDENT_NAV_ITEMS.filter((item) => item.bottomNav);
 
   return (
@@ -38,14 +28,12 @@ export function StudentBottomNav() {
           const Icon = item.icon;
 
           return (
-            <Link
+            <StudentNavLink
               key={item.href}
-              href={item.href}
-              className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 transition-colors",
-                active
-                  ? "text-brand-700"
-                  : "text-slate-500 hover:text-slate-700"
+              item={item}
+              className={studentNavLinkClass(
+                active,
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 transition-colors"
               )}
             >
               <Icon
@@ -56,7 +44,7 @@ export function StudentBottomNav() {
               {active && (
                 <span className="size-1 rounded-full bg-emerald-600" aria-hidden />
               )}
-            </Link>
+            </StudentNavLink>
           );
         })}
       </div>

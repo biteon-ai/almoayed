@@ -34,7 +34,8 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
         <div className="space-y-6 md:col-span-8 md:space-y-8 lg:col-span-9">
           <section
-            className="rounded-2xl border border-slate-100 bg-gradient-to-l from-brand-50/40 to-white p-5 shadow-sm md:p-6"
+            id="student-welcome"
+            className="scroll-mt-24 rounded-2xl border border-slate-100 bg-gradient-to-l from-brand-50/40 to-white p-5 shadow-sm md:p-6"
             data-spekit={SPEKIT.studentWelcome}
           >
             <h1 className="text-xl font-bold text-slate-800 md:text-2xl">

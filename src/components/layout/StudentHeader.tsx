@@ -2,29 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   isStudentNavItemActive,
   STUDENT_NAV_ITEMS,
   type StudentNavItem,
+  useStudentRouteHash,
 } from "@/lib/student-nav";
 import { cn } from "@/lib/utils";
+import {
+  StudentNavLink,
+  studentNavLinkClass,
+} from "@/components/layout/StudentNavLink";
 import { StudentLogoutButton } from "@/components/layout/StudentLogoutButton";
 import { buttonVariants } from "@/components/ui/button";
 import { Settings } from "lucide-react";
-
-function useRouteHash() {
-  const [hash, setHash] = useState("");
-
-  useEffect(() => {
-    const read = () => setHash(window.location.hash);
-    read();
-    window.addEventListener("hashchange", read);
-    return () => window.removeEventListener("hashchange", read);
-  }, []);
-
-  return hash;
-}
 
 function DesktopNavLink({
   item,
@@ -38,11 +29,11 @@ function DesktopNavLink({
   const active = isStudentNavItemActive(item, pathname, hash);
 
   return (
-    <Link
-      href={item.href}
-      className={cn(
-        "relative px-3 py-2 text-sm font-medium transition-colors",
-        active ? "text-brand-700" : "text-slate-600 hover:text-brand-600"
+    <StudentNavLink
+      item={item}
+      className={studentNavLinkClass(
+        active,
+        "relative px-3 py-2 text-sm font-medium transition-colors"
       )}
     >
       {item.label}
@@ -52,13 +43,13 @@ function DesktopNavLink({
           aria-hidden
         />
       )}
-    </Link>
+    </StudentNavLink>
   );
 }
 
 export function StudentHeader() {
   const pathname = usePathname();
-  const hash = useRouteHash();
+  const hash = useStudentRouteHash();
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/90 backdrop-blur-md">

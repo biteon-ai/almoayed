@@ -95,7 +95,7 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
   return (
     <section
       id="quizzes"
-      className="scroll-mt-24 space-y-8"
+      className="scroll-mt-24 scroll-mb-24 space-y-8 md:scroll-mb-0"
       data-spekit={SPEKIT.studentQuizList}
     >
       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-800 md:text-xl">

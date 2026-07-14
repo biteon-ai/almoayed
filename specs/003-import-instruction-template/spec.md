@@ -14,6 +14,7 @@
 
 - Q: Word/Text instruction labels vs parser — which labels should the UI show and parser accept? → A: UI shows `الشرح:` / `التصنيف:`; parser accepts both old (`شرح:` / `قسم:`) and new labels.
 - Q: What should the downloaded sample `.xlsx` contain? → A: Parser field names (`question_text`, `option_a`, …) plus one sample Arabic MCQ row; UI table keeps friendly English labels.
+- Q: Word/Text tab — what should it show for `.docx` vs `.txt`? → A: `.txt` block format as main preview + brief `.docx` callout (numbered questions + a–d option tables; staging preview after upload).
 
 ## User Scenarios & Testing
 
@@ -40,6 +41,7 @@ As a teacher preparing a bulk import, I see format-specific instructions (Excel/
    الشرح: [text]
    التصنيف: [text]
    ```
+   **And** a brief callout explains that `.docx` files should use numbered questions `(1)` with a–d option tables; after upload, the existing staging preview appears before save.
 4. **Given** a `.txt` file using legacy labels `شرح:` or `قسم:`, **When** imported, **Then** import still succeeds (backward compatible).
 5. **Given** import panel, **When** teacher reads validation tips, **Then** hint box with `data-spekit="import-validation-tips"` appears before upload reminding about formulas/images post-import handling.
 
@@ -66,7 +68,7 @@ As a teacher, I can download a starter `.xlsx` file with correct import headers 
 - **FR-001**: Import panel MUST render format switcher tabs labeled **"Excel / CSV"** and **"Word / Text (.docx / .txt)"** before `FileUploadZone`.
 - **FR-002**: Excel/CSV tab MUST display a styled table of expected columns using **friendly English labels**: Question Text, Option A, Option B, Option C, Option D, Correct Option (A, B, C, or D), Explanation, Category — mapped visually to parser fields.
 - **FR-003**: Excel/CSV tab MUST provide **"Download Sample Excel Template"** that downloads a `.xlsx` with parser field-name headers plus **one sample Arabic MCQ row** (teachers may delete the sample row before filling).
-- **FR-004**: Word/Text tab MUST display plain-text format rules in a code block or preview card using `الشرح:` and `التصنيف:` as canonical UI labels.
+- **FR-004**: Word/Text tab MUST display plain-text format rules in a code block or preview card using `الشرح:` and `التصنيف:` as canonical UI labels, **plus** a brief `.docx` callout: numbered questions `(1)` with a–d option tables; upload triggers existing staging preview before save.
 - **FR-005**: `parseWordLikeText` MUST accept both canonical labels (`الشرح:`, `التصنيف:`) and legacy aliases (`شرح:`, `قسم:`) without breaking existing imports.
 - **FR-006**: Panel MUST show validation hint box (`data-spekit="import-validation-tips"`) before upload about formulas/images requiring manual editor handling after import.
 - **FR-007**: Enhancement MUST integrate into existing `BulkQuestionUpload` on `/teacher/quizzes/[id]` without breaking DOCX preview staging, CSV/XLSX/TXT import, or skip/manual flows.

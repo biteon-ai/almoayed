@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>Al-Moayed brand asset renderer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #111;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" aria-hidden="true"></canvas>
+    <script>
+      /** Must match src/lib/constants.ts APP_NAME */
+      const APP_NAME = "المؤيد";
+      const THEME_COLOR = "#0d9488";
+      const THEME_COLOR_LIGHT = "#14b8a6";
+
+      function roundRect(ctx, x, y, width, height, radius) {
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + width, y, x + width, y + height, r);
+        ctx.arcTo(x + width, y + height, x, y + height, r);
+        ctx.arcTo(x, y + height, x, y, r);
+        ctx.arcTo(x, y, x + width, y, r);
+        ctx.closePath();
+      }
+
+      /**
+       * @param {number} size
+       * @param {string} [label]
+       * @returns {string}
+       */
+      window.renderBrandIcon = function renderBrandIcon(size, label = APP_NAME) {
+        const canvas = document.getElementById("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          throw new Error("Canvas 2D context unavailable");
+        }
+
+        const cornerRadius = size * 0.18;
+        ctx.clearRect(0, 0, size, size);
+
+        const gradient = ctx.createRadialGradient(
+          size * 0.5,
+          size * 0.46,
+          size * 0.08,
+          size * 0.5,
+          size * 0.5,
+          size * 0.72
+        );
+        gradient.addColorStop(0, THEME_COLOR_LIGHT);
+        gradient.addColorStop(1, THEME_COLOR);
+
+        ctx.save();
+        roundRect(ctx, 0, 0, size, size, cornerRadius);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.restore();
+
+        const fontSize = Math.round(size * 0.27);
+        ctx.font = `bold ${fontSize}px "Tajawal", "Cairo", "Arial", sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
+        ctx.shadowBlur = Math.max(2, size * 0.018);
+        ctx.shadowOffsetY = Math.max(1, size * 0.006);
+
+        // Slightly above center so the two dots of "ي" stay inside the frame.
+        const metrics = ctx.measureText(label);
+        const verticalPad = Math.max(metrics.actualBoundingBoxDescent || fontSize * 0.12, size * 0.08);
+        const y = size / 2 - verticalPad * 0.15;
+
+        ctx.fillText(label, size / 2, y);
+        ctx.shadowColor = "transparent";
+
+        return canvas.toDataURL("image/png");
+      };
+    </script>
+  </body>
+</html>
