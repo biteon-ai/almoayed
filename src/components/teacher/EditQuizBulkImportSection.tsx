@@ -2,12 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { BulkQuestionUpload } from "@/components/teacher/BulkQuestionUpload";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { ImportSectionHeader } from "@/components/teacher/import/ImportSectionHeader";
+import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -53,12 +49,8 @@ export function EditQuizBulkImportSection({
       )}
 
       <Card className="overflow-hidden border-border/70 shadow-sm">
-        <CardHeader className="space-y-1 p-6 pb-4 text-start">
-          <CardTitle className="text-base font-semibold">
-            استيراد أسئلة بالجملة
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 pt-0">
+        <CardContent className="p-5 md:p-6 lg:p-8">
+          <ImportSectionHeader quizTitle={quizTitle} />
           <BulkQuestionUpload
             quizId={quizId}
             onSuccess={handleSuccess}

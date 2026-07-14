@@ -170,72 +170,79 @@ export function BulkQuestionUpload({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="space-y-4"
+      className="space-y-6"
       data-spekit={SPEKIT.bulkImportZone}
     >
-      <ImportFormatTabs />
-      <ImportValidationTips />
-      <FileUploadZone
-        disabled={isBusy}
-        onFileSelect={handleFileSelect}
-        parsingLabel={
-          parsePhase === "parsing"
-            ? "جاري قراءة بنية ملف Word..."
-            : undefined
-        }
-      />
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-12 xl:gap-8">
+        <div className="space-y-4 xl:col-span-5 xl:sticky xl:top-24">
+          <ImportFormatTabs />
+          <ImportValidationTips />
+        </div>
 
-      {parsePhase === "parsing" && (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-xl border border-brand-200/50 bg-brand-50/30 px-3.5 py-3 text-xs font-semibold text-brand-800"
-        >
-          <FileSearch className="size-4 animate-pulse" />
-          جاري تحليل الجداول والمعادلات في المستند...
-        </p>
-      )}
-
-      {error && (
-        <p
-          role="alert"
-          className="rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-xs font-semibold text-destructive"
-        >
-          {error}
-        </p>
-      )}
-
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button
-          type="submit"
-          variant="brand"
-          className="h-11 flex-1 gap-2"
-          disabled={isBusy}
-          data-spekit={SPEKIT.bulkImportSubmit}
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              جاري الاستيراد...
-            </>
-          ) : (
-            <>
-              <Upload className="size-4" />
-              استيراد الأسئلة
-            </>
-          )}
-        </Button>
-        {onSkip && (
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 gap-2"
+        <div className="space-y-4 xl:col-span-7">
+          <FileUploadZone
             disabled={isBusy}
-            onClick={onSkip}
-          >
-            <SkipForward className="size-4" />
-            تخطي — إضافة يدوية
-          </Button>
-        )}
+            onFileSelect={handleFileSelect}
+            parsingLabel={
+              parsePhase === "parsing"
+                ? "جاري قراءة بنية ملف Word..."
+                : undefined
+            }
+          />
+
+          {parsePhase === "parsing" && (
+            <p
+              role="status"
+              className="flex items-center gap-2 rounded-xl border border-brand-200/50 bg-brand-50/30 px-3.5 py-3 text-xs font-semibold text-brand-800"
+            >
+              <FileSearch className="size-4 animate-pulse" />
+              جاري تحليل الجداول والمعادلات في المستند...
+            </p>
+          )}
+
+          {error && (
+            <p
+              role="alert"
+              className="rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-xs font-semibold text-destructive"
+            >
+              {error}
+            </p>
+          )}
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              type="submit"
+              variant="brand"
+              className="h-11 flex-1 gap-2"
+              disabled={isBusy}
+              data-spekit={SPEKIT.bulkImportSubmit}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  جاري الاستيراد...
+                </>
+              ) : (
+                <>
+                  <Upload className="size-4" />
+                  استيراد الأسئلة
+                </>
+              )}
+            </Button>
+            {onSkip && (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 gap-2"
+                disabled={isBusy}
+                onClick={onSkip}
+              >
+                <SkipForward className="size-4" />
+                تخطي — إضافة يدوية
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </form>
   );

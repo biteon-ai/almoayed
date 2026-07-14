@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   addQuestion,
   getQuizQuestions,
@@ -7,15 +6,12 @@ import {
 import { EditQuizBulkImportSection } from "@/components/teacher/EditQuizBulkImportSection";
 import { QuestionAddForm } from "@/components/teacher/QuestionAddForm";
 import { TeacherQuestionsList } from "@/components/teacher/TeacherQuestionsList";
-import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { notFound } from "next/navigation";
 import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
@@ -42,22 +38,12 @@ export default async function EditQuizPage({ params }: PageProps) {
 
   return (
     <div
-      className="mx-auto w-full max-w-3xl space-y-8"
+      className="mx-auto w-full max-w-6xl space-y-8"
       data-spekit={SPEKIT.teacherQuizEditPage}
     >
       <Suspense fallback={null}>
         <EditQuizImportToast />
       </Suspense>
-      <div className="flex items-center gap-3 text-start">
-        <Link
-          href="/teacher/quizzes"
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-        >
-          <ArrowRight className="size-4" />
-          رجوع
-        </Link>
-        <h1 className="text-xl font-bold tracking-tight">{quiz.title}</h1>
-      </div>
 
       <Suspense
         fallback={
