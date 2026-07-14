@@ -437,25 +437,6 @@ export async function seedDashboardExams() {
   );
 }
 
-// Direct Supabase insert snippet (same data, minimal):
-export async function insertWithSupabaseClient(
-  supabase: ReturnType<typeof createClient>
-) {
-  await supabase.from("quizzes").insert(
-    MOCK_EXAMS.map((exam) => ({
-      id: exam.id,
-      title: exam.title,
-      created_by: DEMO_TEACHER_ID,
-      category_id: CATEGORY_NAME_TO_ID[exam.category] ?? CATEGORY_MATH,
-      is_active: true,
-      is_free: !exam.is_pro,
-      quiz_type: "regular",
-      created_at: exam.created_at,
-      updated_at: exam.updated_at,
-    }))
-  );
-}
-
 if (process.argv[1]?.endsWith("seed-20-dashboard-exams.ts")) {
   seedDashboardExams().catch((err) => {
     console.error(err);
