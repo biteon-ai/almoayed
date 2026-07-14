@@ -5,6 +5,8 @@ import { importQuestionRows, importQuestions } from "@/actions/teacher";
 import { parseDocxQuestions } from "@/actions/parse-docx";
 import { DocxImportPreview, type StagedImportRow } from "@/components/teacher/DocxImportPreview";
 import { FileUploadZone } from "@/components/teacher/FileUploadZone";
+import { ImportFormatTabs } from "@/components/teacher/import/ImportFormatTabs";
+import { ImportValidationTips } from "@/components/teacher/import/ImportValidationTips";
 import { Button } from "@/components/ui/button";
 import { isDocxFile } from "@/lib/docx-file";
 import {
@@ -171,6 +173,8 @@ export function BulkQuestionUpload({
       className="space-y-4"
       data-spekit={SPEKIT.bulkImportZone}
     >
+      <ImportFormatTabs />
+      <ImportValidationTips />
       <FileUploadZone
         disabled={isBusy}
         onFileSelect={handleFileSelect}

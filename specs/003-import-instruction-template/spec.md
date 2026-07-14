@@ -3,7 +3,7 @@
 **Feature ID**: TEACH-004 (UI enhancement)  
 **Feature Branch**: `003-import-instruction-template` (recommended)  
 **Created**: 2026-07-14  
-**Status**: Draft — clarification in progress  
+**Status**: Clarified — ready for planning  
 **Parent**: TEACH-004 Bulk Question Import (implemented)
 
 **Input**: Add a visual instruction template section before the bulk-import file dropzone on the teacher quiz edit import panel (`BulkQuestionUpload` / `EditQuizBulkImportSection`).
@@ -15,6 +15,8 @@
 - Q: Word/Text instruction labels vs parser — which labels should the UI show and parser accept? → A: UI shows `الشرح:` / `التصنيف:`; parser accepts both old (`شرح:` / `قسم:`) and new labels.
 - Q: What should the downloaded sample `.xlsx` contain? → A: Parser field names (`question_text`, `option_a`, …) plus one sample Arabic MCQ row; UI table keeps friendly English labels.
 - Q: Word/Text tab — what should it show for `.docx` vs `.txt`? → A: `.txt` block format as main preview + brief `.docx` callout (numbered questions + a–d option tables; staging preview after upload).
+- Q: Which tab is selected by default on load? → A: Excel / CSV tab active on load.
+- Q: What should the validation hint box (`import-validation-tips`) say? → A: One persistent Arabic bullet list below tab content, above dropzone: formulas → plain text; images → manual editor after import; DOCX math → review in staging.
 
 ## User Scenarios & Testing
 
@@ -28,7 +30,7 @@ As a teacher preparing a bulk import, I see format-specific instructions (Excel/
 
 **Acceptance Scenarios**:
 
-1. **Given** teacher on quiz edit import panel, **When** page loads, **Then** format switcher tabs appear **above** the file dropzone.
+1. **Given** teacher on quiz edit import panel, **When** page loads, **Then** format switcher tabs appear **above** the file dropzone with **Excel / CSV** selected by default.
 2. **Given** "Excel / CSV" tab selected, **When** teacher views the panel, **Then** a styled table shows expected columns and a "Download Sample Excel Template" control is visible.
 3. **Given** "Word / Text" tab selected, **When** teacher views the panel, **Then** a code block / preview card shows the canonical plain-text block format:
    ```
@@ -43,7 +45,7 @@ As a teacher preparing a bulk import, I see format-specific instructions (Excel/
    ```
    **And** a brief callout explains that `.docx` files should use numbered questions `(1)` with a–d option tables; after upload, the existing staging preview appears before save.
 4. **Given** a `.txt` file using legacy labels `شرح:` or `قسم:`, **When** imported, **Then** import still succeeds (backward compatible).
-5. **Given** import panel, **When** teacher reads validation tips, **Then** hint box with `data-spekit="import-validation-tips"` appears before upload reminding about formulas/images post-import handling.
+5. **Given** import panel, **When** teacher reads validation tips, **Then** a persistent hint box with `data-spekit="import-validation-tips"` appears below tab instructions and above the dropzone with Arabic bullets covering: (1) Excel formulas are not evaluated—use plain text; (2) images are not imported—add via manual editor after import; (3) DOCX math may need review in staging preview.
 
 ---
 
@@ -65,12 +67,15 @@ As a teacher, I can download a starter `.xlsx` file with correct import headers 
 
 ### Functional Requirements
 
-- **FR-001**: Import panel MUST render format switcher tabs labeled **"Excel / CSV"** and **"Word / Text (.docx / .txt)"** before `FileUploadZone`.
+- **FR-001**: Import panel MUST render format switcher tabs labeled **"Excel / CSV"** and **"Word / Text (.docx / .txt)"** before `FileUploadZone`, with **Excel / CSV** active by default on load.
 - **FR-002**: Excel/CSV tab MUST display a styled table of expected columns using **friendly English labels**: Question Text, Option A, Option B, Option C, Option D, Correct Option (A, B, C, or D), Explanation, Category — mapped visually to parser fields.
 - **FR-003**: Excel/CSV tab MUST provide **"Download Sample Excel Template"** that downloads a `.xlsx` with parser field-name headers plus **one sample Arabic MCQ row** (teachers may delete the sample row before filling).
 - **FR-004**: Word/Text tab MUST display plain-text format rules in a code block or preview card using `الشرح:` and `التصنيف:` as canonical UI labels, **plus** a brief `.docx` callout: numbered questions `(1)` with a–d option tables; upload triggers existing staging preview before save.
 - **FR-005**: `parseWordLikeText` MUST accept both canonical labels (`الشرح:`, `التصنيف:`) and legacy aliases (`شرح:`, `قسم:`) without breaking existing imports.
-- **FR-006**: Panel MUST show validation hint box (`data-spekit="import-validation-tips"`) before upload about formulas/images requiring manual editor handling after import.
+- **FR-006**: Panel MUST show a **persistent** validation hint box (`data-spekit="import-validation-tips"`) below tab instructions and above `FileUploadZone`, with Arabic bullet points:
+  - Excel formulas are not evaluated — enter plain text values.
+  - Images are not imported — add them via the manual question editor after import.
+  - DOCX math/equations may need review in the staging preview before save.
 - **FR-007**: Enhancement MUST integrate into existing `BulkQuestionUpload` on `/teacher/quizzes/[id]` without breaking DOCX preview staging, CSV/XLSX/TXT import, or skip/manual flows.
 
 ### Key Entities
@@ -101,7 +106,7 @@ As a teacher, I can download a starter `.xlsx` file with correct import headers 
 
 ## Edge Cases
 
-- Teacher switches tabs while a file is selected — dropzone state unchanged; instructions update only.
+- Teacher switches tabs while a file is selected — dropzone state unchanged; instructions update only; validation hint remains visible.
 - Teacher on DOCX preview staging screen — instruction template hidden (existing preview replaces upload form).
 - Download clicked repeatedly — each click produces a fresh valid template file.
 - `.txt` block uses `شرح:` or `قسم:` instead of `الشرح:` / `التصنيف:` — parser accepts both.

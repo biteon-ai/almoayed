@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildSampleImportSheetRows,
+  IMPORT_COLUMN_DEFINITIONS,
+} from "@/lib/import-template";
+import {
   importRowsToQuestionInserts,
   parseCsvQuestions,
   parseWordLikeText,
@@ -43,6 +47,46 @@ describe(`${FEATURE} Bulk question parser`, () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]?.correct_answer).toBe("ب");
     expect(rows[0]?.category_tag).toBe("ضرب");
+  });
+
+  it("parses canonical الشرح and التصنيف labels in .txt blocks", () => {
+    const txt = [
+      "س: سؤال تجريبي",
+      "أ) 1",
+      "ب) 2",
+      "ج) 3",
+      "د) 4",
+      "الجواب: أ",
+      "الشرح: هذا شرح",
+      "التصنيف: جبر",
+    ].join("\n");
+
+    const rows = parseWordLikeText(txt);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.explanation_text).toBe("هذا شرح");
+    expect(rows[0]?.category_tag).toBe("جبر");
+  });
+
+  it("buildSampleImportSheetRows matches parser column count", () => {
+    const [headers] = buildSampleImportSheetRows();
+    expect(headers).toHaveLength(IMPORT_COLUMN_DEFINITIONS.length);
+    expect(headers[0]).toBe("question_text");
+    expect(headers.at(-1)).toBe("category_tag");
+  });
+
+  it("parses generated sample import template via parseXlsxQuestions", async () => {
+    const XLSX = await import("xlsx");
+    const rows = buildSampleImportSheetRows();
+    const sheet = XLSX.utils.aoa_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, "Questions");
+    const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+
+    const parsed = await parseXlsxQuestions(buffer);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]?.question_text).toBe("ما ناتج 5 × 5؟");
+    expect(parsed[0]?.correct_answer).toBe("ب");
+    expect(parsed[0]?.category_tag).toBe("ضرب");
   });
 
   it("skips txt blocks missing question or answer", () => {

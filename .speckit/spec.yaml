@@ -264,12 +264,17 @@ features:
     routes: [/teacher/quizzes/[id]]
     files:
       - src/components/teacher/BulkQuestionUpload.tsx
+      - src/components/teacher/import/ImportFormatTabs.tsx
+      - src/components/teacher/import/ImportExcelGuide.tsx
+      - src/components/teacher/import/ImportWordGuide.tsx
+      - src/components/teacher/import/ImportValidationTips.tsx
       - src/components/teacher/DocxImportPreview.tsx
       - src/components/teacher/EditQuizBulkImportSection.tsx
       - src/components/teacher/EditQuizImportToast.tsx
       - src/components/teacher/FileUploadZone.tsx
       - src/components/teacher/QuestionAddForm.tsx
       - src/lib/import-questions.ts
+      - src/lib/import-template.ts
       - src/lib/docx-html-utils.ts
       - src/lib/docx-file.ts
       - src/lib/parse-docx-questions.ts
@@ -286,7 +291,12 @@ features:
       - Skip setup clears ?setup=import for manual entry
       - Re-import on existing quiz always appends rows (no duplicate blocking in v1)
       - Manual MCQ entry with 2x2 grid (أ–د)
-    spekit: [bulk-import-zone, bulk-import-submit, manual-question-form]
+      - Import panel shows Excel/CSV vs Word/Text tabs above dropzone (Excel default)
+      - Excel tab displays column guide table and downloadable sample .xlsx template
+      - Word tab shows plain-text block format and brief .docx callout
+      - Persistent validation hint (import-validation-tips) above dropzone
+      - parseWordLikeText accepts الشرح/التصنيف and legacy شرح/قسم labels
+    spekit: [bulk-import-zone, bulk-import-submit, import-validation-tips, manual-question-form]
 
   - id: TEACH-005
     name: Teacher Dashboard Stats

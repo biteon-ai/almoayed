@@ -2,6 +2,15 @@ import type { ImportQuestionRow } from "@/types/database";
 
 export { generateSessionToken } from "@/lib/session-token";
 
+function stripLabelPrefix(line: string, prefixes: string[]): string | null {
+  for (const prefix of prefixes) {
+    if (line.startsWith(prefix)) {
+      return line.slice(prefix.length).trimStart();
+    }
+  }
+  return null;
+}
+
 export function parseCsvQuestions(content: string): ImportQuestionRow[] {
   const lines = content
     .split(/\r?\n/)
@@ -91,10 +100,16 @@ export function parseWordLikeText(content: string): ImportQuestionRow[] {
         row.option_d = line.replace(/^[دdD][\).:-]\s*/, "");
       } else if (line.startsWith("الجواب:") || line.startsWith("Answer:")) {
         row.correct_answer = line.replace(/^(الجواب:|Answer:)\s*/, "");
-      } else if (line.startsWith("شرح:") || line.startsWith("Explanation:")) {
-        row.explanation_text = line.replace(/^(شرح:|Explanation:)\s*/, "");
-      } else if (line.startsWith("قسم:") || line.startsWith("Category:")) {
-        row.category_tag = line.replace(/^(قسم:|Category:)\s*/, "");
+      } else if (
+        stripLabelPrefix(line, ["شرح:", "الشرح:", "Explanation:"]) !== null
+      ) {
+        row.explanation_text =
+          stripLabelPrefix(line, ["شرح:", "الشرح:", "Explanation:"]) ?? "";
+      } else if (
+        stripLabelPrefix(line, ["قسم:", "التصنيف:", "Category:"]) !== null
+      ) {
+        row.category_tag =
+          stripLabelPrefix(line, ["قسم:", "التصنيف:", "Category:"]) ?? "عام";
       } else if (!row.question_text) {
         row.question_text = line;
       }

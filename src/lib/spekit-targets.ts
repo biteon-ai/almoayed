@@ -86,6 +86,7 @@ export const SPEKIT = {
   teacherQuizEditPage: "teacher-quiz-edit-page",
   bulkImportZone: "bulk-import-zone",
   bulkImportSubmit: "bulk-import-submit",
+  importValidationTips: "import-validation-tips",
   docxImportPreview: "docx-import-preview",
   docxImportConfirm: "docx-import-confirm",
   manualQuestionForm: "manual-question-form",

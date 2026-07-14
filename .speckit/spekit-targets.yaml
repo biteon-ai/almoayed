@@ -130,6 +130,7 @@ TEACH-004:
   teacher-quiz-edit-page: "Edit quiz page root"
   bulk-import-zone: "Drag-and-drop file upload"
   bulk-import-submit: "Import file submit button"
+  import-validation-tips: "Pre-upload validation hints for bulk import"
   docx-import-preview: "Word docx parsed questions staging list"
   docx-import-confirm: "Confirm and save staged docx questions"
   manual-question-form: "Manual question entry form"
