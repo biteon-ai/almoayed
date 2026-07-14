@@ -1,50 +1,46 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Al-Moayed (المؤيد) — Project Constitution
 
-## Core Principles
+**Slogan:** حل بيدك ما حدا بفيدك  
+**Product:** Mobile-first, RTL Arabic PWA for Syrian Baccalaureate math (students + teachers)
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+> Canonical copy: `.speckit/constitution.md` — keep both in sync when amending.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+## Non-negotiable principles
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+1. **RTL-first Arabic UX** — Tajawal font, `dir="rtl"`, `text-start`, touch targets `h-10`–`h-12`.
+2. **Multi-tenant isolation** — Every teacher-scoped query MUST filter by active `currentTeacherId` from session. Never leak cross-teacher data.
+3. **Gatekeeper quiz security (QUIZ-001)** — `getQuizForStudent` exposes exam fields only. Correct answers and explanations ONLY after valid `exam_submissions` row exists.
+4. **Server-side data layer** — No client Supabase reads for privileged data. Use Server Actions + admin client + `requireStudent` / `requireTeacher`.
+5. **Passwordless auth** — WhatsApp number identity via iron-session; no email/password flows.
+6. **Minimal diffs** — Match existing Shadcn/Base UI patterns; do not over-engineer.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+## Stack
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+| Layer | Choice |
+|-------|--------|
+| Framework | **Next.js 14** App Router, RSC, Server Actions |
+| Language | TypeScript (strict) |
+| UI | Tailwind CSS, Shadcn/UI (Base UI), RTL |
+| Database | **Supabase** PostgreSQL + RLS |
+| Session | iron-session (`profileId`, `role`, `sessionToken`, `currentTeacherId`) |
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Key paths
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+```
+src/actions/auth.ts          AUTH
+src/actions/quiz.ts          Student quiz + weak points
+src/actions/student.ts       MT-002, TIER-002 student side
+src/actions/teacher.ts       TEACH-* teacher admin
+src/lib/supabase/admin.ts    Server-side Supabase client
+src/middleware.ts            Route protection
+supabase/migrations/         Schema source of truth
+.speckit/spec.yaml           Feature registry
+```
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## When changing behavior
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- Update `.speckit/spec.yaml` feature status or acceptance criteria.
+- If adding UI help surfaces, add `data-spekit` via `src/lib/spekit-targets.ts`.
+- Run `npm run lint && npm run typecheck && npm run test` before considering work complete.
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
-
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-07-14 | **Last Amended**: 2026-07-14

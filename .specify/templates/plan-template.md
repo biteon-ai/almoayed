@@ -2,112 +2,114 @@
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md` or `.speckit/tasks/[feature]/spec.md`
 
-**Note**: This template is filled in by the `/speckit-plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+**Note**: Filled by `/speckit-plan`. Project stack defaults below are **Al-Moayed (المؤيد)** — override only what differs for this feature.
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+[Primary requirement + technical approach from spec and clarifications]
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
+**Project**: Al-Moayed (المؤيد) — RTL Arabic PWA for Syrian Baccalaureate math
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
+| Area | Default (this repo) |
+|------|---------------------|
+| **Language** | TypeScript (strict) |
+| **Framework** | **Next.js 14** App Router — RSC, Server Actions, `src/app/` routes |
+| **Database** | **Supabase** PostgreSQL — schema in `supabase/migrations/`, RLS enabled |
+| **Data access** | Server Actions + `createAdminClient()` — **no** client Supabase for privileged reads |
+| **Session / auth** | iron-session (`requireStudent` / `requireTeacher`), WhatsApp login |
+| **UI** | Tailwind CSS, Shadcn/Base UI, RTL (`dir="rtl"`, `text-start`), touch targets `h-10`–`h-12` |
+| **Testing** | Vitest (`tests/features/`, `tests/integration/`), Playwright (`e2e/`) |
+| **Target platform** | Mobile-first PWA (Vercel or Node hosting) |
+| **Spec registry** | `.speckit/spec.yaml` (feature IDs: AUTH-*, QUIZ-*, TEACH-*, etc.) |
 
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+**Feature-specific overrides** (fill if different):
 
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
-
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
-
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
-
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
-
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+- **Primary Dependencies**: [e.g. mammoth for DOCX — or "none beyond stack defaults"]
+- **Storage / tables touched**: [e.g. `quizzes`, `questions` — or N/A]
+- **Performance Goals**: [e.g. import <5s for 50 MCQs — or "standard web"]
+- **Constraints**: [e.g. multi-tenant filter by `currentTeacherId` — reference constitution]
+- **Scale/Scope**: [e.g. single teacher quiz edit screen]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Source: `.speckit/constitution.md` (also `.specify/memory/constitution.md`)
+
+| Gate | Requirement |
+|------|-------------|
+| MT-002 | Teacher-scoped queries filter by `currentTeacherId` / session `profileId` |
+| QUIZ-001 | No `correct_answer` / explanations to students before `exam_submissions` |
+| Server layer | Privileged data via Server Actions + admin Supabase client only |
+| RTL UX | Arabic RTL, Tajawal, accessible touch targets |
+| Minimal diff | Match existing patterns in `src/components/`, `src/actions/` |
+
+**Feature compliance**: [PASS / FAIL — list any justified exceptions in Complexity Tracking]
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit-plan command output)
-├── research.md          # Phase 0 output (/speckit-plan command)
-├── data-model.md        # Phase 1 output (/speckit-plan command)
-├── quickstart.md        # Phase 1 output (/speckit-plan command)
-├── contracts/           # Phase 1 output (/speckit-plan command)
-└── tasks.md             # Phase 2 output (/speckit-tasks command - NOT created by /speckit-plan)
+specs/[###-feature]/          # Spec Kit branch workflow (optional)
+├── plan.md                     # This file
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+└── tasks.md
+
+# Or monorepo-style (main branch):
+.speckit/tasks/[feature-slug]/
+├── spec.md
+├── plan.md
+└── tasks.md
 ```
 
-### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+### Source Code (Al-Moayed — Next.js + Supabase)
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+├── app/                        # App Router pages (RSC)
+│   ├── login/
+│   ├── dashboard/              # Student
+│   ├── quiz/[id]/
+│   └── teacher/                # Teacher admin
+├── actions/                    # Server Actions ("use server")
+│   ├── auth.ts
+│   ├── quiz.ts
+│   ├── student.ts
+│   └── teacher.ts
+├── components/
+│   ├── teacher/
+│   ├── quiz/
+│   └── ui/
+├── lib/                        # Pure helpers, gatekeeper, import parsers
+└── types/database.ts
+
+supabase/
+└── migrations/                 # Schema source of truth
 
 tests/
-├── contract/
+├── features/                   # Vitest — [FEATURE-ID] in describe names
 ├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+e2e/                            # Playwright smoke / RTL
+.speckit/
+├── spec.yaml                   # Feature registry + acceptance
+├── constitution.md
+└── spekit-targets.yaml         # data-spekit hooks
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure decision**: Single Next.js 14 app; Supabase for persistence; no separate API server. New work goes in `src/app/`, `src/actions/`, `src/components/` per feature ID in `spec.yaml`.
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
+> Fill ONLY if Constitution Check has violations that must be justified
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| [none] | — | — |

@@ -8,6 +8,7 @@ This folder is the **source of truth** for what the app does and how agents shou
 |------|-----|
 | **spec.yaml** | All implemented features (AUTH-*, QUIZ-*, TEACH-*, etc.) with routes, files, acceptance criteria |
 | **constitution.md** | Non-negotiable architecture rules |
+| **plan.md** | Default stack context for `/speckit-plan` (Next.js 14 + Supabase) |
 | **PROMPT.md** | Full agent system prompt — paste into Cursor or other AI tools |
 | **spekit-targets.yaml** | Spekit.co DAP selectors (`data-spekit="..."`) |
 
