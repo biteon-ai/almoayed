@@ -1,5 +1,6 @@
 export const APP_NAME = "المؤيد";
 export const APP_SLOGAN = "حل بيدك ما حدا بفيدك";
+export const APP_THEME_COLOR = "#0d9488";
 
 export const TEACHER_WHATSAPP =
   process.env.NEXT_PUBLIC_TEACHER_WHATSAPP ?? "963999999999";

@@ -1,14 +1,39 @@
 {
-  "name": "المؤيد — Al-Moayed",
+  "name": "المؤيد",
   "short_name": "المؤيد",
   "description": "حل بيدك ما حدا بفيدك",
-  "start_url": "/login",
+  "start_url": "/",
   "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d9488",
   "orientation": "portrait",
-  "background_color": "#f7f9fa",
-  "theme_color": "#0d6e6e",
   "lang": "ar",
   "dir": "rtl",
   "categories": ["education"],
-  "icons": []
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }

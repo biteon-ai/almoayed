@@ -4,14 +4,14 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { requestProUpgrade } from "@/actions/student";
 import type { QuizCarouselItem } from "@/types/database";
-import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Crown, FileQuestion, Lock } from "lucide-react";
+import { Crown, FileText, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface QuizCarouselCardProps {
   quiz: QuizCarouselItem;
+  variant?: "default" | "featured";
 }
 
 const NEW_QUIZ_DAYS = 7;
@@ -24,68 +24,113 @@ function isRecentlyCreated(createdAt: string): boolean {
 
 function QuestionMeta({ count }: { count: number }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-slate-500">
-      <FileQuestion className="size-4 shrink-0 text-brand-500/90" aria-hidden />
-      <span>
+    <p className="inline-flex items-center gap-1.5 text-sm text-slate-500">
+      <FileText
+        className="size-4 shrink-0 text-brand-500/90"
+        aria-hidden
+      />
+      <span className="font-medium tabular-nums">
         {count} {count === 1 ? "سؤال" : "أسئلة"}
       </span>
-    </div>
+    </p>
   );
 }
 
-function StatusBadge({ quiz }: { quiz: QuizCarouselItem }) {
-  if (quiz.isLocked) return null;
+function InProgressBadge() {
+  return (
+    <span className="rounded-md border border-amber-100 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+      قيد التقدم
+    </span>
+  );
+}
+
+function NewBadge() {
+  return (
+    <span className="rounded-md border border-sky-100 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+      جديد
+    </span>
+  );
+}
+
+function ProBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border-0 bg-gradient-to-l from-amber-500 to-orange-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+      <Crown className="size-3" aria-hidden />
+      Pro
+    </span>
+  );
+}
+
+function StatusBadgeRow({ quiz }: { quiz: QuizCarouselItem }) {
+  if (quiz.isLocked) {
+    return (
+      <div className="flex w-full items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700/90">
+          <Lock className="size-3.5 shrink-0" aria-hidden />
+          يتطلب اشتراك Pro
+        </span>
+        <ProBadge />
+      </div>
+    );
+  }
 
   if (quiz.hasSubmission) {
     return (
-      <Badge
-        variant="outline"
-        className="border-amber-200/80 bg-amber-50 text-[10px] font-bold text-amber-700"
-      >
-        قيد التقدم
-      </Badge>
+      <div className="flex w-full items-center justify-between gap-2">
+        <InProgressBadge />
+      </div>
     );
   }
 
   if (isRecentlyCreated(quiz.created_at)) {
     return (
-      <Badge
-        variant="outline"
-        className="border-sky-200/80 bg-sky-50 text-[10px] font-bold text-sky-700"
-      >
-        جديد
-      </Badge>
+      <div className="flex w-full items-center justify-between gap-2">
+        <NewBadge />
+      </div>
     );
   }
 
   return null;
 }
 
-const cardShell = cn(
-  "relative flex min-h-[190px] flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-sm",
-  "transition-all duration-200 hover:shadow-md"
-);
-
 const ctaClasses = cn(
   buttonVariants({ variant: "default", size: "lg" }),
   "h-12 w-full rounded-xl text-sm font-bold",
-  "transition-transform duration-200 hover:scale-[1.01] hover:bg-brand-700 active:scale-[0.99]"
+  "bg-brand-600 text-white shadow-sm",
+  "transition-all duration-200 hover:scale-[1.02] hover:bg-brand-700 hover:shadow-md active:scale-[0.99]"
 );
 
-export function QuizCarouselCard({ quiz }: QuizCarouselCardProps) {
+export function QuizCarouselCard({
+  quiz,
+  variant = "default",
+}: QuizCarouselCardProps) {
   if (quiz.isLocked) {
     return <LockedQuizCarouselCard quiz={quiz} />;
   }
 
-  return (
-    <article className={cardShell} data-spekit={SPEKIT.studentQuizItem}>
-      <div className="absolute start-4 top-4">
-        <StatusBadge quiz={quiz} />
-      </div>
+  const featured = variant === "featured";
 
-      <h3 className="mb-3 line-clamp-2 flex-1 pe-2 ps-0 pt-1 font-bold text-base text-slate-800 md:text-lg">
-        {quiz.title}
-      </h3>
+  return (
+    <article
+      className={cn(
+        "flex min-h-[190px] flex-col rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md",
+        featured
+          ? "border-emerald-200/90 bg-gradient-to-br from-emerald-50/50 to-white p-6 ring-1 ring-emerald-100/80 md:min-h-[210px]"
+          : "border-slate-100"
+      )}
+      data-spekit={SPEKIT.studentQuizItem}
+    >
+      <div className="flex flex-1 flex-col gap-2">
+        <StatusBadgeRow quiz={quiz} />
+        <h3
+          className={cn(
+            "line-clamp-2 font-bold text-slate-800",
+            featured ? "text-xl md:text-2xl" : "text-lg"
+          )}
+        >
+          {quiz.title}
+        </h3>
+      </div>
 
       <QuestionMeta count={quiz.questionCount} />
 
@@ -105,24 +150,17 @@ function LockedQuizCarouselCard({ quiz }: QuizCarouselCardProps) {
   return (
     <article
       className={cn(
-        cardShell,
-        "border-amber-100/80 bg-gradient-to-br from-amber-50/50 to-white"
+        "flex min-h-[190px] flex-col rounded-2xl border border-amber-100/80 bg-gradient-to-br from-amber-50/50 to-white p-5 shadow-sm",
+        "transition-all duration-200 hover:shadow-md"
       )}
       {...spekit(SPEKIT.proUpgradeCard)}
     >
-      <Badge className="absolute end-4 top-4 gap-0.5 border-0 bg-gradient-to-l from-amber-500 to-orange-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm hover:from-amber-500 hover:to-orange-500">
-        <Crown className="size-3" />
-        Pro
-      </Badge>
-
-      <div className="mb-2 flex items-center gap-1.5 pt-8 text-amber-700/90">
-        <Lock className="size-3.5 shrink-0" aria-hidden />
-        <span className="text-[11px] font-semibold">يتطلب اشتراك Pro</span>
+      <div className="flex flex-1 flex-col gap-2">
+        <StatusBadgeRow quiz={quiz} />
+        <h3 className="line-clamp-2 text-lg font-bold text-slate-800">
+          {quiz.title}
+        </h3>
       </div>
-
-      <h3 className="mb-3 line-clamp-2 flex-1 font-bold text-base text-slate-800 md:text-lg">
-        {quiz.title}
-      </h3>
 
       <QuestionMeta count={quiz.questionCount} />
 
@@ -131,7 +169,7 @@ function LockedQuizCarouselCard({ quiz }: QuizCarouselCardProps) {
           size="lg"
           className={cn(
             "h-12 w-full gap-2 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-sm font-bold shadow-sm",
-            "transition-transform duration-200 hover:scale-[1.01] hover:from-amber-600 hover:to-orange-600 active:scale-[0.99]"
+            "transition-all duration-200 hover:scale-[1.02] hover:from-amber-600 hover:to-orange-600 hover:shadow-md active:scale-[0.99]"
           )}
           disabled={pending}
           onClick={() => {

@@ -104,6 +104,8 @@ export interface RecentScoreRow {
 export interface QuizCarouselItem extends QuizListItem {
   questionCount: number;
   hasSubmission: boolean;
+  /** Latest submission timestamp when the student has activity on this quiz */
+  lastActivityAt: string | null;
 }
 
 /** [DASH-001] Bundled dashboard read model */

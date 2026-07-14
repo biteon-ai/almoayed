@@ -386,6 +386,9 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         ...listItem,
         questionCount: questionCountByQuiz.get(quiz.id) ?? 0,
         hasSubmission: submissionByQuiz.has(quiz.id),
+        lastActivityAt:
+          (submissionByQuiz.get(quiz.id)?.submitted_at as string | undefined) ??
+          null,
       };
     });
 
