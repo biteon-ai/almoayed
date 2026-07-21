@@ -18,60 +18,85 @@ status_legend:
 features:
   # ── Authentication ──────────────────────────────────────────────────────────
   - id: AUTH-001
-    name: WhatsApp Login
+    name: BiteonSwitch WhatsApp OTP Login
     status: implemented
     persona: [STUDENT, TEACHER]
-    routes: [/login]
+    routes: ["/login", "/api/auth/biteonswitch/callback"]
     files:
       - src/app/login/login-form.tsx
-      - src/actions/auth.ts
+      - src/actions/biteonswitch.ts
+      - src/app/api/auth/biteonswitch/callback/route.ts
+      - src/lib/biteonswitch/client.ts
+      - src/lib/auth-session.ts
       - src/lib/session.ts
     acceptance:
-      - User logs in with WhatsApp number only (no password)
-      - Session cookie stores profileId, role, sessionToken, currentTeacherId
-      - Demo student and demo teacher one-click login work
-    spekit: [login-form, login-whatsapp-field, login-submit]
+      - Existing users start BiteonSwitch hosted WhatsApp OTP from /login CTA
+      - Callback verifies token server-side, enforces AUTH-003, mints iron-session
+      - Role redirect to /dashboard or /teacher/dashboard
+      - Provider outage shows Arabic retry; no student emergency secret
+      - Demo one-click login remains when AUTH_DEMO_BYPASS enabled
+    spekit: [login-form, login-whatsapp-field, login-otp-cta, login-submit]
 
   - id: AUTH-002
     name: Teacher Code Registration
     status: implemented
     persona: [STUDENT]
-    routes: [/login]
+    routes: ["/login", "/register"]
     files:
       - src/app/login/login-form.tsx
-      - src/actions/auth.ts
+      - src/app/register/page.tsx
+      - src/actions/login.ts
     acceptance:
-      - New students MUST provide valid teacher_code unless demo account
-      - Invalid code returns Arabic error message
-      - Creates student_teachers link with pending/active flow
-    spekit: [login-teacher-code, teacher-code-card]
+      - /login is registration-first (name, WhatsApp, teacher code)
+      - Successful register creates profile + student_teachers link without minting session
+      - Duplicate WhatsApp steers to OTP CTA
+      - /register aliases /login
+      - Invalid teacher code returns Arabic error; no link created
+    spekit: [login-form, login-teacher-code, login-name-field, login-submit]
 
   - id: AUTH-003
     name: Device Session Lock
     status: implemented
     persona: [STUDENT, TEACHER]
     files:
-      - src/actions/auth.ts
+      - src/lib/auth-session.ts
       - src/lib/auth.ts
       - supabase/migrations/003_teacher_dashboard.sql
     acceptance:
-      - profiles.last_session_id updated on each login
+      - profiles.last_session_id updated on each login (OTP, admin fallback, demo)
       - Mismatch redirects without breaking Server Components
 
   - id: AUTH-004
     name: Logout
     status: implemented
-    routes: [/dashboard, /teacher/*]
+    routes: ["/dashboard", "/teacher/*"]
     files:
       - src/actions/auth.ts
     acceptance:
       - Clears iron-session and redirects to /login
 
+  - id: AUTH-005
+    name: Admin Emergency Fallback Login
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/admin/login"]
+    files:
+      - src/app/admin/login/page.tsx
+      - src/app/admin/login/admin-login-form.tsx
+      - src/actions/auth.ts
+      - src/lib/admin-fallback.ts
+    acceptance:
+      - Dedicated /admin/login with WhatsApp + ADMIN_FALLBACK_SECRET
+      - Allowlisted TEACHER profiles only; generic Arabic denial
+      - Not advertised on student /login
+      - Works when BiteonSwitch is unavailable; enforces AUTH-003
+    spekit: [admin-login-form]
+
   - id: PROFILE-001
     name: User Profile & Settings
     status: implemented
     persona: [STUDENT, TEACHER]
-    routes: [/settings, /teacher/settings]
+    routes: ["/settings", "/teacher/settings"]
     files:
       - src/app/settings/page.tsx
       - src/app/teacher/settings/page.tsx
@@ -104,7 +129,7 @@ features:
     name: Teacher Switcher
     status: implemented
     persona: [STUDENT]
-    routes: [/dashboard]
+    routes: ["/dashboard"]
     files:
       - src/components/dashboard/TeacherSwitcher.tsx
       - src/actions/student.ts
@@ -118,7 +143,7 @@ features:
     name: Gatekeeper Quiz Flow
     status: implemented
     persona: [STUDENT]
-    routes: [/quiz/[id]]
+    routes: ["/quiz/[id]"]
     files:
       - src/actions/quiz.ts
       - src/components/quiz/QuizRunner.tsx
@@ -134,7 +159,7 @@ features:
     name: Weak Points Analysis
     status: implemented
     persona: [STUDENT]
-    routes: [/dashboard]
+    routes: ["/dashboard"]
     files:
       - src/actions/quiz.ts
       - src/components/dashboard/WeakPointsCard.tsx
@@ -148,7 +173,7 @@ features:
     name: Student Dashboard Mobile Density
     status: implemented
     persona: [STUDENT]
-    routes: [/dashboard]
+    routes: ["/dashboard"]
     files:
       - src/app/dashboard/page.tsx
       - src/actions/quiz.ts
@@ -172,7 +197,7 @@ features:
     name: WhatsApp Results Share
     status: implemented
     persona: [STUDENT]
-    routes: [/quiz/[id]]
+    routes: ["/quiz/[id]"]
     files:
       - src/components/quiz/WhatsAppShare.tsx
     acceptance:
@@ -184,7 +209,7 @@ features:
     name: Free vs Pro Quiz Gating
     status: implemented
     persona: [STUDENT]
-    routes: [/dashboard, /quiz/[id]]
+    routes: ["/dashboard", "/quiz/[id]"]
     files:
       - src/actions/quiz.ts
       - src/components/dashboard/ProUpgradeCard.tsx
@@ -197,7 +222,7 @@ features:
     name: Pro Upgrade Request Workflow
     status: implemented
     persona: [STUDENT, TEACHER]
-    routes: [/dashboard, /teacher/students, /teacher/dashboard]
+    routes: ["/dashboard", "/teacher/students", "/teacher/dashboard"]
     files:
       - src/actions/student.ts
       - src/actions/teacher.ts
@@ -214,7 +239,7 @@ features:
     name: Student Management
     status: implemented
     persona: [TEACHER]
-    routes: [/teacher/students]
+    routes: ["/teacher/students"]
     files:
       - src/components/teacher/StudentManagement.tsx
       - src/actions/teacher.ts
@@ -227,7 +252,7 @@ features:
     name: Study Groups
     status: implemented
     persona: [TEACHER]
-    routes: [/teacher/students]
+    routes: ["/teacher/students"]
     files:
       - src/components/teacher/StudentGroupSelect.tsx
       - src/actions/teacher.ts
@@ -240,7 +265,7 @@ features:
     name: Quiz CRUD and Flags
     status: implemented
     persona: [TEACHER]
-    routes: [/teacher/quizzes, /teacher/quizzes/new, /teacher/quizzes/[id]]
+    routes: ["/teacher/quizzes", "/teacher/quizzes/new", "/teacher/quizzes/[id]"]
     files:
       - src/app/teacher/quizzes/page.tsx
       - src/app/teacher/quizzes/new/page.tsx
@@ -261,7 +286,7 @@ features:
     name: Bulk Question Import
     status: implemented
     persona: [TEACHER]
-    routes: [/teacher/quizzes/[id]]
+    routes: ["/teacher/quizzes/[id]"]
     files:
       - src/components/teacher/BulkQuestionUpload.tsx
       - src/components/teacher/import/ImportFormatTabs.tsx
@@ -302,7 +327,7 @@ features:
     name: Teacher Dashboard Stats
     status: implemented
     persona: [TEACHER]
-    routes: [/teacher/dashboard]
+    routes: ["/teacher/dashboard"]
     files:
       - src/app/teacher/dashboard/page.tsx
       - src/components/teacher/StatCard.tsx
@@ -315,7 +340,7 @@ features:
     name: Interactive Question Editing
     status: implemented
     persona: [TEACHER]
-    routes: [/teacher/quizzes/[id]]
+    routes: ["/teacher/quizzes/[id]"]
     files:
       - src/app/teacher/quizzes/[id]/page.tsx
       - src/components/teacher/TeacherQuestionsList.tsx
@@ -415,5 +440,5 @@ demo_accounts:
 
 routes:
   public: [/login]
-  student: [/dashboard, /quiz/[id]]
-  teacher: [/teacher/dashboard, /teacher/students, /teacher/quizzes, /teacher/quizzes/new, /teacher/quizzes/[id]]
+  student: ["/dashboard", "/quiz/[id]"]
+  teacher: ["/teacher/dashboard", "/teacher/students", "/teacher/quizzes", "/teacher/quizzes/new", "/teacher/quizzes/[id]"]

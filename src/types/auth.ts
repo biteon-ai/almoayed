@@ -5,6 +5,8 @@ import {
 
 export type LoginState =
   | { status: "success"; role: "TEACHER" | "STUDENT" }
+  | { status: "registered"; next: "otp" }
+  | { status: "already_registered" }
   | {
       status: "needs_verification";
       verificationUrl: string;

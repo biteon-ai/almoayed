@@ -33,12 +33,12 @@ test.describe(`${FEATURE} Mobile dashboard density`, () => {
     await page.locator('[data-spekit="login-demo-student"]').click();
     await page.waitForURL(/\/dashboard/);
 
-    await expect(
-      page.locator('[data-spekit="student-dashboard"]')
-    ).toBeVisible();
-    await expect(page.getByText("المعدل العام")).toBeVisible();
-    await expect(page.getByText("اختبارات مكتملة")).toBeVisible();
-    await expect(page.getByText("الاختبارات المتاحة")).toBeVisible();
+    const dashboard = page.locator('[data-spekit="student-dashboard"]');
+    await expect(dashboard).toBeVisible();
+    // Stat labels may render in mobile + aside layouts; scope to dashboard and take first
+    await expect(dashboard.getByText("المعدل العام").first()).toBeVisible();
+    await expect(dashboard.getByText("اختبارات مكتملة").first()).toBeVisible();
+    await expect(dashboard.getByText("الاختبارات المتاحة").first()).toBeVisible();
     await expect(page.getByRole("tab", { name: "نتائجي" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "نقاط الضعف" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "أساتذتي" })).toBeVisible();

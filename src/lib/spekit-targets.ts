@@ -11,10 +11,12 @@ export const SPEKIT = {
   loginTeacherCode: "login-teacher-code",
   loginNameField: "login-name-field",
   loginSubmit: "login-submit",
+  loginOtpCta: "login-otp-cta",
   loginDemoStudent: "login-demo-student",
   loginDemoTeacher: "login-demo-teacher",
   loginVerificationPanel: "login-verification-panel",
   loginLoading: "login-loading-overlay",
+  adminLoginForm: "admin-login-form",
 
   // ── MT-001 / MT-002 ──────────────────────────────────────────
   teacherSwitcher: "teacher-switcher",
