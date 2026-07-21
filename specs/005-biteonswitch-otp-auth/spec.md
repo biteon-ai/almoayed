@@ -8,6 +8,12 @@
 
 **Input**: User description: "Refactor authentication to integrate BiteonSwitch OTP for external hosted login/OTP verification, convert the main public login route into a Registration-only page, and establish a dedicated Admin Fallback Login so admins can still access the product if the external OTP provider is down. Preserve AUTH-002 teacher-code registration, AUTH-003 device session lock, RTL Arabic UX, server-side secret handling, and local demo account access."
 
+## Clarifications
+
+### Session 2026-07-21
+
+- Q: Admin fallback identity model → A: Admin WhatsApp/identifier + shared secret; session minted for that existing privileged profile (not a fixed anonymous superuser)
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Existing User Signs In via External OTP (Priority: P1)
@@ -46,16 +52,16 @@ A new student uses the public page as a **registration** form: full name, WhatsA
 
 ### User Story 3 - Admin Emergency / Fallback Sign-In (Priority: P2)
 
-When BiteonSwitch is down or unreachable, an authorized admin can open a dedicated admin fallback sign-in entry (not shown on the student registration page) and authenticate with a strong admin secret / fallback credential. On success they receive a normal privileged session and can reach teacher/admin controls without using OTP.
+When BiteonSwitch is down or unreachable, an authorized admin can open a dedicated admin fallback sign-in entry (not shown on the student registration page) and authenticate with their admin WhatsApp (or equivalent profile identifier) plus a strong shared admin secret. On success they receive a session for that existing privileged profile and can reach teacher/admin controls without using OTP.
 
 **Why this priority**: Guarantees operational continuity for admins during provider outages; secondary to daily student/teacher OTP but critical for resilience.
 
-**Independent Test**: With OTP treated as unavailable, complete admin fallback with the correct secret and reach teacher/admin area; wrong secret fails; students never see this entry on the registration page.
+**Independent Test**: With OTP treated as unavailable, complete admin fallback with a privileged WhatsApp/identifier plus the correct secret and reach teacher/admin area; wrong secret or non-privileged identity fails; students never see this entry on the registration page.
 
 **Acceptance Scenarios**:
 
-1. **Given** a correct admin fallback credential, **When** an authorized admin submits the dedicated fallback form, **Then** a session is minted for the admin’s privileged profile and they can open teacher/admin controls.
-2. **Given** an incorrect fallback credential, **When** submitted, **Then** access is denied, no session is created, and a clear Arabic error is shown.
+1. **Given** a valid admin WhatsApp/identifier for an existing privileged profile and the correct shared admin secret, **When** they submit the dedicated fallback form, **Then** a session is minted for that profile and they can open teacher/admin controls.
+2. **Given** a wrong secret, an unknown WhatsApp/identifier, or a non-privileged profile, **When** submitted, **Then** access is denied, no session is created, and a clear Arabic error is shown.
 3. **Given** a student on the public registration/sign-in page, **When** they view the page, **Then** admin fallback fields and the admin route are not advertised or embedded in the student UI.
 4. **Given** BiteonSwitch is unreachable, **When** an admin uses fallback successfully, **Then** they can still perform essential teacher/admin work without OTP.
 
@@ -81,7 +87,7 @@ Local/demo testing continues to work for the known demo teacher and demo student
 - BiteonSwitch callback/return arrives twice (replay): second processing must not corrupt the session or create duplicate profiles.
 - Verification succeeds for a WhatsApp number with no profile and no pending registration: user is told to register with a teacher code first (or equivalent safe guidance), and no privileged session is minted.
 - Teacher completes OTP but has no teacher role/profile: access is denied with a clear Arabic message.
-- Admin fallback is attempted by someone without an authorized admin profile: access is denied even if they guess part of the secret flow.
+- Admin fallback is attempted with a wrong secret, unknown identifier, or non-privileged profile: access is denied even if they guess part of the secret flow.
 - User abandons BiteonSwitch mid-flow and returns later: they can restart OTP without being stuck in a half-signed-in state.
 - Network timeout while contacting BiteonSwitch: user sees a recoverable Arabic error; admin fallback remains available on its dedicated entry.
 - Registration with malformed WhatsApp number: rejected with clear validation messaging before any external OTP step.
@@ -96,7 +102,7 @@ Local/demo testing continues to work for the known demo teacher and demo student
 - **FR-004**: After BiteonSwitch reports successful verification, the system MUST resolve the matching profile (create only when registration rules allow), enforce single-device session lock (AUTH-003), establish a server-side session with role and active teacher context when applicable, and redirect by role to student home or teacher home.
 - **FR-005**: New student registration MUST validate the teacher code and link the student to that teacher before (or as part of) completing first sign-in (AUTH-002 preserved).
 - **FR-006**: Registration MUST NOT create a duplicate profile for an already-registered WhatsApp number; instead it MUST steer the user to OTP sign-in.
-- **FR-007**: A dedicated admin fallback sign-in entry (AUTH-005) MUST exist that bypasses BiteonSwitch and authenticates using a strong admin secret / fallback credential known only to authorized operators.
+- **FR-007**: A dedicated admin fallback sign-in entry (AUTH-005) MUST exist that bypasses BiteonSwitch and authenticates using both an admin WhatsApp (or equivalent profile identifier) and a strong shared admin secret; on success it MUST mint a session only for that existing privileged profile.
 - **FR-008**: Admin fallback MUST NOT appear on the standard student registration / public OTP guidance UI.
 - **FR-009**: Admin fallback success MUST grant access to teacher/admin controls even when BiteonSwitch is down or unreachable.
 - **FR-010**: All verification of BiteonSwitch results, admin secrets, and session minting MUST occur only on the server; secrets MUST NOT be exposed to the browser as readable configuration for end users.
@@ -111,7 +117,7 @@ Local/demo testing continues to work for the known demo teacher and demo student
 - **Teacher link**: Relationship between a student profile and a teacher (via teacher code at registration); drives multi-tenant classroom context after sign-in.
 - **Session**: Server-issued signed-in state including profile identity, role, session token for device lock, and active teacher context for students when applicable.
 - **OTP verification result**: Proof returned from BiteonSwitch that a WhatsApp number completed OTP; consumed once to mint or refresh a session.
-- **Admin fallback credential**: Secret used only on the dedicated admin path to mint a privileged session without OTP.
+- **Admin fallback credential**: Pair of admin WhatsApp/identifier plus shared secret used only on the dedicated admin path; resolves to an existing privileged profile before minting a session without OTP.
 
 ## Success Criteria *(mandatory)*
 
@@ -129,7 +135,7 @@ Local/demo testing continues to work for the known demo teacher and demo student
 
 - BiteonSwitch is the mandated external OTP provider for production WhatsApp passwordless auth; product UX may say “تسجيل الدخول عبر واتساب” while operations configure BiteonSwitch credentials.
 - `/login` remains a valid public URL for registration (backward-compatible); an additional `/register` alias is acceptable if it reduces confusion, as long as one primary registration URL is documented.
-- Admin fallback authenticates an **existing** privileged admin/teacher profile; it does not invent a new anonymous superuser without a backing profile.
+- Admin fallback authenticates an **existing** privileged admin/teacher profile via WhatsApp/identifier + shared secret; it does not invent a new anonymous superuser and does not map a lone secret to a single fixed account.
 - Admin fallback is for operational continuity, not for student or ordinary teacher daily login.
 - AUTH-003 single-device lock applies to OTP-minted sessions the same way as today’s session lock; admin fallback sessions also participate in device lock unless a later clarification carves out an exception (default: lock applies).
 - Constitution principle of passwordless auth for normal users remains: no email/password student login is introduced; admin fallback is the only intentional secret-based exception and is scoped to admins.
