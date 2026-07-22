@@ -11,6 +11,11 @@ export interface SessionData {
   sessionToken: string;
   /** Active teacher context for multi-tenant students */
   currentTeacherId: string | null;
+  /**
+   * OTP verified but student has no teacher link yet.
+   * Not a full login — must complete رمز الأستاذ before isLoggedIn.
+   */
+  pendingTeacherLink: boolean;
 }
 
 export const defaultSession: SessionData = {
@@ -21,6 +26,7 @@ export const defaultSession: SessionData = {
   isLoggedIn: false,
   sessionToken: "",
   currentTeacherId: null,
+  pendingTeacherLink: false,
 };
 
 export const sessionOptions: SessionOptions = {

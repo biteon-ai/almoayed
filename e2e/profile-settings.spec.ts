@@ -20,6 +20,7 @@ test.describe(`${FEATURE} Settings UI structure`, () => {
     page,
   }) => {
     await page.goto("/login");
+    await page.getByRole("tab", { name: "تجربة" }).click();
     await expect(
       page.locator('[data-spekit="login-demo-student"]')
     ).toBeVisible();

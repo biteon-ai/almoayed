@@ -79,7 +79,11 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      # Smoke only: public RTL / login / redirects. Authed dashboard is skipped via E2E_SKIP_AUTHED
+      # (CI Supabase URL is example.supabase.co and cannot mint demo sessions).
       - name: Run Playwright E2E (build + start via webServer)
         run: npm run test:e2e
         env:
           PLAYWRIGHT_PORT: "3099"
+          AUTH_DEMO_BYPASS: "true"
+          E2E_SKIP_AUTHED: "true"

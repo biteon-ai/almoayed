@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 62
+  total_targets: 64
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -45,6 +45,7 @@ AUTH-001:
   login-whatsapp-field: "WhatsApp number input"
   login-name-field: "Student name field (optional)"
   login-submit: "Primary login button"
+  login-otp-cta: "Existing-user BiteonSwitch WhatsApp OTP CTA"
   login-loading: "Full-screen login / redirect loading overlay"
   login-demo-student: "Demo student login button"
   login-demo-teacher: "Demo teacher login button"
@@ -53,6 +54,9 @@ AUTH-001:
 AUTH-002:
   login-teacher-code: "Teacher code field for new students"
   teacher-code-card: "Teacher dashboard — shareable code card"
+
+AUTH-005:
+  admin-login-form: "Admin emergency fallback login form"
 
 # ── Multi-tenant ────────────────────────────────────────────────
 MT-002:

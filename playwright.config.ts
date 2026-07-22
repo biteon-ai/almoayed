@@ -28,5 +28,10 @@ export default defineConfig({
         url: BASE_URL,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
+        env: {
+          ...process.env,
+          // next start is NODE_ENV=production; keep demo shortcuts for e2e QA
+          AUTH_DEMO_BYPASS: "true",
+        },
       },
 });

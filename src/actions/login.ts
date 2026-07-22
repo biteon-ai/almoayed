@@ -1,17 +1,18 @@
 "use server";
 
-import { getIronSession } from "iron-session";
-import { cookies } from "next/headers";
-import { createAdminClient } from "@/lib/supabase/admin";
 import {
   authError,
   AuthErrorCode,
   logAuthFailure,
 } from "@/lib/auth-error-codes";
-import { generateSessionToken } from "@/lib/session-token";
-import { sessionOptions, type SessionData } from "@/lib/session";
 import {
-  buildTeacherVerificationUrl,
+  establishSession,
+  getAuthSupabaseClient,
+  getPendingTeacherLinkSession,
+} from "@/lib/auth-session";
+import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
+import { startBiteonSwitchOtp } from "@/actions/biteonswitch";
+import {
   DEMO_STUDENT,
   DEMO_TEACHER,
   normalizeWhatsAppNumber,
@@ -19,75 +20,48 @@ import {
 import type { Profile } from "@/types/database";
 import type { LoginState } from "@/types/auth";
 
-function getSupabaseClient() {
-  try {
-    return createAdminClient();
-  } catch (error) {
-    logAuthFailure("SUPABASE_ENV_MISSING", error);
-    return null;
+async function resolveStudentTeacherId(
+  supabase: NonNullable<ReturnType<typeof getAuthSupabaseClient>>,
+  studentId: string,
+  fallbackTeacherId: string | null
+): Promise<{ teacherId: string | null; error: LoginState | null }> {
+  const { data: activeLink, error: linkFetchError } = await supabase
+    .from("student_teachers")
+    .select("teacher_id, status")
+    .eq("student_id", studentId)
+    .eq("status", "active")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (linkFetchError) {
+    logAuthFailure("SUPABASE_STUDENT_LINK_FETCH_FAILED", linkFetchError);
+    return {
+      teacherId: null,
+      error: authError(AuthErrorCode.SUPABASE_CONNECTION_ERROR),
+    };
   }
+
+  return {
+    teacherId: activeLink?.teacher_id ?? fallbackTeacherId,
+    error: null,
+  };
 }
 
-async function establishSession(
-  profile: Profile,
-  teacherId: string | null
-): Promise<LoginState | { role: "TEACHER" | "STUDENT" }> {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
-  }
-
-  const sessionToken = generateSessionToken();
-
-  const { error: sessionUpdateError } = await supabase
-    .from("profiles")
-    .update({ last_session_id: sessionToken })
-    .eq("id", profile.id);
-
-  if (sessionUpdateError) {
-    logAuthFailure("SUPABASE_SESSION_UPDATE_FAILED", sessionUpdateError);
-    return authError(AuthErrorCode.SUPABASE_SESSION_UPDATE_FAILED);
-  }
-
-  try {
-    const cookieStore = await cookies();
-    const session = await getIronSession<SessionData>(
-      cookieStore,
-      sessionOptions
-    );
-
-    session.profileId = profile.id;
-    session.whatsappNumber = profile.whatsapp_number;
-    session.fullName = profile.full_name;
-    session.role = profile.role;
-    session.isLoggedIn = true;
-    session.sessionToken = sessionToken;
-    session.currentTeacherId = teacherId;
-
-    await session.save();
-  } catch (error) {
-    logAuthFailure("SESSION_SAVE_FAILED", error);
-    return authError(AuthErrorCode.SESSION_SAVE_FAILED);
-  }
-
-  return { role: profile.role };
-}
-
-export async function loginWithWhatsApp(
+/** AUTH-002: create profile + teacher link; does NOT mint a session. */
+export async function registerStudent(
   _prev: LoginState | null,
   formData: FormData
 ): Promise<LoginState> {
   try {
-    return await loginWithWhatsAppImpl(formData);
+    return await registerStudentImpl(formData);
   } catch (error) {
-    logAuthFailure("LOGIN_UNEXPECTED", error);
+    logAuthFailure("REGISTER_UNEXPECTED", error);
     return authError(AuthErrorCode.LOGIN_UNEXPECTED);
   }
 }
 
-async function loginWithWhatsAppImpl(
-  formData: FormData
-): Promise<LoginState> {
+async function registerStudentImpl(formData: FormData): Promise<LoginState> {
   const rawNumber = formData.get("whatsapp_number");
   const fullName = (formData.get("full_name") as string)?.trim() ?? "";
   const teacherCode = (formData.get("teacher_code") as string)?.trim() ?? "";
@@ -97,93 +71,131 @@ async function loginWithWhatsAppImpl(
   }
 
   const whatsappNumber = normalizeWhatsAppNumber(rawNumber);
-
   if (whatsappNumber.length < 10 || whatsappNumber.length > 15) {
     return authError(AuthErrorCode.INVALID_WHATSAPP);
   }
 
-  const supabase = getSupabaseClient();
+  if (!fullName) {
+    return authError(AuthErrorCode.MISSING_FULL_NAME);
+  }
+
+  if (!teacherCode) {
+    return authError(AuthErrorCode.TEACHER_CODE_REQUIRED);
+  }
+
+  const supabase = getAuthSupabaseClient();
   if (!supabase) {
     return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
   }
 
-  const isDemoStudent =
-    whatsappNumber === DEMO_STUDENT.whatsapp_number && !teacherCode;
-  const isDemoTeacher =
-    whatsappNumber === DEMO_TEACHER.whatsapp_number && !teacherCode;
-
   const { data: existing, error: fetchError } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id")
     .eq("whatsapp_number", whatsappNumber)
-    .maybeSingle<Profile>();
+    .maybeSingle();
 
   if (fetchError) {
     logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", fetchError);
     return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
   }
 
-  let profile = existing;
-  let linkedTeacherId: string | null = null;
+  if (existing) {
+    return { status: "already_registered" };
+  }
 
-  if (!profile) {
-    if (!teacherCode && !isDemoStudent && !isDemoTeacher) {
+  const { data: teacher, error: teacherLookupError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("teacher_code", teacherCode)
+    .eq("role", "TEACHER")
+    .maybeSingle();
+
+  if (teacherLookupError) {
+    logAuthFailure("SUPABASE_TEACHER_LOOKUP_FAILED", teacherLookupError);
+    return authError(AuthErrorCode.SUPABASE_CONNECTION_ERROR);
+  }
+
+  if (!teacher) {
+    return authError(AuthErrorCode.INVALID_TEACHER_CODE);
+  }
+
+  const { data: created, error: createError } = await supabase
+    .from("profiles")
+    .insert({
+      whatsapp_number: whatsappNumber,
+      full_name: fullName,
+      role: "STUDENT",
+      is_subscribed: false,
+    })
+    .select()
+    .single<Profile>();
+
+  if (createError || !created) {
+    logAuthFailure("SUPABASE_PROFILE_CREATE_FAILED", createError);
+    return authError(AuthErrorCode.SUPABASE_PROFILE_CREATE_FAILED);
+  }
+
+  const { error: linkError } = await supabase.from("student_teachers").insert({
+    student_id: created.id,
+    teacher_id: teacher.id,
+    status: "pending",
+    tier: "free",
+  });
+
+  if (linkError) {
+    logAuthFailure("SUPABASE_STUDENT_LINK_FAILED", linkError);
+    return authError(AuthErrorCode.SUPABASE_STUDENT_LINK_FAILED);
+  }
+
+  return { status: "registered", next: "otp" };
+}
+
+/**
+ * AUTH-002 + AUTH-001: register then immediately start BiteonSwitch OTP.
+ */
+export async function registerStudentAndRequestOTP(
+  _prev: LoginState | null,
+  formData: FormData
+): Promise<LoginState> {
+  try {
+    const registered = await registerStudentImpl(formData);
+    if (registered.status === "error") return registered;
+    if (registered.status === "already_registered") return registered;
+
+    const otp = await startBiteonSwitchOtp(null, formData);
+    if (otp.status === "redirect") {
+      return { status: "redirect", redirectUrl: otp.redirectUrl };
+    }
+    return authError(otp.code);
+  } catch (error) {
+    logAuthFailure("REGISTER_AND_OTP_UNEXPECTED", error);
+    return authError(AuthErrorCode.LOGIN_UNEXPECTED);
+  }
+}
+
+/**
+ * After OTP: student verified but missing teacher link — attach رمز الأستاذ then mint session.
+ */
+export async function linkTeacherCodeAction(
+  _prev: LoginState | null,
+  formData: FormData
+): Promise<LoginState> {
+  try {
+    const pending = await getPendingTeacherLinkSession();
+    if (!pending) {
+      return authError(AuthErrorCode.LOGIN_UNEXPECTED);
+    }
+
+    const teacherCode = (formData.get("teacher_code") as string)?.trim() ?? "";
+    if (!teacherCode) {
       return authError(AuthErrorCode.TEACHER_CODE_REQUIRED);
     }
 
-    const codeToUse =
-      isDemoStudent || isDemoTeacher ? "AlMoayed-DEMO" : teacherCode;
-
-    const { data: teacher, error: teacherLookupError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("teacher_code", codeToUse)
-      .eq("role", "TEACHER")
-      .maybeSingle();
-
-    if (teacherLookupError) {
-      logAuthFailure("SUPABASE_TEACHER_LOOKUP_FAILED", teacherLookupError);
-      return authError(AuthErrorCode.SUPABASE_CONNECTION_ERROR);
+    const supabase = getAuthSupabaseClient();
+    if (!supabase) {
+      return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
     }
 
-    if (!teacher) {
-      return authError(AuthErrorCode.INVALID_TEACHER_CODE);
-    }
-
-    linkedTeacherId = teacher.id;
-
-    const { data: created, error: createError } = await supabase
-      .from("profiles")
-      .insert({
-        whatsapp_number: whatsappNumber,
-        full_name: fullName || "طالب",
-        role: "STUDENT",
-        is_subscribed: isDemoStudent,
-      })
-      .select()
-      .single<Profile>();
-
-    if (createError || !created) {
-      logAuthFailure("SUPABASE_PROFILE_CREATE_FAILED", createError);
-      return authError(AuthErrorCode.SUPABASE_PROFILE_CREATE_FAILED);
-    }
-
-    const { error: linkError } = await supabase
-      .from("student_teachers")
-      .insert({
-        student_id: created.id,
-        teacher_id: teacher.id,
-        status: isDemoStudent ? "active" : "pending",
-        tier: "free",
-      });
-
-    if (linkError) {
-      logAuthFailure("SUPABASE_STUDENT_LINK_FAILED", linkError);
-      return authError(AuthErrorCode.SUPABASE_STUDENT_LINK_FAILED);
-    }
-
-    profile = created;
-  } else if (profile.role === "STUDENT" && teacherCode) {
     const { data: teacher, error: teacherLookupError } = await supabase
       .from("profiles")
       .select("id")
@@ -196,79 +208,131 @@ async function loginWithWhatsAppImpl(
       return authError(AuthErrorCode.SUPABASE_CONNECTION_ERROR);
     }
 
-    if (teacher) {
-      const { error: upsertError } = await supabase
-        .from("student_teachers")
-        .upsert(
-          {
-            student_id: profile.id,
-            teacher_id: teacher.id,
-            status: "pending",
-            tier: "free",
-          },
-          { onConflict: "student_id,teacher_id" }
-        );
-
-      if (upsertError) {
-        logAuthFailure("SUPABASE_STUDENT_LINK_FAILED", upsertError);
-        return authError(AuthErrorCode.SUPABASE_STUDENT_LINK_FAILED);
-      }
-
-      linkedTeacherId = teacher.id;
+    if (!teacher) {
+      return authError(AuthErrorCode.INVALID_TEACHER_CODE);
     }
+
+    const { error: upsertError } = await supabase.from("student_teachers").upsert(
+      {
+        student_id: pending.profileId,
+        teacher_id: teacher.id,
+        status: "pending",
+        tier: "free",
+      },
+      { onConflict: "student_id,teacher_id" }
+    );
+
+    if (upsertError) {
+      logAuthFailure("SUPABASE_STUDENT_LINK_FAILED", upsertError);
+      return authError(AuthErrorCode.SUPABASE_STUDENT_LINK_FAILED);
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", pending.profileId)
+      .maybeSingle<Profile>();
+
+    if (profileError || !profile) {
+      logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", profileError);
+      return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
+    }
+
+    const sessionResult = await establishSession(profile, teacher.id);
+    if ("status" in sessionResult && sessionResult.status === "error") {
+      return sessionResult;
+    }
+
+    return { status: "success", role: "STUDENT" };
+  } catch (error) {
+    logAuthFailure("LINK_TEACHER_UNEXPECTED", error);
+    return authError(AuthErrorCode.LOGIN_UNEXPECTED);
+  }
+}
+
+/** Local/demo session mint for seeded identities only (FR-012). */
+export async function loginDemoAccount(
+  _prev: LoginState | null,
+  formData: FormData
+): Promise<LoginState> {
+  try {
+    if (!isAuthDemoBypassEnabled()) {
+      return authError(AuthErrorCode.DEMO_BYPASS_DISABLED);
+    }
+
+    const rawNumber = formData.get("whatsapp_number");
+    if (!rawNumber || typeof rawNumber !== "string") {
+      return authError(AuthErrorCode.MISSING_WHATSAPP);
+    }
+
+    const whatsappNumber = normalizeWhatsAppNumber(rawNumber);
+    const isDemoStudent = whatsappNumber === DEMO_STUDENT.whatsapp_number;
+    const isDemoTeacher = whatsappNumber === DEMO_TEACHER.whatsapp_number;
+
+    if (!isDemoStudent && !isDemoTeacher) {
+      return authError(AuthErrorCode.DEMO_BYPASS_DISABLED);
+    }
+
+    const supabase = getAuthSupabaseClient();
+    if (!supabase) {
+      return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
+    }
+
+    const { data: profile, error: fetchError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("whatsapp_number", whatsappNumber)
+      .maybeSingle<Profile>();
+
+    if (fetchError) {
+      logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", fetchError);
+      return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
+    }
+
+    if (!profile) {
+      return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
+    }
+
+    let teacherId: string | null = null;
+    if (profile.role === "STUDENT") {
+      const resolved = await resolveStudentTeacherId(supabase, profile.id, null);
+      if (resolved.error) return resolved.error;
+      teacherId = resolved.teacherId;
+    }
+
+    const sessionResult = await establishSession(profile, teacherId);
+    if ("status" in sessionResult && sessionResult.status === "error") {
+      return sessionResult;
+    }
+
+    const { role } = sessionResult as { role: "TEACHER" | "STUDENT" };
+    return { status: "success", role };
+  } catch (error) {
+    logAuthFailure("DEMO_LOGIN_UNEXPECTED", error);
+    return authError(AuthErrorCode.LOGIN_UNEXPECTED);
+  }
+}
+
+/**
+ * @deprecated Prefer registerStudentAndRequestOTP + BiteonSwitch OTP.
+ */
+export async function loginWithWhatsApp(
+  prev: LoginState | null,
+  formData: FormData
+): Promise<LoginState> {
+  const teacherCode = (formData.get("teacher_code") as string)?.trim() ?? "";
+  const rawNumber = formData.get("whatsapp_number");
+  const whatsappNumber =
+    typeof rawNumber === "string" ? normalizeWhatsAppNumber(rawNumber) : "";
+
+  if (
+    isAuthDemoBypassEnabled() &&
+    !teacherCode &&
+    (whatsappNumber === DEMO_STUDENT.whatsapp_number ||
+      whatsappNumber === DEMO_TEACHER.whatsapp_number)
+  ) {
+    return loginDemoAccount(prev, formData);
   }
 
-  if (profile.role === "STUDENT") {
-    const { data: activeLink, error: linkFetchError } = await supabase
-      .from("student_teachers")
-      .select("teacher_id, status")
-      .eq("student_id", profile.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (linkFetchError) {
-      logAuthFailure("SUPABASE_STUDENT_LINK_FETCH_FAILED", linkFetchError);
-      return authError(AuthErrorCode.SUPABASE_CONNECTION_ERROR);
-    }
-
-    if (activeLink) {
-      linkedTeacherId = activeLink.teacher_id;
-    }
-
-    if (!profile.is_subscribed && !activeLink && !isDemoStudent) {
-      const token = profile.verification_token ?? "";
-      return {
-        status: "needs_verification",
-        verificationUrl: buildTeacherVerificationUrl(
-          whatsappNumber,
-          token,
-          profile.full_name || fullName
-        ),
-        code: AuthErrorCode.ACCOUNT_PENDING_VERIFICATION,
-      };
-    }
-
-    if (!profile.is_subscribed && activeLink) {
-      const { error: subscribeError } = await supabase
-        .from("profiles")
-        .update({ is_subscribed: true })
-        .eq("id", profile.id);
-
-      if (subscribeError) {
-        logAuthFailure("SUPABASE_SUBSCRIBE_UPDATE_FAILED", subscribeError);
-        return authError(AuthErrorCode.SUPABASE_CONNECTION_ERROR);
-      }
-    }
-  }
-
-  const sessionResult = await establishSession(profile, linkedTeacherId);
-
-  if ("status" in sessionResult && sessionResult.status === "error") {
-    return sessionResult;
-  }
-
-  const { role } = sessionResult as { role: "TEACHER" | "STUDENT" };
-  return { status: "success", role };
+  return registerStudentAndRequestOTP(prev, formData);
 }

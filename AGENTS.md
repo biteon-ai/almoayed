@@ -23,7 +23,7 @@ npm run dev
 
 ## Implemented feature IDs
 
-`AUTH-001` · `AUTH-002` · `AUTH-003` · `MT-001` · `MT-002` · `QUIZ-001` · `QUIZ-002` · `QUIZ-003` · `TIER-001` · `TIER-002` · `TEACH-001` · `TEACH-002` · `TEACH-003` · `TEACH-004` · `TEACH-005` · `UI-001` · `UI-002` · `ENABLE-001`
+`AUTH-001` · `AUTH-002` · `AUTH-003` · `AUTH-004` · `AUTH-005` · `MT-001` · `MT-002` · `QUIZ-001` · `QUIZ-002` · `QUIZ-003` · `TIER-001` · `TIER-002` · `TEACH-001` · `TEACH-002` · `TEACH-003` · `TEACH-004` · `TEACH-005` · `UI-001` · `UI-002` · `ENABLE-001`
 
 See `.speckit/spec.yaml` for acceptance criteria, file paths, and partial features.
 
