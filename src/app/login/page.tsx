@@ -10,13 +10,14 @@ export const metadata = {
 
 function LoginFormFallback() {
   return (
-    <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">
-      جاري التحميل…
+    <div className="flex h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 via-background to-background p-4 dark:from-slate-950 dark:via-background sm:p-6">
+      <p className="text-sm text-muted-foreground">جاري التحميل…</p>
     </div>
   );
 }
 
 export default async function LoginPage() {
+  // Gates one-click demo session mint; تجربة tab is always visible in LoginForm
   const demoEnabled = isAuthDemoBypassEnabled();
   const pending = await getPendingTeacherLinkSession();
 

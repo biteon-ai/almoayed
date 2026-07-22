@@ -68,6 +68,10 @@ export const SPEKIT = {
   studentActivateButton: "student-activate-button",
   studentDeactivateButton: "student-deactivate-button",
   studentManualProUpgrade: "student-manual-pro-upgrade",
+  addStudentButton: "add-student-button",
+  addStudentDialog: "add-student-dialog",
+  studentSearch: "student-search",
+  studentPagination: "student-pagination",
 
   // ── TEACH-002 ────────────────────────────────────────────────
   createGroupForm: "create-group-form",

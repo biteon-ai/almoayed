@@ -5,22 +5,61 @@ export type ImportColumnField = keyof ImportQuestionRow;
 export interface ImportColumnDefinition {
   label: string;
   field: ImportColumnField;
+  systemLabel: string;
+  description: string;
   hint?: string;
 }
 
 export const IMPORT_COLUMN_DEFINITIONS: ImportColumnDefinition[] = [
-  { label: "Question Text", field: "question_text" },
-  { label: "Option A", field: "option_a" },
-  { label: "Option B", field: "option_b" },
-  { label: "Option C", field: "option_c" },
-  { label: "Option D", field: "option_d" },
+  {
+    label: "Question Text",
+    field: "question_text",
+    systemLabel: "نص السؤال",
+    description: "نص السؤال كاملاً (عمود إلزامي).",
+  },
+  {
+    label: "Option A",
+    field: "option_a",
+    systemLabel: "الخيار أ",
+    description: "نص الخيار الأول.",
+  },
+  {
+    label: "Option B",
+    field: "option_b",
+    systemLabel: "الخيار ب",
+    description: "نص الخيار الثاني.",
+  },
+  {
+    label: "Option C",
+    field: "option_c",
+    systemLabel: "الخيار ج",
+    description: "نص الخيار الثالث.",
+  },
+  {
+    label: "Option D",
+    field: "option_d",
+    systemLabel: "الخيار د",
+    description: "نص الخيار الرابع.",
+  },
   {
     label: "Correct Option (A, B, C, or D)",
     field: "correct_answer",
+    systemLabel: "الإجابة الصحيحة",
     hint: "أ / ب / ج / د",
+    description: "حرف الخيار الصحيح: أ أو ب أو ج أو د.",
   },
-  { label: "Explanation", field: "explanation_text" },
-  { label: "Category", field: "category_tag" },
+  {
+    label: "Explanation",
+    field: "explanation_text",
+    systemLabel: "الشرح",
+    description: "شرح يظهر للطالب بعد التسليم (اختياري).",
+  },
+  {
+    label: "Category",
+    field: "category_tag",
+    systemLabel: "التصنيف",
+    description: "وسم موضوعي للمراجعة والفلترة (اختياري).",
+  },
 ];
 
 export const SAMPLE_IMPORT_ROW: ImportQuestionRow = {

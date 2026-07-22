@@ -114,6 +114,10 @@ TEACH-001:
   student-activate-button: "Activate student button"
   student-deactivate-button: "Deactivate student button"
   student-manual-pro-upgrade: "Manual Pro upgrade button"
+  add-student-button: "Add new student CTA"
+  add-student-dialog: "Manual add student dialog"
+  student-search: "Search by name or WhatsApp"
+  student-pagination: "Roster pagination controls"
 
 TEACH-002:
   create-group-form: "Create study group card"

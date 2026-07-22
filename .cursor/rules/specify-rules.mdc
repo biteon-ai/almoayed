@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/005-biteonswitch-otp-auth/plan.md`
+**Active plan**: `specs/006-student-management-hub/plan.md`
 
 Related artifacts:
-- Spec: `specs/005-biteonswitch-otp-auth/spec.md`
-- Research: `specs/005-biteonswitch-otp-auth/research.md`
-- Data model: `specs/005-biteonswitch-otp-auth/data-model.md`
-- Contracts: `specs/005-biteonswitch-otp-auth/contracts/`
-- Quickstart: `specs/005-biteonswitch-otp-auth/quickstart.md`
+- Spec: `specs/006-student-management-hub/spec.md`
+- Research: `specs/006-student-management-hub/research.md`
+- Data model: `specs/006-student-management-hub/data-model.md`
+- Contracts: `specs/006-student-management-hub/contracts/`
+- Quickstart: `specs/006-student-management-hub/quickstart.md`
 <!-- SPECKIT END -->

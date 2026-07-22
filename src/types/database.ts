@@ -176,6 +176,11 @@ export interface QuizSubmitResult {
   }>;
 }
 
+/** Result shape for teacher student hub mutations */
+export type ActionResult =
+  | { ok: true }
+  | { ok: false; error: string; field?: "fullName" | "whatsapp" | "group" | "tier" };
+
 export interface TeacherStudentRow {
   linkId: string;
   studentId: string;
@@ -185,6 +190,8 @@ export interface TeacherStudentRow {
   tier: StudentTier;
   upgradeRequested: boolean;
   groupNames: string[];
+  /** Singular group for this teacher (hub UX); null if unassigned */
+  groupId: string | null;
 }
 
 export interface StudentTeacherOption {

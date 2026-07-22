@@ -24,6 +24,133 @@ export function normalizeWhatsAppNumber(input: string): string {
   return input.replace(/\D/g, "");
 }
 
+/** Common dial codes for teacher student WhatsApp entry (digits only, no +). */
+export const WHATSAPP_DIAL_CODES = [
+  { code: "963", label: "سوريا" },
+  { code: "31", label: "هولندا" },
+  { code: "90", label: "تركيا" },
+  { code: "966", label: "السعودية" },
+  { code: "971", label: "الإمارات" },
+  { code: "961", label: "لبنان" },
+  { code: "962", label: "الأردن" },
+  { code: "20", label: "مصر" },
+  { code: "49", label: "ألمانيا" },
+  { code: "44", label: "بريطانيا" },
+  { code: "1", label: "أمريكا/كندا" },
+] as const;
+
+export type WhatsAppDialCode = (typeof WHATSAPP_DIAL_CODES)[number]["code"];
+
+/** E.164 digits only (no +): 8–15 digits, first digit 1–9. */
+export const WHATSAPP_E164_DIGITS_RE = /^[1-9]\d{7,14}$/;
+
+/**
+ * Strip spaces, dashes, +, and leading 00 → digits for DB / wa.me links.
+ */
+export function sanitizeWhatsAppForDb(input: string): string {
+  let digits = normalizeWhatsAppNumber(input);
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  return digits;
+}
+
+/**
+ * Compose dial code + national (or full international) input into DB digits.
+ * - If input already starts with the selected dial → keep (no duplicate prefix).
+ * - If input is already a full E.164 starting with any known dial → keep as-is
+ *   (e.g. dial +963 but paste +31684144342 → 31684144342, not 96331…).
+ * - Otherwise prepends `dialCode` after stripping a trunk `0`.
+ * - Syrian local `9xxxxxxxx` / `09xxxxxxxx` still resolve when dial is 963.
+ */
+export function composeWhatsAppNumber(
+  dialCode: string,
+  nationalOrFull: string
+): string {
+  let digits = sanitizeWhatsAppForDb(nationalOrFull);
+  if (!digits) return "";
+
+  if (digits.startsWith("0")) digits = digits.slice(1);
+  if (!digits) return "";
+
+  // Selected dial already present — do not duplicate (963… / 31…)
+  if (digits.startsWith(dialCode) && digits.length > dialCode.length) {
+    return digits;
+  }
+
+  // Full international paste with a different country code than the select
+  const sortedDialCodes = [...WHATSAPP_DIAL_CODES].sort(
+    (a, b) => b.code.length - a.code.length
+  );
+  for (const { code } of sortedDialCodes) {
+    const national = digits.slice(code.length);
+    if (
+      digits.startsWith(code) &&
+      national.length >= 7 &&
+      !national.startsWith("0") &&
+      WHATSAPP_E164_DIGITS_RE.test(digits)
+    ) {
+      return digits;
+    }
+  }
+
+  // Legacy Syrian helpers: local 9xxxxxxxx with Syria dial selected
+  if (
+    dialCode === "963" &&
+    digits.length === 9 &&
+    digits.startsWith("9")
+  ) {
+    return `963${digits}`;
+  }
+
+  return `${dialCode}${digits}`;
+}
+
+/** Valid WhatsApp / E.164 digit string for storage and wa.me links. */
+export function isValidWhatsAppE164(digits: string): boolean {
+  return WHATSAPP_E164_DIGITS_RE.test(digits);
+}
+
+/**
+ * Split a stored WhatsApp digit string into dial code + national remainder
+ * using known dial codes (longest match first). Defaults to Syria.
+ */
+export function splitWhatsAppDial(fullDigits: string): {
+  dialCode: WhatsAppDialCode;
+  national: string;
+} {
+  const digits = sanitizeWhatsAppForDb(fullDigits);
+  const sorted = [...WHATSAPP_DIAL_CODES].sort(
+    (a, b) => b.code.length - a.code.length
+  );
+  for (const { code } of sorted) {
+    if (digits.startsWith(code) && digits.length > code.length) {
+      return { dialCode: code, national: digits.slice(code.length) };
+    }
+  }
+  return { dialCode: "963", national: digits };
+}
+
+/**
+ * Sanitize teacher-entered WhatsApp into DB form (digits only, Syrian 963…).
+ * Accepts local `9xxxxxxxx`, `09xxxxxxxx`, `+963…`, or bare `963…`.
+ * Prefer `composeWhatsAppNumber` / `sanitizeWhatsAppForDb` for international.
+ */
+export function sanitizeSyrianWhatsApp(input: string): string {
+  let digits = sanitizeWhatsAppForDb(input);
+  if (digits.startsWith("9630") && digits.length >= 13) {
+    digits = `963${digits.slice(4)}`;
+  } else if (digits.startsWith("0")) {
+    digits = `963${digits.slice(1)}`;
+  } else if (digits.length === 9 && digits.startsWith("9")) {
+    digits = `963${digits}`;
+  }
+  return digits;
+}
+
+/** Syrian mobile: 963 + 9xxxxxxxx (12 digits). */
+export function isValidSyrianWhatsApp(digits: string): boolean {
+  return /^9639\d{8}$/.test(digits);
+}
+
 export function formatWhatsAppDisplay(number: string): string {
   const digits = normalizeWhatsAppNumber(number);
   if (digits.startsWith("963") && digits.length >= 12) {

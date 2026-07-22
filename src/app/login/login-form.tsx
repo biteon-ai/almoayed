@@ -39,11 +39,16 @@ import { SPEKIT, spekit } from "@/lib/spekit-targets";
 const initialLogin: LoginState | null = null;
 const initialOtp: StartOtpState | null = null;
 
-const fieldGap = "space-y-2.5";
+const fieldGap =
+  "space-y-3 [@media(max-height:700px)]:space-y-2.5 sm:space-y-4";
 const labelClass =
   "flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300";
 const inputClass =
-  "h-10 px-3 text-sm placeholder:text-xs";
+  "h-11 w-full px-4 py-3 text-sm placeholder:text-xs [@media(max-height:700px)]:h-10 sm:h-12";
+const touchBtnClass =
+  "h-11 w-full gap-2 text-sm font-semibold [@media(max-height:700px)]:h-10 sm:h-12";
+const tabTriggerClass =
+  "h-auto min-h-0 whitespace-nowrap px-1 py-1.5 text-xs font-medium xs:text-sm data-[active]:shadow-sm";
 
 function PendingWatcher({
   onPendingChange,
@@ -76,7 +81,7 @@ function SubmitButton({
       type="submit"
       variant={variant}
       size="default"
-      className="h-10 w-full gap-2 text-sm font-semibold sm:h-11"
+      className={touchBtnClass}
       disabled={pending}
       data-spekit={spekitId}
     >
@@ -107,14 +112,14 @@ function WhatsAppField({
   spekitProps?: ReturnType<typeof spekit>;
 }) {
   return (
-    <div className="space-y-1" {...spekitProps}>
+    <div className="space-y-1.5" {...spekitProps}>
       <Label htmlFor={id} className={labelClass}>
         <MessageCircle className="size-3.5 shrink-0 text-brand-600" />
         رقم واتساب
       </Label>
-      <div className="input-touch-group h-10 items-stretch">
+      <div className="input-touch-group h-11 items-stretch [@media(max-height:700px)]:h-10 sm:h-12">
         <span
-          className="input-touch-prefix !gap-1 !px-2 !text-xs !font-semibold"
+          className="input-touch-prefix !gap-1.5 !px-3 !text-xs !font-semibold sm:!text-sm"
           dir="ltr"
         >
           <span className="size-1.5 shrink-0 rounded-full bg-[#25D366]" />
@@ -261,12 +266,19 @@ export function LoginForm({
   };
 
   const showLinkPanel = needsTeacherLink || needsTeacherQuery;
-  const tabCols = demoEnabled ? "grid-cols-3" : "grid-cols-2";
+
+  const viewportHeight =
+    "h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))]";
 
   return (
     <MobileShell
       noPadding
-      className="max-w-none items-center justify-center overflow-x-hidden bg-gradient-to-b from-slate-50 via-background to-background p-3 dark:from-slate-950 dark:via-background sm:p-6"
+      className={cn(
+        "max-w-none min-h-0 flex-col justify-between overflow-hidden",
+        viewportHeight,
+        "bg-gradient-to-b from-slate-50 via-background to-background dark:from-slate-950 dark:via-background",
+        "p-4 pt-4 pb-4 sm:p-6 sm:pt-6 sm:pb-6"
+      )}
     >
       <LoginLoadingOverlay
         show={overlay}
@@ -276,204 +288,217 @@ export function LoginForm({
 
       <div
         className={cn(
-          "relative flex w-full max-w-md flex-col items-stretch justify-center gap-2 xs:gap-2.5",
+          "relative mx-auto flex h-full min-h-0 w-full max-w-md flex-col justify-between gap-3",
           overlay && "pointer-events-none opacity-40"
         )}
+        dir="rtl"
       >
-        <BrandHeader compact showSlogan={false} />
+        {/* Header — compact brand + slogan */}
+        <header className="shrink-0 pt-0.5">
+          <BrandHeader compact showSlogan />
+        </header>
 
-        <div
-          className="card-native glow-teal w-full overflow-hidden"
-          {...spekit(SPEKIT.loginForm)}
-        >
-          <div className="h-0.5 bg-gradient-to-l from-brand-400 via-brand-600 to-brand-800 sm:h-1" />
+        {/* Body — flexible auth card fills remaining viewport */}
+        <main className="flex min-h-0 flex-1 flex-col justify-center py-1">
+          <div
+            className="card-native glow-teal flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl shadow-lg sm:h-auto sm:max-h-none sm:rounded-3xl sm:shadow-xl"
+            {...spekit(SPEKIT.loginForm)}
+          >
+            <div className="h-0.5 shrink-0 bg-gradient-to-l from-brand-400 via-brand-600 to-brand-800 sm:h-1" />
 
-          <div className="space-y-2.5 p-3 xs:p-3.5 sm:space-y-3 sm:p-4">
-            {(banner || errorMessage) && !busy && (
-              <div
-                role="alert"
-                className={cn(
-                  "rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold leading-snug xs:text-xs",
-                  errorMessage && !banner
-                    ? "border-destructive/25 bg-destructive/5 text-destructive"
-                    : "border-brand-200/80 bg-brand-50/60 text-brand-900 dark:border-brand-900/40 dark:bg-brand-950/20 dark:text-brand-100"
-                )}
-              >
-                {errorMessage && !banner ? errorMessage : banner}
-                {errorMessage && banner ? (
-                  <p className="mt-1 text-destructive">{errorMessage}</p>
-                ) : null}
-              </div>
-            )}
-
-            {showLinkPanel ? (
-              <form action={linkAction} className={fieldGap}>
-                <PendingWatcher onPendingChange={setBusy} />
-                <p className="text-[11px] leading-snug text-muted-foreground xs:text-xs">
-                  رقم واتساب موثّق
-                  {pendingWhatsapp ? (
-                    <>
-                      {" "}
-                      (<span className="font-mono font-bold" dir="ltr">
-                        {pendingWhatsapp}
-                      </span>
-                      )
-                    </>
-                  ) : null}
-                  . أدخل رمز الأستاذ لإكمال الجلسة.
-                </p>
-                <div className="space-y-1" {...spekit(SPEKIT.loginTeacherCode)}>
-                  <Label htmlFor="link_teacher_code" className={labelClass}>
-                    <Key className="size-3.5 shrink-0 text-brand-600" />
-                    رمز الأستاذ
-                  </Label>
-                  <Input
-                    id="link_teacher_code"
-                    name="teacher_code"
-                    placeholder="AlMoayed-XXXX"
-                    value={linkCode}
-                    onChange={(e) => setLinkCode(e.target.value)}
-                    className={cn(inputClass, "font-mono tracking-wide")}
-                    dir="ltr"
-                    required
-                  />
-                </div>
-                <SubmitButton
-                  label="إكمال الدخول"
-                  pendingLabel="جاري الربط..."
-                  icon={Key}
-                  spekitId={SPEKIT.loginSubmit}
-                />
-              </form>
-            ) : (
-              <Tabs
-                value={tab}
-                onValueChange={(v) => {
-                  if (v) {
-                    setTab(v);
-                    setBanner(null);
-                  }
-                }}
-                className="gap-2.5 sm:gap-3"
-              >
-                <TabsList
+            <div className="flex min-h-0 flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
+              {(banner || errorMessage) && !busy && (
+                <div
+                  role="alert"
                   className={cn(
-                    "grid h-auto w-full gap-1 rounded-xl p-1",
-                    tabCols
+                    "shrink-0 rounded-xl border px-3 py-2 text-xs font-semibold leading-snug",
+                    errorMessage && !banner
+                      ? "border-destructive/25 bg-destructive/5 text-destructive"
+                      : "border-brand-200/80 bg-brand-50/60 text-brand-900 dark:border-brand-900/40 dark:bg-brand-950/20 dark:text-brand-100"
                   )}
                 >
-                  <TabsTrigger
-                    value="register"
-                    className="h-auto min-h-9 whitespace-normal px-1 py-1.5 text-[10px] font-bold leading-tight xs:text-xs sm:text-sm data-[active]:shadow-sm"
-                  >
-                    تسجيل جديد
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="login"
-                    className="h-auto min-h-9 whitespace-normal px-1 py-1.5 text-[10px] font-bold leading-tight xs:text-xs sm:text-sm data-[active]:shadow-sm"
-                  >
-                    دخول
-                  </TabsTrigger>
-                  {demoEnabled && (
-                    <TabsTrigger
-                      value="demo"
-                      className="h-auto min-h-9 whitespace-normal px-1 py-1.5 text-[10px] font-bold leading-tight xs:text-xs sm:text-sm data-[active]:shadow-sm"
-                    >
+                  {errorMessage && !banner ? errorMessage : banner}
+                  {errorMessage && banner ? (
+                    <p className="mt-1 text-destructive">{errorMessage}</p>
+                  ) : null}
+                </div>
+              )}
+
+              {showLinkPanel ? (
+                <form
+                  action={linkAction}
+                  className={cn(fieldGap, "flex min-h-0 flex-1 flex-col justify-center")}
+                >
+                  <PendingWatcher onPendingChange={setBusy} />
+                  <p className="text-xs leading-snug text-muted-foreground">
+                    رقم واتساب موثّق
+                    {pendingWhatsapp ? (
+                      <>
+                        {" "}
+                        (<span className="font-mono font-bold" dir="ltr">
+                          {pendingWhatsapp}
+                        </span>
+                        )
+                      </>
+                    ) : null}
+                    . أدخل رمز الأستاذ لإكمال الجلسة.
+                  </p>
+                  <div className="space-y-1.5" {...spekit(SPEKIT.loginTeacherCode)}>
+                    <Label htmlFor="link_teacher_code" className={labelClass}>
+                      <Key className="size-3.5 shrink-0 text-brand-600" />
+                      رمز الأستاذ
+                    </Label>
+                    <Input
+                      id="link_teacher_code"
+                      name="teacher_code"
+                      placeholder="AlMoayed-XXXX"
+                      value={linkCode}
+                      onChange={(e) => setLinkCode(e.target.value)}
+                      className={cn(inputClass, "font-mono tracking-wide")}
+                      dir="ltr"
+                      required
+                    />
+                  </div>
+                  <SubmitButton
+                    label="إكمال الدخول"
+                    pendingLabel="جاري الربط..."
+                    icon={Key}
+                    spekitId={SPEKIT.loginSubmit}
+                  />
+                </form>
+              ) : (
+                <Tabs
+                  value={tab}
+                  onValueChange={(v) => {
+                    if (v) {
+                      setTab(v);
+                      setBanner(null);
+                    }
+                  }}
+                  className="flex min-h-0 flex-1 flex-col gap-4"
+                >
+                  <TabsList className="grid h-auto w-full shrink-0 grid-cols-3 gap-0 rounded-xl border-0 bg-muted/60 p-1 shadow-none">
+                    <TabsTrigger value="register" className={tabTriggerClass}>
+                      تسجيل جديد
+                    </TabsTrigger>
+                    <TabsTrigger value="login" className={tabTriggerClass}>
+                      دخول
+                    </TabsTrigger>
+                    <TabsTrigger value="demo" className={tabTriggerClass}>
                       تجربة
                     </TabsTrigger>
-                  )}
-                </TabsList>
+                  </TabsList>
 
-                <TabsContent value="register" className="mt-0">
-                  <form action={registerAction} className={fieldGap}>
-                    <PendingWatcher
-                      onPendingChange={(p) => {
-                        setBusy(p);
-                        if (p) setOverlay(true);
-                      }}
-                    />
-                    <div
-                      className="space-y-1"
-                      {...spekit(SPEKIT.loginNameField)}
+                  <TabsContent
+                    value="register"
+                    className="mt-0 flex min-h-0 flex-1 flex-col data-[hidden]:hidden"
+                  >
+                    <form
+                      action={registerAction}
+                      className={cn(
+                        fieldGap,
+                        "flex min-h-0 flex-1 flex-col justify-center"
+                      )}
                     >
-                      <Label htmlFor="full_name" className={labelClass}>
-                        <User className="size-3.5 shrink-0 text-brand-600" />
-                        اسمك
-                      </Label>
-                      <Input
-                        id="full_name"
-                        name="full_name"
-                        placeholder="مثال: أحمد الخطيب"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className={inputClass}
-                        required
+                      <PendingWatcher
+                        onPendingChange={(p) => {
+                          setBusy(p);
+                          if (p) setOverlay(true);
+                        }}
                       />
-                    </div>
-                    <WhatsAppField
-                      id="reg_whatsapp"
-                      value={whatsapp}
-                      onChange={setWhatsapp}
-                      spekitProps={spekit(SPEKIT.loginWhatsappField)}
-                    />
-                    <div
-                      className="space-y-1"
-                      {...spekit(SPEKIT.loginTeacherCode)}
+                      <div
+                        className="space-y-1.5"
+                        {...spekit(SPEKIT.loginNameField)}
+                      >
+                        <Label htmlFor="full_name" className={labelClass}>
+                          <User className="size-3.5 shrink-0 text-brand-600" />
+                          اسمك
+                        </Label>
+                        <Input
+                          id="full_name"
+                          name="full_name"
+                          placeholder="مثال: أحمد الخطيب"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+                      <WhatsAppField
+                        id="reg_whatsapp"
+                        value={whatsapp}
+                        onChange={setWhatsapp}
+                        spekitProps={spekit(SPEKIT.loginWhatsappField)}
+                      />
+                      <div
+                        className="space-y-1.5"
+                        {...spekit(SPEKIT.loginTeacherCode)}
+                      >
+                        <Label htmlFor="teacher_code" className={labelClass}>
+                          <Key className="size-3.5 shrink-0 text-brand-600" />
+                          رمز الأستاذ
+                        </Label>
+                        <Input
+                          id="teacher_code"
+                          name="teacher_code"
+                          placeholder="AlMoayed-XXXX"
+                          value={teacherCode}
+                          onChange={(e) => setTeacherCode(e.target.value)}
+                          className={cn(inputClass, "font-mono tracking-wide")}
+                          dir="ltr"
+                          required
+                        />
+                      </div>
+                      <SubmitButton
+                        label="تسجيل والتحقق عبر واتساب"
+                        pendingLabel="جاري التسجيل..."
+                        icon={User}
+                        spekitId={SPEKIT.loginSubmit}
+                      />
+                    </form>
+                  </TabsContent>
+
+                  <TabsContent
+                    value="login"
+                    className="mt-0 flex min-h-0 flex-1 flex-col data-[hidden]:hidden"
+                  >
+                    <form
+                      action={otpAction}
+                      className={cn(
+                        fieldGap,
+                        "flex min-h-0 flex-1 flex-col justify-center"
+                      )}
                     >
-                      <Label htmlFor="teacher_code" className={labelClass}>
-                        <Key className="size-3.5 shrink-0 text-brand-600" />
-                        رمز الأستاذ
-                      </Label>
-                      <Input
-                        id="teacher_code"
-                        name="teacher_code"
-                        placeholder="AlMoayed-XXXX"
-                        value={teacherCode}
-                        onChange={(e) => setTeacherCode(e.target.value)}
-                        className={cn(inputClass, "font-mono tracking-wide")}
-                        dir="ltr"
-                        required
+                      <PendingWatcher
+                        onPendingChange={(p) => {
+                          setBusy(p);
+                          if (p) setOverlay(true);
+                        }}
                       />
-                    </div>
-                    <SubmitButton
-                      label="تسجيل والتحقق عبر واتساب"
-                      pendingLabel="جاري التسجيل..."
-                      icon={User}
-                      spekitId={SPEKIT.loginSubmit}
-                    />
-                  </form>
-                </TabsContent>
+                      <p className="text-xs leading-snug text-muted-foreground">
+                        أدخل رقم واتسابك المسجّل — سنحوّلك لخدمة التحقق ثم نفتح
+                        جلستك.
+                      </p>
+                      <WhatsAppField
+                        id="login_whatsapp"
+                        value={whatsapp}
+                        onChange={setWhatsapp}
+                        spekitProps={spekit(SPEKIT.loginWhatsappField)}
+                      />
+                      <SubmitButton
+                        label="تسجيل الدخول عبر واتساب"
+                        pendingLabel="جاري التحويل..."
+                        variant="whatsapp"
+                        icon={LogIn}
+                        spekitId={SPEKIT.loginOtpCta}
+                      />
+                    </form>
+                  </TabsContent>
 
-                <TabsContent value="login" className="mt-0">
-                  <form action={otpAction} className={fieldGap}>
-                    <PendingWatcher
-                      onPendingChange={(p) => {
-                        setBusy(p);
-                        if (p) setOverlay(true);
-                      }}
-                    />
-                    <p className="text-[11px] leading-snug text-muted-foreground xs:text-xs">
-                      أدخل رقم واتسابك المسجّل — سنحوّلك لخدمة التحقق ثم نفتح
-                      جلستك.
-                    </p>
-                    <WhatsAppField
-                      id="login_whatsapp"
-                      value={whatsapp}
-                      onChange={setWhatsapp}
-                      spekitProps={spekit(SPEKIT.loginWhatsappField)}
-                    />
-                    <SubmitButton
-                      label="تسجيل الدخول عبر واتساب"
-                      pendingLabel="جاري التحويل..."
-                      variant="whatsapp"
-                      icon={LogIn}
-                      spekitId={SPEKIT.loginOtpCta}
-                    />
-                  </form>
-                </TabsContent>
-
-                {demoEnabled && (
-                  <TabsContent value="demo" className="mt-0">
+                  <TabsContent
+                    value="demo"
+                    className="mt-0 flex min-h-0 flex-1 flex-col data-[hidden]:hidden"
+                  >
                     <form
                       ref={demoFormRef}
                       action={demoAction}
@@ -484,10 +509,19 @@ export function LoginForm({
                         name="whatsapp_number"
                         value={whatsapp}
                       />
-                      <input type="hidden" name="full_name" value={fullName} />
+                      <input
+                        type="hidden"
+                        name="full_name"
+                        value={fullName}
+                      />
                     </form>
-                    <div className={fieldGap}>
-                      <p className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground xs:text-xs">
+                    <div
+                      className={cn(
+                        fieldGap,
+                        "flex min-h-0 flex-1 flex-col justify-center"
+                      )}
+                    >
+                      <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                         <FlaskConical className="size-3.5 shrink-0" />
                         حسابات تجريبية للتطوير والعرض
                       </p>
@@ -496,7 +530,8 @@ export function LoginForm({
                           type="button"
                           variant="secondary"
                           size="default"
-                          className="h-10 w-full gap-2 text-sm font-semibold sm:h-11"
+                          className={touchBtnClass}
+                          disabled={!demoEnabled}
                           onClick={() =>
                             submitDemo(
                               DEMO_STUDENT.whatsapp_number,
@@ -504,8 +539,8 @@ export function LoginForm({
                             )
                           }
                         >
-                          <GraduationCap className="size-4" />
-                          دخول تجريبي — طالب
+                          <GraduationCap className="size-4 shrink-0" />
+                          دخول كطالب تجريبي
                         </Button>
                       </div>
                       <div {...spekit(SPEKIT.loginDemoTeacher)}>
@@ -513,7 +548,8 @@ export function LoginForm({
                           type="button"
                           variant="secondary"
                           size="default"
-                          className="h-10 w-full gap-2 text-sm font-semibold sm:h-11"
+                          className={touchBtnClass}
+                          disabled={!demoEnabled}
                           onClick={() =>
                             submitDemo(
                               DEMO_TEACHER.whatsapp_number,
@@ -521,17 +557,27 @@ export function LoginForm({
                             )
                           }
                         >
-                          <School className="size-4" />
-                          دخول تجريبي — أستاذ
+                          <School className="size-4 shrink-0" />
+                          دخول كأستاذ تجريبي
                         </Button>
                       </div>
+                      {!demoEnabled ? (
+                        <p className="text-center text-[11px] text-muted-foreground">
+                          الدخول التجريبي غير مفعّل في هذا البيئة.
+                        </p>
+                      ) : null}
                     </div>
                   </TabsContent>
-                )}
-              </Tabs>
-            )}
+                </Tabs>
+              )}
+            </div>
           </div>
-        </div>
+        </main>
+
+        {/* Footer — pinned near bottom */}
+        <footer className="shrink-0 pb-0.5 text-center text-[11px] leading-snug text-muted-foreground sm:text-xs">
+          منصة تعليمية سورية · بكالوريا رياضيات
+        </footer>
       </div>
     </MobileShell>
   );
