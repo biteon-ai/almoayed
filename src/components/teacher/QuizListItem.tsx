@@ -1,63 +1,90 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { updateQuizFlags } from "@/actions/teacher";
 import type { TeacherQuiz } from "@/types/database";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
+import { cn } from "@/lib/utils";
+import {
+  CheckCircle2,
+  Crown,
+  Edit3,
+  EyeOff,
+  FileText,
+  Sparkles,
+  Users,
+} from "lucide-react";
 
-export function QuizListItem({ quiz }: { quiz: TeacherQuiz }) {
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+interface QuizListItemProps {
+  quiz: TeacherQuiz;
+  pending?: boolean;
+  onRequestToggleActive: (quiz: TeacherQuiz) => void;
+  onToggleFree: (quiz: TeacherQuiz) => void;
+}
 
+/**
+ * Quiz card row for teacher quiz management.
+ * Activation requires confirmation in the parent (`QuizManagement`).
+ * تفعيل is disabled when `question_count === 0`.
+ */
+export function QuizListItem({
+  quiz,
+  pending = false,
+  onRequestToggleActive,
+  onToggleFree,
+}: QuizListItemProps) {
   const canActivate = quiz.question_count > 0;
-
-  const toggle = (flags: Parameters<typeof updateQuizFlags>[1]) => {
-    setError(null);
-    startTransition(async () => {
-      try {
-        await updateQuizFlags(quiz.id, flags);
-      } catch (cause) {
-        setError(
-          cause instanceof Error
-            ? cause.message
-            : "فشل تحديث الاختبار. جرّب مرة تانية."
-        );
-      }
-    });
-  };
 
   return (
     <Card
-      className="overflow-hidden border-border/70 shadow-sm"
+      className="rounded-xl border bg-card p-0 transition-all hover:shadow-md"
       {...spekit(SPEKIT.quizListItem)}
     >
-      <CardContent className="p-5">
-        <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <CardContent className="p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1 space-y-2.5 text-start">
-            <h3 className="text-base font-semibold leading-snug text-foreground">
-              {quiz.title}
+            <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
+              <FileText className="size-5 shrink-0 text-brand-600" />
+              <span className="truncate">{quiz.title}</span>
             </h3>
             <div
               className="flex flex-wrap gap-2"
               {...spekit(SPEKIT.quizStatusBadges)}
             >
-              <StatusBadge tone={quiz.is_active ? "active" : "hidden"}>
+              <StatusBadge
+                tone={quiz.is_active ? "active" : "hidden"}
+                className="inline-flex items-center gap-1"
+              >
+                {quiz.is_active ? (
+                  <CheckCircle2 className="size-3.5" />
+                ) : (
+                  <EyeOff className="size-3.5" />
+                )}
                 {quiz.is_active ? "نشط" : "مخفي"}
               </StatusBadge>
-              <StatusBadge tone={quiz.is_free ? "free" : "pro"}>
+              <StatusBadge
+                tone={quiz.is_free ? "free" : "pro"}
+                className="inline-flex items-center gap-1"
+              >
+                {quiz.is_free ? (
+                  <Sparkles className="size-3.5" />
+                ) : (
+                  <Crown className="size-3.5" />
+                )}
                 {quiz.is_free ? "مجاني" : "Pro"}
               </StatusBadge>
               <StatusBadge
                 tone={quiz.quiz_type === "session_group" ? "group" : "regular"}
+                className="inline-flex items-center gap-1"
               >
+                <Users className="size-3.5" />
                 {quiz.quiz_type === "session_group" ? "مجموعة" : "عادي"}
               </StatusBadge>
+              <span className="text-xs text-muted-foreground">
+                {quiz.question_count} سؤال
+              </span>
             </div>
           </div>
 
@@ -65,64 +92,66 @@ export function QuizListItem({ quiz }: { quiz: TeacherQuiz }) {
             className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0"
             {...spekit(SPEKIT.quizToggleActions)}
           >
-            {error && (
-              <p
-                role="alert"
-                className="w-full rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive"
-              >
-                {error}
-              </p>
-            )}
             <Button
               type="button"
               size="sm"
               variant="outline"
-              className="h-9 px-3"
+              className="h-10 gap-1.5 px-3"
               disabled={pending || (!quiz.is_active && !canActivate)}
               title={
                 !quiz.is_active && !canActivate
                   ? "أضف سؤالاً واحداً على الأقل قبل التفعيل"
                   : undefined
               }
-              onClick={() => toggle({ is_active: !quiz.is_active })}
+              onClick={() => onRequestToggleActive(quiz)}
             >
-              {quiz.is_active ? "إخفاء" : "تفعيل"}
+              {quiz.is_active ? (
+                <>
+                  <EyeOff className="size-3.5" />
+                  إخفاء
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="size-3.5" />
+                  تفعيل
+                </>
+              )}
             </Button>
+
             <Button
               type="button"
               size="sm"
               variant="ghost"
-              className="h-9 px-3"
+              className="h-10 gap-1.5 px-3"
               disabled={pending}
-              onClick={() => toggle({ is_free: !quiz.is_free })}
+              onClick={() => onToggleFree(quiz)}
             >
+              <Crown className="size-3.5" />
               {quiz.is_free ? "تحويل لـ Pro" : "تحويل لمجاني"}
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-9 px-3"
-              disabled={pending}
-              onClick={() =>
-                toggle({
-                  quiz_type:
-                    quiz.quiz_type === "regular" ? "session_group" : "regular",
-                })
-              }
-            >
-              {quiz.quiz_type === "regular" ? "مجموعة خاصة" : "اختبار عادي"}
-            </Button>
+
             <Link
               href={`/teacher/quizzes/${quiz.id}`}
               className={cn(
-                buttonVariants({ variant: "link", size: "sm" }),
-                "inline-flex h-9 items-center gap-1 px-2 font-semibold text-brand-700"
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "inline-flex h-10 items-center gap-1.5 px-3"
+              )}
+              title="إعدادات المجموعة"
+            >
+              <Users className="size-3.5" />
+              مجموعة
+            </Link>
+
+            <Link
+              href={`/teacher/quizzes/${quiz.id}`}
+              className={cn(
+                buttonVariants({ variant: "brand", size: "sm" }),
+                "inline-flex h-10 items-center gap-1.5 px-3"
               )}
               {...spekit(SPEKIT.quizEditLink)}
             >
+              <Edit3 className="size-3.5" />
               تحرير
-              <ChevronLeft className="size-4 shrink-0" aria-hidden />
             </Link>
           </div>
         </div>

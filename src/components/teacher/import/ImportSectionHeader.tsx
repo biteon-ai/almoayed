@@ -1,32 +1,48 @@
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
 
 interface ImportSectionHeaderProps {
   quizTitle: string;
+  /** Prefer `/teacher/quizzes/{id}` for «العودة للاختبار». */
   backHref?: string;
+  backLabel?: string;
 }
 
 export function ImportSectionHeader({
   quizTitle,
   backHref = "/teacher/quizzes",
+  backLabel = "العودة للاختبار",
 }: ImportSectionHeaderProps) {
   return (
-    <div className="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 flex-wrap items-center gap-3">
-        <h2 className="text-xl font-bold text-slate-800 md:text-2xl">
+    <header
+      dir="rtl"
+      className="mb-6 flex flex-col gap-4 border-b border-border/60 pb-5 sm:flex-row sm:items-start sm:justify-between"
+    >
+      <div className="min-w-0 space-y-2.5 text-start">
+        <h2 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">
           استيراد أسئلة بالجملة
         </h2>
-        <span className="rounded-full bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700">
+        <Badge
+          variant="secondary"
+          className="max-w-full truncate rounded-full bg-brand-50 px-3 py-1 text-sm font-medium text-brand-800 hover:bg-brand-50 dark:bg-brand-950/40 dark:text-brand-200"
+        >
           الاختبار: {quizTitle}
-        </span>
+        </Badge>
       </div>
+
       <Link
         href={backHref}
-        className="flex shrink-0 items-center gap-2 self-start text-slate-500 transition-colors hover:text-slate-800 sm:self-center"
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          "h-10 shrink-0 gap-2 self-start rounded-xl sm:self-center"
+        )}
       >
-        <span className="text-sm font-medium">رجوع</span>
-        <ChevronLeft className="size-4" aria-hidden />
+        <ArrowRight className="size-4" aria-hidden />
+        {backLabel}
       </Link>
-    </div>
+    </header>
   );
 }

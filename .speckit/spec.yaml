@@ -244,11 +244,28 @@ features:
     routes: ["/teacher/students"]
     files:
       - src/components/teacher/StudentManagement.tsx
+      - src/components/teacher/AddStudentDialog.tsx
+      - src/components/teacher/EditStudentDialog.tsx
+      - src/components/teacher/DeleteStudentConfirmDialog.tsx
       - src/actions/teacher.ts
+      - tests/features/teach-001-students-hub.test.ts
     acceptance:
-      - Filter by tier (free/pro) and status (active/pending/deactivated)
-      - Activate, deactivate, manual Pro upgrade
-    spekit: [student-filters, student-card, student-activate-button, student-deactivate-button]
+      - Manual add student (name + WhatsApp) defaults free/active
+      - Search by name or WhatsApp; filter by tier, status, study group
+      - Paginate at 8 students per page with RTL prev/next
+      - Activate/deactivate (confirm on deactivate); Pro approve/revoke without confirm
+      - Edit name + group (WhatsApp read-only); unlink with confirm
+      - Group clear via بدون مجموعة; MT-002 scoped to teacher
+    spekit:
+      [
+        student-filters,
+        student-card,
+        student-activate-button,
+        student-deactivate-button,
+        add-student-button,
+        student-search,
+        student-pagination,
+      ]
 
   - id: TEACH-002
     name: Study Groups

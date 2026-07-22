@@ -10,6 +10,7 @@ import {
   parseXlsxQuestions,
 } from "@/lib/import-questions";
 import type {
+  ActionResult,
   Category,
   ImportQuestionRow,
   Question,
@@ -21,6 +22,10 @@ import type {
   TeacherStudentRow,
   Topic,
 } from "@/types/database";
+import {
+  isValidWhatsAppE164,
+  sanitizeWhatsAppForDb,
+} from "@/lib/constants";
 
 function teacherId(session: { profileId: string }) {
   return session.profileId;
@@ -112,11 +117,15 @@ export async function getTeacherStudents(filters?: {
   }
 
   const groupMap = new Map<string, string[]>();
+  const groupIdMap = new Map<string, string>();
   for (const m of members) {
     const name = groupNameById.get(m.group_id) ?? "";
     const list = groupMap.get(m.student_id) ?? [];
     if (name) list.push(name);
     groupMap.set(m.student_id, list);
+    if (!groupIdMap.has(m.student_id)) {
+      groupIdMap.set(m.student_id, m.group_id);
+    }
   }
 
   return links.map((l) => {
@@ -124,15 +133,17 @@ export async function getTeacherStudents(filters?: {
       full_name: string;
       whatsapp_number: string;
     };
+    const sid = l.student_id as string;
     return {
       linkId: l.id as string,
-      studentId: l.student_id as string,
+      studentId: sid,
       fullName: p.full_name,
       whatsappNumber: p.whatsapp_number,
       status: l.status as StudentTeacherStatus,
       tier: l.tier as StudentTier,
       upgradeRequested: l.upgrade_requested as boolean,
-      groupNames: groupMap.get(l.student_id as string) ?? [],
+      groupNames: groupMap.get(sid) ?? [],
+      groupId: groupIdMap.get(sid) ?? null,
     };
   });
 }
@@ -141,6 +152,10 @@ export async function updateStudentStatus(
   linkId: string,
   status: StudentTeacherStatus
 ) {
+  if (status === "pending") {
+    throw new Error("لا يمكن تعيين حالة معلق يدوياً.");
+  }
+
   const session = await requireTeacher();
   const supabase = createAdminClient();
 
@@ -167,6 +182,21 @@ export async function updateStudentStatus(
   }
 
   revalidatePath("/teacher/students");
+}
+
+export async function toggleStudentStatus(
+  linkId: string,
+  status: "active" | "deactivated"
+): Promise<ActionResult> {
+  try {
+    await updateStudentStatus(linkId, status);
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "فشل تحديث الحالة.",
+    };
+  }
 }
 
 export async function updateStudentTier(linkId: string, tier: StudentTier) {
@@ -210,24 +240,415 @@ export async function createTeacherGroup(groupName: string) {
 }
 
 export async function assignStudentToGroup(groupId: string, studentId: string) {
+  const result = await setStudentGroup({ studentId, groupId });
+  if (!result.ok) throw new Error(result.error);
+}
+
+export async function setStudentGroup(input: {
+  studentId: string;
+  groupId: string | null;
+}): Promise<ActionResult> {
   const session = await requireTeacher();
   const supabase = createAdminClient();
+  const tid = session.profileId;
 
-  const { data: group } = await supabase
+  const { data: teacherGroups } = await supabase
     .from("teacher_groups")
     .select("id")
-    .eq("id", groupId)
-    .eq("teacher_id", session.profileId)
-    .single();
+    .eq("teacher_id", tid);
 
-  if (!group) throw new Error("المجموعة غير موجودة.");
+  const ownedIds = (teacherGroups ?? []).map((g) => g.id as string);
 
-  const { error } = await supabase.from("teacher_group_members").upsert(
-    { group_id: groupId, student_id: studentId },
-    { onConflict: "group_id,student_id" }
-  );
-  if (error) throw new Error("فشل إضافة الطالب للمجموعة.");
+  if (ownedIds.length) {
+    await supabase
+      .from("teacher_group_members")
+      .delete()
+      .eq("student_id", input.studentId)
+      .in("group_id", ownedIds);
+  }
+
+  if (input.groupId) {
+    if (!ownedIds.includes(input.groupId)) {
+      return { ok: false, error: "المجموعة غير موجودة." };
+    }
+    const { error } = await supabase.from("teacher_group_members").insert({
+      group_id: input.groupId,
+      student_id: input.studentId,
+    });
+    if (error) {
+      return { ok: false, error: "فشل إضافة الطالب للمجموعة." };
+    }
+  }
+
   revalidatePath("/teacher/students");
+  return { ok: true };
+}
+
+export async function createStudentManually(input: {
+  fullName: string;
+  whatsappNumber: string;
+  groupId?: string | null;
+  tier?: StudentTier;
+}): Promise<ActionResult> {
+  try {
+    const session = await requireTeacher();
+    const supabase = createAdminClient();
+    const tid = session.profileId;
+
+    const fullName = input.fullName.trim();
+    const whatsapp = sanitizeWhatsAppForDb(input.whatsappNumber);
+    const tier: StudentTier = input.tier === "pro" ? "pro" : "free";
+    const groupId = input.groupId?.trim() || null;
+
+    if (!fullName) {
+      return {
+        ok: false,
+        error: "يرجى إدخال اسم الطالب.",
+        field: "fullName",
+      };
+    }
+    if (!isValidWhatsAppE164(whatsapp)) {
+      return {
+        ok: false,
+        error: "يرجى إدخال رقم واتساب صحيح",
+        field: "whatsapp",
+      };
+    }
+
+    if (groupId) {
+      const { data: ownedGroup } = await supabase
+        .from("teacher_groups")
+        .select("id")
+        .eq("id", groupId)
+        .eq("teacher_id", tid)
+        .maybeSingle();
+      if (!ownedGroup) {
+        return {
+          ok: false,
+          error: "المجموعة الدراسية غير موجودة.",
+          field: "group",
+        };
+      }
+    }
+
+    const { data: existingProfile, error: lookupErr } = await supabase
+      .from("profiles")
+      .select("id, role, full_name")
+      .eq("whatsapp_number", whatsapp)
+      .maybeSingle();
+
+    if (lookupErr) {
+      console.error("Error looking up student profile:", lookupErr);
+      return {
+        ok: false,
+        error:
+          lookupErr.message ||
+          "فشل البحث عن ملف الطالب (خطأ في الخادم)",
+      };
+    }
+
+    let studentId = existingProfile?.id as string | undefined;
+
+    if (existingProfile) {
+      if (existingProfile.role !== "STUDENT") {
+        return {
+          ok: false,
+          error: "هذا الرقم مسجّل بحساب غير طالب.",
+          field: "whatsapp",
+        };
+      }
+    } else {
+      const { data: created, error: createErr } = await supabase
+        .from("profiles")
+        .insert({
+          whatsapp_number: whatsapp,
+          full_name: fullName,
+          role: "STUDENT",
+        })
+        .select("id")
+        .single();
+      if (createErr || !created) {
+        console.error("Error creating student:", createErr);
+        return mapStudentCreateError(
+          createErr,
+          "فشل إنشاء ملف الطالب (خطأ في الخادم)"
+        );
+      }
+      studentId = created.id as string;
+    }
+
+    const { data: existingLink, error: linkLookupErr } = await supabase
+      .from("student_teachers")
+      .select("id")
+      .eq("student_id", studentId!)
+      .eq("teacher_id", tid)
+      .maybeSingle();
+
+    if (linkLookupErr) {
+      console.error("Error looking up student link:", linkLookupErr);
+      return {
+        ok: false,
+        error:
+          linkLookupErr.message ||
+          "فشل التحقق من ربط الطالب (خطأ في الخادم)",
+      };
+    }
+
+    if (existingLink) {
+      return {
+        ok: false,
+        error: "رقم الواتساب موجود مسبقاً في قائمتك.",
+        field: "whatsapp",
+      };
+    }
+
+    const { error: linkErr } = await supabase.from("student_teachers").insert({
+      student_id: studentId!,
+      teacher_id: tid,
+      status: "active",
+      tier,
+      upgrade_requested: false,
+    });
+
+    if (linkErr) {
+      console.error("Error linking student:", linkErr);
+      return mapStudentCreateError(
+        linkErr,
+        "فشل ربط الطالب بقائمتك (خطأ في الخادم)"
+      );
+    }
+
+    if (existingProfile && fullName !== existingProfile.full_name) {
+      await supabase
+        .from("profiles")
+        .update({ full_name: fullName })
+        .eq("id", studentId!);
+    }
+
+    if (groupId) {
+      const { error: memberErr } = await supabase
+        .from("teacher_group_members")
+        .insert({
+          group_id: groupId,
+          student_id: studentId!,
+        });
+      if (memberErr) {
+        console.error("Error assigning student group:", memberErr);
+        return {
+          ok: false,
+          error:
+            memberErr.message ||
+            "تمت إضافة الطالب لكن فشل تعيين المجموعة.",
+          field: "group",
+        };
+      }
+    }
+
+    revalidatePath("/teacher/students");
+    return { ok: true };
+  } catch (error: unknown) {
+    console.error("Error creating student:", error);
+    const err = error as { code?: string; message?: string };
+    if (
+      err?.code === "P2002" ||
+      err?.code === "23505" ||
+      err?.message?.toLowerCase().includes("unique constraint") ||
+      err?.message?.toLowerCase().includes("duplicate key")
+    ) {
+      return {
+        ok: false,
+        error: "رقم الواتساب هذا مسجل بالفعل لطالب آخر",
+        field: "whatsapp",
+      };
+    }
+    return {
+      ok: false,
+      error:
+        (error instanceof Error ? error.message : undefined) ||
+        "فشل إنشاء ملف الطالب (خطأ في الخادم)",
+    };
+  }
+}
+
+/** Map Supabase/Postgres insert errors to Arabic ActionResult messages. */
+function mapStudentCreateError(
+  err: { code?: string; message?: string; details?: string; hint?: string } | null,
+  fallback: string
+): ActionResult {
+  if (!err) return { ok: false, error: fallback };
+
+  const code = err.code ?? "";
+  const message = (err.message ?? "").toLowerCase();
+
+  if (
+    code === "23505" ||
+    code === "P2002" ||
+    message.includes("unique constraint") ||
+    message.includes("duplicate key")
+  ) {
+    return {
+      ok: false,
+      error: "رقم الواتساب هذا مسجل بالفعل لطالب آخر",
+      field: "whatsapp",
+    };
+  }
+
+  // Prefer server message so teachers/devs see the real cause (enum, check, RLS…)
+  const detail = [err.message, err.details, err.hint]
+    .filter(Boolean)
+    .join(" — ");
+
+  return {
+    ok: false,
+    error: detail || fallback,
+  };
+}
+
+export async function updateStudentInfo(input: {
+  linkId: string;
+  fullName: string;
+  whatsappNumber: string;
+  groupId: string | null;
+}): Promise<ActionResult> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+  const tid = session.profileId;
+  const fullName = input.fullName.trim();
+  const whatsapp = sanitizeWhatsAppForDb(input.whatsappNumber);
+
+  if (!fullName) {
+    return {
+      ok: false,
+      error: "يرجى إدخال اسم الطالب.",
+      field: "fullName",
+    };
+  }
+  if (!whatsapp) {
+    return {
+      ok: false,
+      error: "يرجى إدخال رقم واتساب صحيح",
+      field: "whatsapp",
+    };
+  }
+  if (!isValidWhatsAppE164(whatsapp)) {
+    return {
+      ok: false,
+      error: "يرجى إدخال رقم واتساب صحيح",
+      field: "whatsapp",
+    };
+  }
+
+  const { data: link } = await supabase
+    .from("student_teachers")
+    .select("id, student_id")
+    .eq("id", input.linkId)
+    .eq("teacher_id", tid)
+    .maybeSingle();
+
+  if (!link) {
+    return { ok: false, error: "الطالب غير موجود في قائمتك." };
+  }
+
+  const studentId = link.student_id as string;
+
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("id, whatsapp_number")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  if (!currentProfile) {
+    return { ok: false, error: "ملف الطالب غير موجود." };
+  }
+
+  if (currentProfile.whatsapp_number !== whatsapp) {
+    const { data: conflict } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("whatsapp_number", whatsapp)
+      .neq("id", studentId)
+      .maybeSingle();
+
+    if (conflict) {
+      return {
+        ok: false,
+        error: "رقم الواتساب هذا مستخدم بالفعل لطالب آخر",
+        field: "whatsapp",
+      };
+    }
+  }
+
+  const { error: profileErr } = await supabase
+    .from("profiles")
+    .update({
+      full_name: fullName,
+      whatsapp_number: whatsapp,
+    })
+    .eq("id", studentId);
+
+  if (profileErr) {
+    if (profileErr.code === "23505") {
+      return {
+        ok: false,
+        error: "رقم الواتساب هذا مستخدم بالفعل لطالب آخر",
+        field: "whatsapp",
+      };
+    }
+    return { ok: false, error: "فشل تحديث بيانات الطالب." };
+  }
+
+  const groupResult = await setStudentGroup({
+    studentId,
+    groupId: input.groupId,
+  });
+  if (!groupResult.ok) return groupResult;
+
+  revalidatePath("/teacher/students");
+  return { ok: true };
+}
+
+export async function deleteStudentLink(linkId: string): Promise<ActionResult> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+  const tid = session.profileId;
+
+  const { data: link } = await supabase
+    .from("student_teachers")
+    .select("id, student_id")
+    .eq("id", linkId)
+    .eq("teacher_id", tid)
+    .maybeSingle();
+
+  if (!link) {
+    return { ok: false, error: "الطالب غير موجود في قائمتك." };
+  }
+
+  const { data: teacherGroups } = await supabase
+    .from("teacher_groups")
+    .select("id")
+    .eq("teacher_id", tid);
+  const ownedIds = (teacherGroups ?? []).map((g) => g.id as string);
+
+  if (ownedIds.length) {
+    await supabase
+      .from("teacher_group_members")
+      .delete()
+      .eq("student_id", link.student_id)
+      .in("group_id", ownedIds);
+  }
+
+  const { error } = await supabase
+    .from("student_teachers")
+    .delete()
+    .eq("id", linkId)
+    .eq("teacher_id", tid);
+
+  if (error) {
+    return { ok: false, error: "فشل حذف الطالب من القائمة." };
+  }
+
+  revalidatePath("/teacher/students");
+  return { ok: true };
 }
 
 export async function getTeacherCategories(): Promise<Category[]> {
@@ -348,6 +769,25 @@ export async function updateQuizFlags(
     .eq("created_by", session.profileId);
   if (error) throw new Error("فشل تحديث الاختبار.");
   revalidatePath("/teacher/quizzes");
+}
+
+/** Toggle quiz active/hidden with ActionResult for UI confirmation flows. */
+export async function toggleQuizStatus(
+  quizId: string,
+  nextActive: boolean
+): Promise<ActionResult> {
+  try {
+    await updateQuizFlags(quizId, { is_active: nextActive });
+    return { ok: true };
+  } catch (cause) {
+    return {
+      ok: false,
+      error:
+        cause instanceof Error
+          ? cause.message
+          : "فشل تحديث حالة الاختبار.",
+    };
+  }
 }
 
 export async function getQuizQuestions(quizId: string): Promise<Question[]> {

@@ -50,7 +50,10 @@ export function EditQuizBulkImportSection({
 
       <Card className="overflow-hidden border-border/70 shadow-sm">
         <CardContent className="p-5 md:p-6 lg:p-8">
-          <ImportSectionHeader quizTitle={quizTitle} />
+          <ImportSectionHeader
+            quizTitle={quizTitle}
+            backHref={`/teacher/quizzes/${quizId}`}
+          />
           <BulkQuestionUpload
             quizId={quizId}
             onSuccess={handleSuccess}
