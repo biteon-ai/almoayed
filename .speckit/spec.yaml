@@ -30,11 +30,14 @@ features:
       - src/lib/auth-session.ts
       - src/lib/session.ts
     acceptance:
-      - Existing users start BiteonSwitch hosted WhatsApp OTP from /login CTA
+      - /login uses compact top tabs: تسجيل جديد | دخول | تجربة (demo)
+      - Existing users start BiteonSwitch hosted WhatsApp OTP from دخول tab
       - Callback verifies token server-side, enforces AUTH-003, mints iron-session
+      - Students with no teacher link are prompted for رمز الأستاذ before session completes
       - Role redirect to /dashboard or /teacher/dashboard
       - Provider outage shows Arabic retry; no student emergency secret
-      - Demo one-click login remains when AUTH_DEMO_BYPASS enabled
+      - Demo one-click login on تجربة tab when AUTH_DEMO_BYPASS enabled
+      - No admin/emergency links on public /login (AUTH-005 is unlinked at /admin/login only)
     spekit: [login-form, login-whatsapp-field, login-otp-cta, login-submit]
 
   - id: AUTH-002
@@ -47,9 +50,9 @@ features:
       - src/app/register/page.tsx
       - src/actions/login.ts
     acceptance:
-      - /login is registration-first (name, WhatsApp, teacher code)
-      - Successful register creates profile + student_teachers link without minting session
-      - Duplicate WhatsApp steers to OTP CTA
+      - /login registration tab collects name, WhatsApp, teacher code
+      - registerStudentAndRequestOTP creates profile + link then starts BiteonSwitch OTP
+      - Duplicate WhatsApp steers to دخول tab
       - /register aliases /login
       - Invalid teacher code returns Arabic error; no link created
     spekit: [login-form, login-teacher-code, login-name-field, login-submit]
@@ -86,10 +89,9 @@ features:
       - src/actions/auth.ts
       - src/lib/admin-fallback.ts
     acceptance:
-      - Dedicated /admin/login with WhatsApp + ADMIN_FALLBACK_SECRET
-      - Allowlisted TEACHER profiles only; generic Arabic denial
-      - Not advertised on student /login
-      - Works when BiteonSwitch is unavailable; enforces AUTH-003
+      - Dedicated unlinked route /admin/login (never linked from public /login UI)
+      - WhatsApp + ADMIN_FALLBACK_KEY (or ADMIN_FALLBACK_SECRET) for allowlisted TEACHER
+      - Generic Arabic denial; works when BiteonSwitch is unavailable; enforces AUTH-003
     spekit: [admin-login-form]
 
   - id: PROFILE-001

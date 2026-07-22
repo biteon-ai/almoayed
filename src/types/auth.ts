@@ -7,6 +7,8 @@ export type LoginState =
   | { status: "success"; role: "TEACHER" | "STUDENT" }
   | { status: "registered"; next: "otp" }
   | { status: "already_registered" }
+  | { status: "redirect"; redirectUrl: string }
+  | { status: "needs_teacher_link" }
   | {
       status: "needs_verification";
       verificationUrl: string;

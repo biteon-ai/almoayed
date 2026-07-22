@@ -11,6 +11,7 @@ export function createStudentSession(
     isLoggedIn: true,
     sessionToken: "a".repeat(64),
     currentTeacherId: "teacher-profile-001",
+    pendingTeacherLink: false,
     ...overrides,
   };
 }
@@ -26,6 +27,7 @@ export function createTeacherSession(
     isLoggedIn: true,
     sessionToken: "b".repeat(64),
     currentTeacherId: null,
+    pendingTeacherLink: false,
     ...overrides,
   };
 }

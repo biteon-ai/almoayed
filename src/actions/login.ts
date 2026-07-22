@@ -8,8 +8,10 @@ import {
 import {
   establishSession,
   getAuthSupabaseClient,
+  getPendingTeacherLinkSession,
 } from "@/lib/auth-session";
 import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
+import { startBiteonSwitchOtp } from "@/actions/biteonswitch";
 import {
   DEMO_STUDENT,
   DEMO_TEACHER,
@@ -148,6 +150,106 @@ async function registerStudentImpl(formData: FormData): Promise<LoginState> {
   return { status: "registered", next: "otp" };
 }
 
+/**
+ * AUTH-002 + AUTH-001: register then immediately start BiteonSwitch OTP.
+ */
+export async function registerStudentAndRequestOTP(
+  _prev: LoginState | null,
+  formData: FormData
+): Promise<LoginState> {
+  try {
+    const registered = await registerStudentImpl(formData);
+    if (registered.status === "error") return registered;
+    if (registered.status === "already_registered") return registered;
+
+    const otp = await startBiteonSwitchOtp(null, formData);
+    if (otp.status === "redirect") {
+      return { status: "redirect", redirectUrl: otp.redirectUrl };
+    }
+    return authError(otp.code);
+  } catch (error) {
+    logAuthFailure("REGISTER_AND_OTP_UNEXPECTED", error);
+    return authError(AuthErrorCode.LOGIN_UNEXPECTED);
+  }
+}
+
+/**
+ * After OTP: student verified but missing teacher link — attach رمز الأستاذ then mint session.
+ */
+export async function linkTeacherCodeAction(
+  _prev: LoginState | null,
+  formData: FormData
+): Promise<LoginState> {
+  try {
+    const pending = await getPendingTeacherLinkSession();
+    if (!pending) {
+      return authError(AuthErrorCode.LOGIN_UNEXPECTED);
+    }
+
+    const teacherCode = (formData.get("teacher_code") as string)?.trim() ?? "";
+    if (!teacherCode) {
+      return authError(AuthErrorCode.TEACHER_CODE_REQUIRED);
+    }
+
+    const supabase = getAuthSupabaseClient();
+    if (!supabase) {
+      return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
+    }
+
+    const { data: teacher, error: teacherLookupError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("teacher_code", teacherCode)
+      .eq("role", "TEACHER")
+      .maybeSingle();
+
+    if (teacherLookupError) {
+      logAuthFailure("SUPABASE_TEACHER_LOOKUP_FAILED", teacherLookupError);
+      return authError(AuthErrorCode.SUPABASE_CONNECTION_ERROR);
+    }
+
+    if (!teacher) {
+      return authError(AuthErrorCode.INVALID_TEACHER_CODE);
+    }
+
+    const { error: upsertError } = await supabase.from("student_teachers").upsert(
+      {
+        student_id: pending.profileId,
+        teacher_id: teacher.id,
+        status: "pending",
+        tier: "free",
+      },
+      { onConflict: "student_id,teacher_id" }
+    );
+
+    if (upsertError) {
+      logAuthFailure("SUPABASE_STUDENT_LINK_FAILED", upsertError);
+      return authError(AuthErrorCode.SUPABASE_STUDENT_LINK_FAILED);
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", pending.profileId)
+      .maybeSingle<Profile>();
+
+    if (profileError || !profile) {
+      logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", profileError);
+      return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
+    }
+
+    const sessionResult = await establishSession(profile, teacher.id);
+    if ("status" in sessionResult && sessionResult.status === "error") {
+      return sessionResult;
+    }
+
+    return { status: "success", role: "STUDENT" };
+  } catch (error) {
+    logAuthFailure("LINK_TEACHER_UNEXPECTED", error);
+    return authError(AuthErrorCode.LOGIN_UNEXPECTED);
+  }
+}
+
 /** Local/demo session mint for seeded identities only (FR-012). */
 export async function loginDemoAccount(
   _prev: LoginState | null,
@@ -212,8 +314,7 @@ export async function loginDemoAccount(
 }
 
 /**
- * @deprecated Prefer registerStudent + BiteonSwitch OTP.
- * Kept as alias for any residual callers — routes to register or demo.
+ * @deprecated Prefer registerStudentAndRequestOTP + BiteonSwitch OTP.
  */
 export async function loginWithWhatsApp(
   prev: LoginState | null,
@@ -233,5 +334,5 @@ export async function loginWithWhatsApp(
     return loginDemoAccount(prev, formData);
   }
 
-  return registerStudent(prev, formData);
+  return registerStudentAndRequestOTP(prev, formData);
 }

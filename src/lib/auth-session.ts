@@ -59,6 +59,7 @@ export async function establishSession(
     session.isLoggedIn = true;
     session.sessionToken = sessionToken;
     session.currentTeacherId = teacherId;
+    session.pendingTeacherLink = false;
 
     await session.save();
   } catch (error) {
@@ -67,4 +68,50 @@ export async function establishSession(
   }
 
   return { role: profile.role };
+}
+
+/**
+ * OTP succeeded but student has no teacher link — hold identity until رمز الأستاذ.
+ * Does NOT set isLoggedIn or last_session_id.
+ */
+export async function savePendingTeacherLinkSession(
+  profile: Profile
+): Promise<{ ok: true } | LoginState> {
+  try {
+    const cookieStore = await cookies();
+    const session = await getIronSession<SessionData>(
+      cookieStore,
+      sessionOptions
+    );
+
+    session.profileId = profile.id;
+    session.whatsappNumber = profile.whatsapp_number;
+    session.fullName = profile.full_name;
+    session.role = profile.role;
+    session.isLoggedIn = false;
+    session.sessionToken = "";
+    session.currentTeacherId = null;
+    session.pendingTeacherLink = true;
+
+    await session.save();
+    return { ok: true };
+  } catch (error) {
+    logAuthFailure("PENDING_LINK_SESSION_FAILED", error);
+    return authError(AuthErrorCode.SESSION_SAVE_FAILED);
+  }
+}
+
+export async function getPendingTeacherLinkSession(): Promise<{
+  profileId: string;
+  whatsappNumber: string;
+  fullName: string;
+} | null> {
+  const cookieStore = await cookies();
+  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+  if (!session.pendingTeacherLink || !session.profileId) return null;
+  return {
+    profileId: session.profileId,
+    whatsappNumber: session.whatsappNumber,
+    fullName: session.fullName,
+  };
 }

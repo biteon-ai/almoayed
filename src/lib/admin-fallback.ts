@@ -4,6 +4,7 @@ import { normalizeWhatsAppNumber } from "@/lib/constants";
 export function getAdminFallbackSecret(): string {
   return (
     process.env.ADMIN_FALLBACK_SECRET?.trim() ||
+    process.env.ADMIN_FALLBACK_KEY?.trim() ||
     process.env.ADMIN_SECRET?.trim() ||
     ""
   );

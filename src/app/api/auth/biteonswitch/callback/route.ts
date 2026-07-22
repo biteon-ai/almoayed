@@ -7,6 +7,7 @@ import {
 import {
   establishSession,
   getAuthSupabaseClient,
+  savePendingTeacherLinkSession,
 } from "@/lib/auth-session";
 import { logAuthFailure } from "@/lib/auth-error-codes";
 import type { Profile } from "@/types/database";
@@ -14,6 +15,7 @@ import type { Profile } from "@/types/database";
 function loginErrorRedirect(request: NextRequest, error: string) {
   const url = new URL("/login", request.url);
   url.searchParams.set("error", error);
+  url.searchParams.set("tab", "login");
   return NextResponse.redirect(url);
 }
 
@@ -98,27 +100,30 @@ export async function GET(request: NextRequest) {
 
   let teacherId: string | null = null;
   if (profile.role === "STUDENT") {
-    const { data: activeLink } = await supabase
+    const { data: links, error: linksError } = await supabase
       .from("student_teachers")
-      .select("teacher_id")
+      .select("teacher_id, status")
       .eq("student_id", profile.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+      .order("created_at", { ascending: true });
 
-    teacherId = activeLink?.teacher_id ?? null;
-
-    if (!teacherId) {
-      const { data: anyLink } = await supabase
-        .from("student_teachers")
-        .select("teacher_id")
-        .eq("student_id", profile.id)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      teacherId = anyLink?.teacher_id ?? null;
+    if (linksError) {
+      logAuthFailure("OTP_LINKS_FETCH_FAILED", linksError);
+      return loginErrorRedirect(request, "otp_unavailable");
     }
+
+    if (!links || links.length === 0) {
+      const pending = await savePendingTeacherLinkSession(profile);
+      if ("status" in pending && pending.status === "error") {
+        return loginErrorRedirect(request, "otp_unavailable");
+      }
+      const url = new URL("/login", request.url);
+      url.searchParams.set("tab", "login");
+      url.searchParams.set("needs_teacher", "1");
+      return NextResponse.redirect(url);
+    }
+
+    const active = links.find((l) => l.status === "active");
+    teacherId = active?.teacher_id ?? links[0]?.teacher_id ?? null;
   }
 
   const sessionResult = await establishSession(profile, teacherId);

@@ -17,6 +17,7 @@ test.describe(`${FEATURE} Dashboard UI structure`, () => {
 
   test("demo student shortcut available for manual QA", async ({ page }) => {
     await page.goto("/login");
+    await page.getByRole("tab", { name: "تجربة" }).click();
     await expect(
       page.locator('[data-spekit="login-demo-student"]')
     ).toBeVisible();
@@ -30,6 +31,7 @@ test.describe(`${FEATURE} Mobile dashboard density`, () => {
     page,
   }) => {
     await page.goto("/login");
+    await page.getByRole("tab", { name: "تجربة" }).click();
     await page.locator('[data-spekit="login-demo-student"]').click();
     await page.waitForURL(/\/dashboard/);
 
