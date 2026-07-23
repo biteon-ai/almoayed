@@ -10,7 +10,8 @@ import {
   getQuizCardStatus,
   isRecentlyCreatedQuiz,
 } from "@/lib/student-quiz-ui";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,

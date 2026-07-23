@@ -1,15 +1,10 @@
 "use client";
 
+import { createContext, useCallback, useContext } from "react";
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-} from "react";
-import {
-  startProgress,
-  stopProgress,
-} from "next-nprogress-bar";
+  useLoadingBarSync,
+  withLoadingBar,
+} from "@/components/providers/top-loader-provider";
 
 type StudentLoadingContextValue = {
   withLoading: <T>(fn: () => Promise<T>) => Promise<T>;
@@ -28,27 +23,14 @@ export function useStudentLoadingBar() {
 }
 
 /** Syncs top loading bar with a boolean (e.g. useTransition pending). Safe outside shell. */
-export function useStudentLoadingBarSync(active: boolean) {
-  useEffect(() => {
-    if (!active) return;
-    startProgress();
-    return () => stopProgress(true);
-  }, [active]);
-}
+export { useLoadingBarSync as useStudentLoadingBarSync };
 
 export function StudentPortalShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const withLoading = useCallback(async <T,>(fn: () => Promise<T>) => {
-    startProgress();
-    try {
-      return await fn();
-    } finally {
-      stopProgress(true);
-    }
-  }, []);
+  const withLoading = useCallback(withLoadingBar, []);
 
   return (
     <StudentLoadingContext.Provider value={{ withLoading }}>

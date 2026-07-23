@@ -17,7 +17,6 @@ import {
 } from "@/lib/login-ui-messages";
 import { DEMO_STUDENT, DEMO_TEACHER, APP_FOOTER_COPYRIGHT } from "@/lib/constants";
 import { AuthField, AuthInputShell } from "@/components/login/AuthField";
-import { LoginBrandingPanel } from "@/components/login/LoginBrandingPanel";
 import { LoginLoadingOverlay } from "@/components/login/LoginLoadingOverlay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -335,27 +334,19 @@ export function LoginForm({
   const showLinkPanel = needsTeacherLink || needsTeacherQuery;
 
   return (
-    <div
-      className="min-h-dvh bg-background lg:grid lg:grid-cols-2"
-      dir="rtl"
-    >
+    <>
       <LoginLoadingOverlay
         show={overlay}
         message="جاري المتابعة…"
         subMessage="لحظة من فضلك…"
       />
 
-      <LoginBrandingPanel />
-
-      <div className="flex min-h-dvh flex-col bg-gradient-to-b from-slate-50/80 via-background to-background dark:from-slate-950/50 dark:via-background">
-        <LoginBrandingPanel compact />
-
-        <div
-          className={cn(
-            "flex flex-1 items-center justify-center px-4 py-6 sm:px-6 sm:py-8",
-            overlay && "pointer-events-none opacity-40"
-          )}
-        >
+      <div
+        className={cn(
+          "flex flex-1 items-center justify-center px-4 py-6 sm:px-6 sm:py-8",
+          overlay && "pointer-events-none opacity-40"
+        )}
+      >
           <div
             className="w-full max-w-md space-y-6"
             {...spekit(SPEKIT.loginForm)}
@@ -635,7 +626,6 @@ export function LoginForm({
             </p>
           </div>
         </div>
-      </div>
-    </div>
+    </>
   );
 }

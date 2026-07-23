@@ -935,6 +935,26 @@ export async function createQuiz(formData: FormData) {
   const session = await requireTeacher();
   const supabase = createAdminClient();
 
+  const { data: teacherProfile } = await supabase
+    .from("profiles")
+    .select("max_quiz_limit")
+    .eq("id", session.profileId)
+    .maybeSingle();
+
+  if (teacherProfile?.max_quiz_limit != null) {
+    const { count } = await supabase
+      .from("quizzes")
+      .select("id", { count: "exact", head: true })
+      .eq("created_by", session.profileId)
+      .eq("is_archived", false);
+
+    if ((count ?? 0) >= teacherProfile.max_quiz_limit) {
+      throw new Error(
+        `وصلت إلى حد الاختبارات (${teacherProfile.max_quiz_limit}). تواصل مع الإدارة لرفع الحد.`
+      );
+    }
+  }
+
   const title = (formData.get("title") as string)?.trim();
   if (!title) throw new Error("عنوان الاختبار مطلوب.");
 

@@ -57,7 +57,18 @@ export async function requireStudent(): Promise<SessionData> {
 export async function requireTeacher(): Promise<SessionData> {
   const session = await enforceValidSession(await getSession());
   if (session.role !== "TEACHER") {
+    if (session.role === "SUPER_ADMIN") {
+      redirect("/admin/dashboard");
+    }
     redirect("/dashboard");
+  }
+  return session;
+}
+
+export async function requireSuperAdmin(): Promise<SessionData> {
+  const session = await enforceValidSession(await getSession());
+  if (session.role !== "SUPER_ADMIN" || session.impersonation) {
+    redirect("/admin/login");
   }
   return session;
 }

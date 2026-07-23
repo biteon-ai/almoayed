@@ -2,6 +2,13 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatPaginationRange } from "@/lib/pagination-ui";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +24,8 @@ export interface PaginationControlsProps {
   variant?: "full" | "compact";
   /** When `compact`, also show "عرض X–Y من أصل Z" summary (table footers). */
   showRangeSummary?: boolean;
+  /** Compact/mobile footers — dropdown to jump to any page. */
+  showQuickJump?: boolean;
   className?: string;
   /** Optional Spekit / data attribute hook. */
   dataSpekit?: string;
@@ -34,6 +43,7 @@ export function PaginationControls({
   itemLabel = "عنصر",
   variant = "full",
   showRangeSummary = false,
+  showQuickJump = false,
   className,
   dataSpekit,
 }: PaginationControlsProps) {
@@ -60,11 +70,37 @@ export function PaginationControls({
         السابق
       </Button>
 
-      {variant === "compact" && (
+      {variant === "compact" && showQuickJump && showNav ? (
+        <Select
+          value={String(page)}
+          onValueChange={(value) => {
+            if (!value) return;
+            onPageChange(Number(value));
+          }}
+        >
+          <SelectTrigger
+            aria-label="انتقل إلى صفحة"
+            className="h-8 w-[5.25rem] rounded-lg px-2 text-[11px] font-semibold tabular-nums shadow-none"
+          >
+            <SelectValue>
+              {page}/{totalPages}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent align="center">
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (pageNumber) => (
+                <SelectItem key={pageNumber} value={String(pageNumber)}>
+                  صفحة {pageNumber}
+                </SelectItem>
+              )
+            )}
+          </SelectContent>
+        </Select>
+      ) : variant === "compact" ? (
         <span className="min-w-[3.5rem] rounded-md bg-background px-2 py-1 text-center text-[11px] font-semibold tabular-nums text-muted-foreground ring-1 ring-border/60">
           {page}/{totalPages}
         </span>
-      )}
+      ) : null}
 
       <Button
         type="button"

@@ -10,6 +10,12 @@ export const QUIZ_CATEGORY_FILTERS = [
 
 export type QuizCategoryFilter = (typeof QUIZ_CATEGORY_FILTERS)[number];
 
+/** Student /quizzes page — exam cards per pagination page (mobile-first). */
+export const STUDENT_EXAMS_PAGE_SIZE = 4;
+
+/** Student /results page — attempt result cards per pagination page (2×2 grid). */
+export const STUDENT_RESULTS_PAGE_SIZE = 4;
+
 export type QuizCardStatus = "locked" | "completed" | "in_progress" | "new";
 
 export function estimateQuizDurationMinutes(questionCount: number): number {

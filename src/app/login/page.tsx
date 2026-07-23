@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { LoginForm } from "./login-form";
+import { LoginPageShell } from "./login-page-shell";
 import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
 import { getPendingTeacherLinkSession } from "@/lib/auth-session";
 import { APP_DESCRIPTION, APP_SLOGAN } from "@/lib/constants";
@@ -23,11 +24,13 @@ export default async function LoginPage() {
 
   return (
     <Suspense fallback={<LoginFormFallback />}>
-      <LoginForm
-        demoEnabled={demoEnabled}
-        needsTeacherLink={Boolean(pending)}
-        pendingWhatsapp={pending?.whatsappNumber ?? ""}
-      />
+      <LoginPageShell>
+        <LoginForm
+          demoEnabled={demoEnabled}
+          needsTeacherLink={Boolean(pending)}
+          pendingWhatsapp={pending?.whatsappNumber ?? ""}
+        />
+      </LoginPageShell>
     </Suspense>
   );
 }

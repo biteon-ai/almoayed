@@ -9,6 +9,7 @@ export function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
     topic_id: null,
     is_active: true,
     is_free: true,
+    is_archived: false,
     quiz_type: "regular",
     target_group_id: null,
     created_at: "2026-01-01T00:00:00Z",

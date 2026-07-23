@@ -5,6 +5,13 @@ import { sessionOptions, type SessionData } from "@/lib/session";
 
 const studentPaths = ["/dashboard", "/quiz", "/quizzes", "/results"];
 const teacherPaths = ["/teacher"];
+const adminPublicPaths = ["/admin/login", "/admin/emergency"];
+
+function matchesPrefix(pathname: string, prefixes: string[]) {
+  return prefixes.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,7 +19,19 @@ export async function middleware(request: NextRequest) {
   const isSettingsRoute =
     pathname === "/settings" || pathname.startsWith("/settings/");
 
-  if (isSettingsRoute) {
+  const isAdminRoute =
+    pathname === "/admin" || pathname.startsWith("/admin/");
+  const isAdminPublic = adminPublicPaths.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+  const isAdminProtected = isAdminRoute && !isAdminPublic;
+
+  const isTeacherLogin = pathname === "/teacher/login";
+  const isStudentRoute = matchesPrefix(pathname, studentPaths);
+  const isTeacherRoute =
+    matchesPrefix(pathname, teacherPaths) && !isTeacherLogin;
+
+  if (isAdminProtected || isSettingsRoute || isStudentRoute || isTeacherRoute) {
     const response = NextResponse.next();
     const session = await getIronSession<SessionData>(
       request,
@@ -20,48 +39,56 @@ export async function middleware(request: NextRequest) {
       sessionOptions
     );
 
+    if (isAdminProtected) {
+      if (
+        !session.isLoggedIn ||
+        session.role !== "SUPER_ADMIN" ||
+        session.impersonation
+      ) {
+        const loginUrl = new URL("/admin/login", request.url);
+        loginUrl.searchParams.set("from", pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+      return response;
+    }
+
+    if (isSettingsRoute) {
+      if (!session.isLoggedIn) {
+        const loginUrl = new URL("/login", request.url);
+        loginUrl.searchParams.set("from", pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+      return response;
+    }
+
     if (!session.isLoggedIn) {
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL(
+        isTeacherRoute ? "/teacher/login" : "/login",
+        request.url
+      );
       loginUrl.searchParams.set("from", pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    if (isTeacherRoute && session.role !== "TEACHER") {
+      if (session.role === "SUPER_ADMIN") {
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      }
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    if (isStudentRoute && session.role === "TEACHER") {
+      return NextResponse.redirect(new URL("/teacher/dashboard", request.url));
+    }
+
+    if (isStudentRoute && session.role === "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
 
     return response;
   }
 
-  const isStudentRoute = studentPaths.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`)
-  );
-  const isTeacherRoute = teacherPaths.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`)
-  );
-
-  if (!isStudentRoute && !isTeacherRoute) {
-    return NextResponse.next();
-  }
-
-  const response = NextResponse.next();
-  const session = await getIronSession<SessionData>(
-    request,
-    response,
-    sessionOptions
-  );
-
-  if (!session.isLoggedIn) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  if (isTeacherRoute && session.role !== "TEACHER") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  if (isStudentRoute && session.role === "TEACHER") {
-    return NextResponse.redirect(new URL("/teacher/dashboard", request.url));
-  }
-
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
@@ -71,6 +98,7 @@ export const config = {
     "/quizzes/:path*",
     "/results/:path*",
     "/teacher/:path*",
+    "/admin/:path*",
     "/settings",
   ],
 };

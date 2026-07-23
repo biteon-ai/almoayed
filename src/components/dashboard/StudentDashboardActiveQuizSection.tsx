@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { QuizCarouselItem } from "@/types/database";
 import { formatDurationAr } from "@/lib/student-quiz-ui";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { SPEKIT } from "@/lib/spekit-targets";

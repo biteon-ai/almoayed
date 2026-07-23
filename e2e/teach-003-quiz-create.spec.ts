@@ -8,7 +8,9 @@ test.describe(`${FEATURE} Teacher quiz create route`, () => {
   }) => {
     await page.goto("/teacher/quizzes/new");
 
-    await expect(page).toHaveURL(/\/login\?from=/);
-    await expect(page.locator('[data-spekit="login-form"]')).toBeVisible();
+    await expect(page).toHaveURL(/\/teacher\/login\?from=/);
+    await expect(
+      page.locator('[data-spekit="teacher-email-login-form"]')
+    ).toBeVisible();
   });
 });

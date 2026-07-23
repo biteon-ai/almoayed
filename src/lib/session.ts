@@ -1,6 +1,14 @@
 import { SessionOptions } from "iron-session";
 import type { UserRole } from "@/types/database";
 
+export interface ImpersonationContext {
+  adminProfileId: string;
+  adminRole: "SUPER_ADMIN";
+  teacherId: string;
+  teacherName: string;
+  startedAt: string;
+}
+
 export interface SessionData {
   profileId: string;
   whatsappNumber: string;
@@ -16,6 +24,8 @@ export interface SessionData {
    * Not a full login — must complete رمز الأستاذ before isLoggedIn.
    */
   pendingTeacherLink: boolean;
+  /** [ADMIN-001] Super Admin impersonating a teacher */
+  impersonation?: ImpersonationContext;
 }
 
 export const defaultSession: SessionData = {

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { requestProUpgrade } from "@/actions/student";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import type { QuizCarouselItem } from "@/types/database";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Crown, FileText, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";

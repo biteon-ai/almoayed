@@ -6,6 +6,7 @@ import {
   QUIZ_PAGE_SIZE,
   STUDENT_PAGE_SIZE,
 } from "@/lib/paginate-students";
+import { STUDENT_EXAMS_PAGE_SIZE, STUDENT_RESULTS_PAGE_SIZE } from "@/lib/student-quiz-ui";
 
 describe("pagination-ui", () => {
   it("formatPaginationRange returns zero range for empty lists", () => {
@@ -22,6 +23,16 @@ describe("usePagination helpers (paginate-students)", () => {
   it("exports stable default page sizes", () => {
     expect(STUDENT_PAGE_SIZE).toBe(8);
     expect(QUIZ_PAGE_SIZE).toBe(6);
+    expect(STUDENT_EXAMS_PAGE_SIZE).toBe(4);
+    expect(STUDENT_RESULTS_PAGE_SIZE).toBe(4);
+  });
+
+  it("paginates student exams four cards per page", () => {
+    const rows = Array.from({ length: 10 }, (_, i) => ({ id: i }));
+    const result = paginateStudents(rows, 2, STUDENT_EXAMS_PAGE_SIZE);
+    expect(result.items).toHaveLength(4);
+    expect(result.page).toBe(2);
+    expect(result.totalPages).toBe(3);
   });
 
   it("paginateQuizzes delegates to paginateStudents with quiz page size", () => {

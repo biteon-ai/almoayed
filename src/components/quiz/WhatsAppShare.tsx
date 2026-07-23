@@ -1,7 +1,7 @@
 "use client";
 
 import { APP_NAME, APP_SLOGAN, APP_URL, buildResultShareUrl } from "@/lib/constants";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/brand/Logo";

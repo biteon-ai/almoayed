@@ -175,3 +175,19 @@
 .animate-fade-in {
   animation: fadeIn 0.35s ease-out forwards;
 }
+
+/* Global route progress bar — above sticky headers & safe-area shell */
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  z-index: 99999 !important;
+  box-shadow: 0 0 10px rgb(16 185 129 / 0.45);
+}
+
+#nprogress .peg {
+  box-shadow:
+    0 0 12px rgb(16 185 129 / 0.75),
+    0 0 6px rgb(16 185 129 / 0.55);
+}
