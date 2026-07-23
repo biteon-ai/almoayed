@@ -4,7 +4,7 @@
 product:
   name: المؤيد
   name_en: Al-Moayed
-  slogan: منصتك الأولى للتقييم الذكي واجتياز الامتحانات
+  slogan: حل بيدك ما حدا بفيدك
   locale: ar-SY
   direction: rtl
   stack: Next.js 14 · Supabase · iron-session · Tailwind · Shadcn
@@ -37,7 +37,7 @@ features:
       - Role redirect to /dashboard or /teacher/dashboard
       - Provider outage shows Arabic retry; no student emergency secret
       - Demo one-click login on تجربة tab when AUTH_DEMO_BYPASS enabled; tab hidden when disabled
-      - No admin/emergency links on public /login (AUTH-005 is unlinked at /admin/login only)
+      - No admin/emergency links on public /login (AUTH-005 is unlinked at /admin/emergency only)
     spekit: [login-form, login-whatsapp-field, login-otp-cta, login-submit]
 
   - id: AUTH-002
@@ -82,17 +82,56 @@ features:
     name: Admin Emergency Fallback Login
     status: implemented
     persona: [TEACHER]
-    routes: ["/admin/login"]
+    routes: ["/admin/emergency"]
     files:
-      - src/app/admin/login/page.tsx
-      - src/app/admin/login/admin-login-form.tsx
+      - src/app/admin/(auth)/emergency/page.tsx
+      - src/app/admin/(auth)/login/admin-login-form.tsx
       - src/actions/auth.ts
       - src/lib/admin-fallback.ts
     acceptance:
-      - Dedicated unlinked route /admin/login (never linked from public /login UI)
+      - Dedicated unlinked route /admin/emergency (never linked from public /login UI)
       - WhatsApp + ADMIN_FALLBACK_KEY (or ADMIN_FALLBACK_SECRET) for allowlisted TEACHER
       - Generic Arabic denial; works when BiteonSwitch is unavailable; enforces AUTH-003
     spekit: [admin-login-form]
+
+  - id: ADMIN-001
+    name: Super Admin Dashboard
+    status: implemented
+    persona: [SUPER_ADMIN]
+    routes: ["/admin/login", "/admin/dashboard", "/admin/teachers", "/teacher/login"]
+    files:
+      - src/app/admin/(auth)/login/page.tsx
+      - src/app/admin/(portal)/dashboard/page.tsx
+      - src/app/admin/(portal)/teachers/page.tsx
+      - src/app/api/admin/kpis/route.ts
+      - src/app/api/admin/teachers/route.ts
+      - src/app/api/admin/teachers/[id]/route.ts
+      - src/app/api/admin/impersonate/[teacherId]/route.ts
+      - src/app/api/admin/impersonate/exit/route.ts
+      - src/lib/admin/teachers.ts
+      - src/lib/admin/kpis.ts
+      - src/lib/admin/impersonation.ts
+      - src/components/admin/AdminKpiCards.tsx
+      - src/components/admin/AdminTeachersTable.tsx
+      - src/components/admin/CreateTeacherModal.tsx
+      - src/components/admin/EditTeacherModal.tsx
+      - src/components/admin/DeleteTeacherDialog.tsx
+      - src/components/admin/ImpersonationBanner.tsx
+    acceptance:
+      - Super Admin email login at /admin/login; teacher emergency fallback at /admin/emergency
+      - KPI dashboard shows platform-wide users, teachers, students, exams, attempts
+      - Teachers created only via Super Admin; public /login remains student-only
+      - Admin-provisioned teachers sign in at /teacher/login with email + password
+      - Searchable teacher roster with create/edit/toggle/delete and quiz disposition
+      - Impersonation with sticky Arabic banner and safe return to admin session
+      - Optional max_quiz_limit enforced on teacher quiz creation
+    spekit:
+      - admin-layout
+      - admin-kpi-total-users
+      - admin-teachers-table
+      - admin-create-teacher-modal
+      - admin-impersonation-banner
+      - teacher-email-login-form
 
   - id: PROFILE-001
     name: User Profile & Settings
@@ -200,7 +239,7 @@ features:
       - KPI cards show completed exams, average score, and subscription tier with trend hints
       - Continue-learning section highlights the most recent active quiz with progress and launch CTA
       - Achievements section surfaces earned badges (streak, high score, milestones)
-      - /quizzes page shows searchable quiz grid with category filters, metadata, and Pro/Free badges
+      - /quizzes page shows searchable quiz grid with category filters, metadata, Pro/Free badges, and 4-card pagination with quick jump
       - /results page shows gamified score cards with grade pills and retake/review actions
       - Quiz carousel and bottom tabs for scores, weak points, and teacher switcher remain on dashboard
     spekit: [student-dashboard, student-welcome, student-quizzes-page, student-results-page, student-quiz-list, weak-points-card, teacher-switcher, pro-upgrade-card]
@@ -426,12 +465,15 @@ features:
     persona: [STUDENT, TEACHER]
     files:
       - src/app/layout.tsx
+      - src/components/providers/top-loader-provider.tsx
       - src/components/layout/MobileShell.tsx
       - public/manifest.json
       - public/sw.js
     acceptance:
       - RTL html lang=ar, safe-area insets, touch-friendly inputs
       - manifest + mobile-web-app-capable meta
+      - Global emerald top progress bar on route navigation via TopLoaderProvider
+      - useLoadingBar / useLoadingBarSync / withLoadingBar for manual heavy-action feedback
 
   - id: OFFLINE-001
     name: Offline Quiz PWA

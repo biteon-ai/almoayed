@@ -1,15 +1,18 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { DashboardStats, RecentScoreRow } from "@/types/database";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { usePagination } from "@/hooks/usePagination";
 import {
   QUIZ_CATEGORY_FILTERS,
+  STUDENT_RESULTS_PAGE_SIZE,
   type QuizCategoryFilter,
   filterQuizzesByCategory,
   filterQuizzesBySearch,
@@ -51,11 +54,29 @@ export function StudentResultsView({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<QuizCategoryFilter>("الكل");
+  const resultsSectionRef = useRef<HTMLElement>(null);
 
   const filteredScores = useMemo(() => {
     const byCategory = filterQuizzesByCategory(scores, selectedCategory);
     return filterQuizzesBySearch(byCategory, searchQuery);
   }, [scores, selectedCategory, searchQuery]);
+
+  const {
+    items: paginatedScores,
+    page,
+    totalPages,
+    total: filteredTotal,
+    setPage,
+    resetPage,
+  } = usePagination(filteredScores, STUDENT_RESULTS_PAGE_SIZE);
+
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+    resultsSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   return (
     <div
@@ -98,7 +119,10 @@ export function StudentResultsView({
             className="h-10 rounded-xl border-muted bg-muted/30 pe-10 text-xs focus-visible:ring-emerald-500"
             placeholder="ابحث في النتائج..."
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              resetPage();
+            }}
             aria-label="بحث في النتائج"
           />
         </div>
@@ -110,7 +134,10 @@ export function StudentResultsView({
               type="button"
               size="sm"
               variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => {
+                setSelectedCategory(category);
+                resetPage();
+              }}
               className={cn(
                 "h-9 shrink-0 rounded-xl px-4 text-xs",
                 selectedCategory === category &&
@@ -140,7 +167,7 @@ export function StudentResultsView({
             ابدأ أول اختبار
           </Link>
         </div>
-      ) : filteredScores.length === 0 ? (
+      ) : filteredTotal === 0 ? (
         <div className="rounded-2xl border border-dashed bg-muted/20 px-6 py-10 text-center">
           <p className="text-sm font-semibold">ما في نتائج مطابقة لبحثك</p>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -148,11 +175,38 @@ export function StudentResultsView({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {filteredScores.map((row) => (
-            <ResultCard key={`${row.quizId}-${row.submittedAt}`} row={row} />
-          ))}
-        </div>
+        <section
+          ref={resultsSectionRef}
+          className="scroll-mt-24 space-y-4"
+          id="results"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-foreground">سجل المحاولات</h2>
+            <span className="text-xs font-medium text-muted-foreground">
+              ({filteredTotal} نتيجة)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {paginatedScores.map((row) => (
+              <ResultCard key={`${row.quizId}-${row.submittedAt}`} row={row} />
+            ))}
+          </div>
+
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            total={filteredTotal}
+            pageSize={STUDENT_RESULTS_PAGE_SIZE}
+            onPageChange={handlePageChange}
+            itemLabel="نتيجة"
+            variant="compact"
+            showRangeSummary
+            showQuickJump
+            className="rounded-2xl border bg-card px-3 py-3 sm:px-4"
+            dataSpekit={SPEKIT.studentPagination}
+          />
+        </section>
       )}
     </div>
   );

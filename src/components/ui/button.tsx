@@ -1,3 +1,5 @@
+"use client";
+
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -46,13 +48,18 @@ function Button({
   size = "default",
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // Radix-style `asChild` is not supported — it would render <button><a> and break hydration.
+  if ("asChild" in props) {
+    delete (props as { asChild?: boolean }).asChild;
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
-  )
+  );
 }
 
 export { Button, buttonVariants }

@@ -27,7 +27,7 @@ export function getAuthSupabaseClient() {
 export async function establishSession(
   profile: Profile,
   teacherId: string | null
-): Promise<LoginState | { role: "TEACHER" | "STUDENT" }> {
+): Promise<LoginState | { role: "TEACHER" | "STUDENT" | "SUPER_ADMIN" }> {
   const supabase = getAuthSupabaseClient();
   if (!supabase) {
     return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
@@ -53,7 +53,8 @@ export async function establishSession(
     );
 
     session.profileId = profile.id;
-    session.whatsappNumber = profile.whatsapp_number;
+    session.whatsappNumber = profile.whatsapp_number ?? "";
+    session.impersonation = undefined;
     session.fullName = profile.full_name;
     session.role = profile.role;
     session.isLoggedIn = true;
@@ -85,7 +86,8 @@ export async function savePendingTeacherLinkSession(
     );
 
     session.profileId = profile.id;
-    session.whatsappNumber = profile.whatsapp_number;
+    session.whatsappNumber = profile.whatsapp_number ?? "";
+    session.impersonation = undefined;
     session.fullName = profile.full_name;
     session.role = profile.role;
     session.isLoggedIn = false;

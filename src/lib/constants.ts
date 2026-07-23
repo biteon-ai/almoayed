@@ -1,5 +1,5 @@
 export const APP_NAME = "المؤيد";
-export const APP_SLOGAN = "منصتك الأولى للتقييم الذكي واجتياز الامتحانات";
+export const APP_SLOGAN = "حل بيدك ما حدا بفيدك";
 export const APP_TAGLINE = "منصة التقييم والاختبارات الذكية";
 export const APP_DESCRIPTION =
   "منصة المؤيد تمنح الطلاب في كافة المراحل والمواد الدراسية تجربة اختبارات تفاعلية، تصحيحاً فورياً، وتحليلات دقيقة للأداء.";

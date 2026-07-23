@@ -29,6 +29,7 @@ import type { LoginState } from "@/types/auth";
 export async function logout(): Promise<void> {
   const cookieStore = await cookies();
   const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+  const previousRole = session.role;
 
   if (session.profileId) {
     const supabase = createAdminClient();
@@ -40,6 +41,10 @@ export async function logout(): Promise<void> {
 
   Object.assign(session, defaultSession);
   await session.save();
+
+  if (previousRole === "SUPER_ADMIN") {
+    redirect("/admin/login");
+  }
   redirect("/login");
 }
 
@@ -94,6 +99,32 @@ async function loginAdminFallbackImpl(formData: FormData): Promise<LoginState> {
   }
 
   const sessionResult = await establishSession(profile, null);
+  if ("status" in sessionResult && sessionResult.status === "error") {
+    return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
+  }
+
+  return { status: "success", role: "TEACHER" };
+}
+
+/** [ADMIN-001] Email/password login for admin-provisioned teachers. */
+export async function loginTeacherEmail(
+  _prev: LoginState | null,
+  formData: FormData
+): Promise<LoginState> {
+  const email = (formData.get("email") as string)?.trim() ?? "";
+  const password = (formData.get("password") as string) ?? "";
+
+  const { loginTeacherWithEmail } = await import("@/lib/admin/auth");
+  const result = await loginTeacherWithEmail(email, password);
+
+  if (result === "inactive") {
+    return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
+  }
+  if (!result) {
+    return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
+  }
+
+  const sessionResult = await establishSession(result, null);
   if ("status" in sessionResult && sessionResult.status === "error") {
     return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
   }

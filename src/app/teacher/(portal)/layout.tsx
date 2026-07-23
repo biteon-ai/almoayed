@@ -1,5 +1,6 @@
 import { logout } from "@/actions/auth";
-import { requireTeacher } from "@/lib/auth";
+import { getSession, requireTeacher } from "@/lib/auth";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { APP_SLOGAN } from "@/lib/constants";
 import { Logo } from "@/components/brand/Logo";
 import { TeacherHeaderNav } from "@/components/layout/TeacherHeaderNav";
@@ -13,9 +14,13 @@ export default async function TeacherLayout({
   children: React.ReactNode;
 }) {
   await requireTeacher();
+  const session = await getSession();
 
   return (
     <TeacherPortalShell>
+      {session.impersonation ? (
+        <ImpersonationBanner teacherName={session.impersonation.teacherName} />
+      ) : null}
       <div className="min-h-dvh bg-gradient-to-b from-brand-50/40 to-background">
         <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur-md">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">

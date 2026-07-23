@@ -1,4 +1,6 @@
-export type UserRole = "TEACHER" | "STUDENT";
+export type UserRole = "TEACHER" | "STUDENT" | "SUPER_ADMIN";
+export type TeacherAccountStatus = "active" | "inactive";
+export type AuthMethod = "whatsapp" | "email";
 export type StudentTeacherStatus = "pending" | "active" | "deactivated";
 export type StudentTier = "free" | "pro";
 export type QuizType = "regular" | "session_group";
@@ -13,7 +15,7 @@ export interface BankDetails {
 
 export interface Profile {
   id: string;
-  whatsapp_number: string;
+  whatsapp_number: string | null;
   full_name: string;
   role: UserRole;
   is_subscribed: boolean;
@@ -23,6 +25,12 @@ export interface Profile {
   bank_details: BankDetails;
   teacher_code: string | null;
   last_session_id: string | null;
+  email: string | null;
+  password_hash: string | null;
+  phone_number: string | null;
+  teacher_account_status: TeacherAccountStatus;
+  max_quiz_limit: number | null;
+  auth_method: AuthMethod;
   created_at: string;
   updated_at: string;
 }
@@ -70,10 +78,43 @@ export interface Quiz {
   topic_id: string | null;
   is_active: boolean;
   is_free: boolean;
+  is_archived: boolean;
   quiz_type: QuizType;
   target_group_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** [ADMIN-001] Platform KPI snapshot */
+export interface AdminKpiSnapshot {
+  totalUsers: number;
+  totalTeachers: number;
+  activeTeachers: number;
+  inactiveTeachers: number;
+  totalStudents: number;
+  totalExams: number;
+  publishedExams: number;
+  draftExams: number;
+  completedAttempts: number;
+}
+
+export interface SubjectCatalogItem {
+  id: string;
+  nameAr: string;
+  slug: string;
+}
+
+/** [ADMIN-001] Teacher row for Super Admin roster */
+export interface AdminTeacherRow {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  status: TeacherAccountStatus;
+  subjects: SubjectCatalogItem[];
+  quizCount: number;
+  maxQuizLimit: number | null;
+  createdAt: string;
 }
 
 export interface TeacherQuiz extends Quiz {

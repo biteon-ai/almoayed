@@ -130,6 +130,29 @@ export const SPEKIT = {
   profileTierInfo: "profile-tier-info",
   profileTeacherCode: "profile-teacher-code",
   profileSessionManagement: "profile-session-management",
+
+  // ── ADMIN-001 ────────────────────────────────────────────────
+  adminLayout: "admin-layout",
+  adminNavDashboard: "admin-nav-dashboard",
+  adminNavTeachers: "admin-nav-teachers",
+  adminKpiTotalUsers: "admin-kpi-total-users",
+  adminKpiTeachers: "admin-kpi-teachers",
+  adminKpiStudents: "admin-kpi-students",
+  adminKpiExams: "admin-kpi-exams",
+  adminKpiAttempts: "admin-kpi-attempts",
+  adminTeachersTable: "admin-teachers-table",
+  adminAddTeacherBtn: "admin-add-teacher-btn",
+  adminTeacherSearch: "admin-teacher-search",
+  adminTeacherStatusFilter: "admin-teacher-status-filter",
+  adminTeacherStatsActive: "admin-teacher-stats-active",
+  adminCreateTeacherModal: "admin-create-teacher-modal",
+  adminCreateTeacherSubmit: "admin-create-teacher-submit",
+  adminTeacherFormPage: "admin-teacher-form-page",
+  adminEditTeacherSubmit: "admin-edit-teacher-submit",
+  adminDeleteTeacherDialog: "admin-delete-teacher-dialog",
+  adminImpersonationBanner: "admin-impersonation-banner",
+  adminImpersonationExit: "admin-impersonation-exit",
+  teacherEmailLoginForm: "teacher-email-login-form",
 } as const;
 
 export type SpekitTarget = (typeof SPEKIT)[keyof typeof SPEKIT];

@@ -1,17 +1,20 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { DashboardStats, QuizCarouselItem } from "@/types/database";
 import { StudentQuizGridCard } from "@/components/student/StudentQuizGridCard";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { usePagination } from "@/hooks/usePagination";
 import {
   QUIZ_CATEGORY_FILTERS,
+  STUDENT_EXAMS_PAGE_SIZE,
   type QuizCategoryFilter,
   filterQuizzesByCategory,
   filterQuizzesBySearch,
@@ -42,6 +45,7 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<QuizCategoryFilter>("الكل");
+  const quizzesSectionRef = useRef<HTMLElement>(null);
 
   const { continueQuiz, queueQuizzes } = useMemo(
     () => splitQuizExamSections(quizzes),
@@ -52,6 +56,23 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
     const byCategory = filterQuizzesByCategory(queueQuizzes, selectedCategory);
     return filterQuizzesBySearch(byCategory, searchQuery);
   }, [queueQuizzes, selectedCategory, searchQuery]);
+
+  const {
+    items: paginatedQuizzes,
+    page,
+    totalPages,
+    total: filteredTotal,
+    setPage,
+    resetPage,
+  } = usePagination(filteredQuizzes, STUDENT_EXAMS_PAGE_SIZE);
+
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+    quizzesSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   const continueProgress = continueQuiz
     ? continueQuiz.hasSubmission
@@ -105,7 +126,10 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
             className="h-10 rounded-xl border-muted bg-muted/30 pe-10 text-xs focus-visible:ring-emerald-500"
             placeholder="ابحث عن اختبار..."
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              resetPage();
+            }}
             aria-label="بحث في الاختبارات"
           />
         </div>
@@ -117,7 +141,10 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
               type="button"
               size="sm"
               variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => {
+                setSelectedCategory(category);
+                resetPage();
+              }}
               className={cn(
                 "h-9 shrink-0 rounded-xl px-4 text-xs",
                 selectedCategory === category &&
@@ -131,7 +158,7 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
       </div>
 
       {continueQuiz ? (
-        <section className="space-y-3" data-spekit={SPEKIT.studentQuizList}>
+        <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
             <Play className="h-4 w-4 fill-emerald-600/20 text-emerald-600" />
             <span>تابع من حيث توقفت</span>
@@ -193,13 +220,18 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
         </section>
       ) : null}
 
-      <section className="space-y-4" id="quizzes">
+      <section
+        ref={quizzesSectionRef}
+        className="scroll-mt-24 space-y-4"
+        id="quizzes"
+        data-spekit={SPEKIT.studentQuizList}
+      >
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-foreground">
             جميع الاختبارات المتاحة
           </h2>
           <span className="text-xs font-medium text-muted-foreground">
-            ({filteredQuizzes.length} اختبار)
+            ({filteredTotal} اختبار)
           </span>
         </div>
 
@@ -214,7 +246,7 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
               راجع أستاذك قريباً — الاختبارات الجديدة رح تظهر هون فوراً.
             </p>
           </div>
-        ) : filteredQuizzes.length === 0 ? (
+        ) : filteredTotal === 0 ? (
           <div className="rounded-2xl border border-dashed bg-muted/20 px-6 py-10 text-center">
             <p className="text-sm font-semibold">ما في نتائج مطابقة لبحثك</p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -222,11 +254,26 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredQuizzes.map((quiz) => (
-              <StudentQuizGridCard key={quiz.id} quiz={quiz} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {paginatedQuizzes.map((quiz) => (
+                <StudentQuizGridCard key={quiz.id} quiz={quiz} />
+              ))}
+            </div>
+
+            <PaginationControls
+              page={page}
+              totalPages={totalPages}
+              total={filteredTotal}
+              pageSize={STUDENT_EXAMS_PAGE_SIZE}
+              onPageChange={handlePageChange}
+              itemLabel="اختبار"
+              variant="compact"
+              showRangeSummary
+              showQuickJump
+              className="rounded-2xl border bg-card px-3 py-3 sm:px-4"
+            />
+          </>
         )}
       </section>
     </div>

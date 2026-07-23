@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { APP_SLOGAN } from "@/lib/constants";
 import {
   isStudentNavItemActive,
   STUDENT_NAV_ITEMS,
@@ -48,7 +47,7 @@ function DesktopNavLink({
   );
 }
 
-export function StudentHeader() {
+export function StudentHeader({ slogan }: { slogan: string }) {
   const pathname = usePathname();
   const hash = useStudentRouteHash();
 
@@ -62,7 +61,7 @@ export function StudentHeader() {
               المؤيد
             </span>
             <span className="mt-0.5 block truncate text-[11px] font-medium text-slate-500 md:text-xs">
-              {APP_SLOGAN}
+              {slogan}
             </span>
           </Link>
 
