@@ -3,10 +3,15 @@ import {
   getQuizForStudent,
   getSubmissionResults,
 } from "@/actions/quiz";
+import {
+  countUniqueCompletedQuizzes,
+  getStudentProfileState,
+} from "@/actions/profile";
 import { QuizRunnerContainer } from "@/components/quiz/QuizRunnerContainer";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { SPEKIT } from "@/lib/spekit-targets";
+import { shouldBlockNewQuiz } from "@/lib/student-profile";
 import { AppError, ErrorCode, toUserMessage } from "@/lib/app-errors";
 import { getActiveTeacherId, requireStudent } from "@/lib/auth";
 
@@ -66,6 +71,21 @@ export default async function QuizPage({ params }: QuizPageProps) {
 
   if (!quiz) {
     notFound();
+  }
+
+  const [profileState, uniqueCompletedQuizzes] = await Promise.all([
+    getStudentProfileState(),
+    countUniqueCompletedQuizzes(session.profileId),
+  ]);
+
+  if (
+    shouldBlockNewQuiz({
+      profileCompleted: profileState.profileCompleted,
+      uniqueCompletedQuizzes,
+      hasSubmissionForQuiz: Boolean(existingSubmissionId),
+    })
+  ) {
+    redirect(`/profile/complete?from=${encodeURIComponent(`/quiz/${id}`)}`);
   }
 
   const initialResults = existingSubmissionId

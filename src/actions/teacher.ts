@@ -12,9 +12,11 @@ import {
 import type {
   ActionResult,
   Category,
+  EducationStage,
   ImportQuestionRow,
   Question,
   Quiz,
+  ReferralSource,
   StudentTeacherStatus,
   StudentTier,
   TeacherDashboardAnalytics,
@@ -250,7 +252,11 @@ export async function getTeacherStudentDetail(
     .select(
       `
       id, student_id, status, tier, upgrade_requested, created_at,
-      profiles:student_id (full_name, whatsapp_number)
+      profiles:student_id (
+        full_name, whatsapp_number,
+        birth_date, education_stage, province, city, address, email,
+        referral_source, primary_subject
+      )
     `
     )
     .eq("teacher_id", tid)
@@ -262,6 +268,14 @@ export async function getTeacherStudentDetail(
   const profile = link.profiles as unknown as {
     full_name: string;
     whatsapp_number: string;
+    birth_date: string | null;
+    education_stage: string | null;
+    province: string | null;
+    city: string | null;
+    address: string | null;
+    email: string | null;
+    referral_source: string | null;
+    primary_subject: string | null;
   };
 
   const [{ data: groups }, { data: quizzes }] = await Promise.all([
@@ -359,7 +373,22 @@ export async function getTeacherStudentDetail(
     answerStats,
   });
 
-  return { student, analytics };
+  const demographics: NonNullable<TeacherStudentDetail["demographics"]> = {
+    birthDate: profile.birth_date,
+    educationStage: (profile.education_stage as EducationStage | null) ?? null,
+    province: profile.province,
+    city: profile.city,
+    address: profile.address ?? "",
+    email: profile.email,
+    referralSource: (profile.referral_source as ReferralSource | null) ?? null,
+    primarySubject: profile.primary_subject,
+  };
+
+  return {
+    student,
+    analytics,
+    demographics,
+  };
 }
 
 export async function updateStudentStatus(

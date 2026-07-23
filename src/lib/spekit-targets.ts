@@ -131,6 +131,12 @@ export const SPEKIT = {
   profileTeacherCode: "profile-teacher-code",
   profileSessionManagement: "profile-session-management",
 
+  // ── PROFILE-002 ──────────────────────────────────────────────
+  studentOnboarding: "student-onboarding",
+  profileCompletionModal: "profile-completion-modal",
+  profileCompletionSubmit: "profile-completion-submit",
+  studentDemographicsSettings: "student-demographics-settings",
+
   // ── ADMIN-001 ────────────────────────────────────────────────
   adminLayout: "admin-layout",
   adminNavDashboard: "admin-nav-dashboard",

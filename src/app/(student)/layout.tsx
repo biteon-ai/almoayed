@@ -4,12 +4,15 @@ import { StudentPortalShell } from "@/components/layout/StudentPortalShell";
 import { OfflineSyncProvider } from "@/components/pwa/OfflineSyncProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { APP_SLOGAN } from "@/lib/constants";
+import { enforceStudentOnboardingComplete } from "@/lib/student-onboarding-guard";
 
-export default function StudentLayout({
+export default async function StudentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await enforceStudentOnboardingComplete();
+
   return (
     <StudentPortalShell>
       <ServiceWorkerRegister />

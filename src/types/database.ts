@@ -31,8 +31,45 @@ export interface Profile {
   teacher_account_status: TeacherAccountStatus;
   max_quiz_limit: number | null;
   auth_method: AuthMethod;
+  birth_date: string | null;
+  education_stage: EducationStage | null;
+  province: string | null;
+  city: string | null;
+  referral_source: ReferralSource | null;
+  primary_subject: string | null;
+  onboarding_completed: boolean;
+  profile_completed: boolean;
   created_at: string;
   updated_at: string;
+}
+
+/** [PROFILE-002] Student education stage */
+export type EducationStage =
+  | "primary"
+  | "preparatory"
+  | "secondary"
+  | "baccalaureate"
+  | "university"
+  | "other";
+
+/** [PROFILE-002] How the student got the teacher code */
+export type ReferralSource =
+  | "class"
+  | "whatsapp"
+  | "friend"
+  | "social"
+  | "other";
+
+/** [PROFILE-002] Student demographics (camelCase for UI/actions) */
+export interface StudentDemographics {
+  birthDate: string | null;
+  educationStage: EducationStage | null;
+  province: string | null;
+  city: string | null;
+  address: string;
+  email: string | null;
+  referralSource: ReferralSource | null;
+  primarySubject: string | null;
 }
 
 export interface StudentTeacher {
@@ -335,6 +372,7 @@ export interface TeacherStudentAnalytics {
 export interface TeacherStudentDetail {
   student: TeacherStudentRow;
   analytics: TeacherStudentAnalytics;
+  demographics: StudentDemographics | null;
 }
 
 /** [PROFILE-001] Aggregated settings page read model */
@@ -346,6 +384,10 @@ export interface SettingsProfile {
   tier: StudentTier | null;
   upgradeRequested: boolean;
   teacherCode: string | null;
+  /** [PROFILE-002] Present for students */
+  demographics?: StudentDemographics | null;
+  onboardingCompleted?: boolean;
+  profileCompleted?: boolean;
 }
 
 export interface ImportQuestionRow {

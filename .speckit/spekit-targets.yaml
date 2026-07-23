@@ -179,6 +179,12 @@ PROFILE-001:
   profile-teacher-code: "Settings — teacher code display or copy section"
   profile-session-management: "Settings — active sessions and logout-other-devices"
 
+PROFILE-002:
+  student-onboarding: "First onboarding wizard root"
+  profile-completion-modal: "Mandatory profile completion full-page root"
+  profile-completion-submit: "Profile completion submit button"
+  student-demographics-settings: "Settings demographics editor block"
+
 # ── Super Admin dashboard ───────────────────────────────────────
 ADMIN-001:
   admin-layout: "Super Admin shell layout root"
