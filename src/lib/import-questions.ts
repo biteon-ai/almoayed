@@ -1,3 +1,12 @@
+/**
+ * NOTE: Bulk Import Strategy — Append-Only
+ * Duplicate detection is explicitly out of scope.
+ * Every imported item is treated as a new entry with a fresh unique ID.
+ *
+ * Parsers in this module only skip structurally invalid rows (empty question text,
+ * fewer than two options). Re-importing the same file always creates new records.
+ * See also: `importQuestionRows` in `src/actions/teacher.ts`.
+ */
 import type { ImportQuestionRow } from "@/types/database";
 
 export { generateSessionToken } from "@/lib/session-token";

@@ -11,6 +11,9 @@ import type { ImportQuestionRow } from "@/types/database";
 /**
  * Converts an uploaded .docx exam file to parsed question rows (server-only;
  * mammoth does not bundle reliably for client dynamic import in Next.js).
+ *
+ * NOTE: Bulk Import Strategy — Append-Only (see `importQuestionRows` in teacher.ts).
+ * Parsed rows are never deduplicated; each save creates new question records.
  */
 export async function parseDocxQuestions(
   formData: FormData

@@ -2,7 +2,7 @@
 
 منصة **تعليمية متكاملة** — PWA عربية (RTL) لجميع المراحل الدراسية والمواد، تربط المعلّمين بالطلاب عبر اختبارات تفاعلية، تصحيح فوري، تحليل الأداء، وإدارة الاشتراكات.
 
-**الشعار:** حل بيدك ما حدا بفيدك
+**الشعار:** منصتك الأولى للتقييم الذكي واجتياز الامتحانات
 
 ---
 
@@ -149,6 +149,19 @@ e2e/                        # Playwright specs
 - **Multi-tenant:** استعلامات المعلّم scoped بـ `currentTeacherId`.
 - **RTL + touch-first:** واجهة عربية بالكامل، بدون `<select>` native في UI جديد.
 - **Spekit hooks:** `data-spekit` عبر [`src/lib/spekit-targets.ts`](src/lib/spekit-targets.ts).
+
+### استيراد الأسئلة بالجملة (TEACH-004) — Append-Only
+
+استيراد CSV / Excel / Word / TXT يتم عبر **Server Actions** (`importQuestions`، `importQuestionRows` في [`src/actions/teacher.ts`](src/actions/teacher.ts)) وليس عبر `/api/import/*`.
+
+| القرار | التفاصيل |
+|--------|----------|
+| **الاستراتيجية** | Append-only — كل صف صالح يُدرَج كسؤال جديد بمعرّف فريد |
+| **كشف التكرار** | **خارج النطاق** — لا مقارنة بنص السؤال أو العنوان |
+| **إعادة الرفع** | رفع نفس الملف مرتين يُنشئ أسئلة مكررة (الوضع الافتراضي) |
+| **الاستبدال** | وضع «replace» يحذف كل أسئلة الاختبار ثم يستورد — لا dedup داخل الملف |
+
+المنطق في [`src/lib/import-questions.ts`](src/lib/import-questions.ts) و [`src/lib/parse-docx-questions.ts`](src/lib/parse-docx-questions.ts). راجع [CONTRIBUTING.md](CONTRIBUTING.md) قبل إضافة تحقق من التكرار.
 
 ---
 

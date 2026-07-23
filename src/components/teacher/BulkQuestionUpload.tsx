@@ -16,7 +16,13 @@ import { Button } from "@/components/ui/button";
 import { isDocxFile } from "@/lib/docx-file";
 import { sanitizeImportRows } from "@/lib/parse-docx-questions";
 import { SPEKIT } from "@/lib/spekit-targets";
-import { FileSearch, Loader2, SkipForward, UploadCloud } from "lucide-react";
+import {
+  AlertTriangle,
+  FileSearch,
+  Loader2,
+  SkipForward,
+  UploadCloud,
+} from "lucide-react";
 
 interface BulkQuestionUploadProps {
   quizId: string;
@@ -190,6 +196,24 @@ export function BulkQuestionUpload({
       data-spekit={SPEKIT.bulkImportZone}
     >
       <div className="space-y-4">
+        <div
+          role="note"
+          className="rounded-xl border border-amber-200/80 bg-amber-50/50 px-3.5 py-3 text-start dark:border-amber-900/40 dark:bg-amber-950/30"
+        >
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle
+              className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400"
+              aria-hidden
+            />
+            <p className="text-xs leading-relaxed text-amber-950/90 dark:text-amber-100/90">
+              <span className="font-bold">استيراد إضافي فقط:</span> كل رفع يُضيف
+              أسئلة جديدة دون التحقق من التكرار. إعادة رفع نفس الملف ستُنشئ
+              أسئلة مكررة — استخدم وضع «استبدال الأسئلة الحالية» في الإعدادات
+              المتقدمة إذا أردت البدء من جديد.
+            </p>
+          </div>
+        </div>
+
         <FileUploadZone
           disabled={isBusy}
           onFileSelect={handleFileSelect}
