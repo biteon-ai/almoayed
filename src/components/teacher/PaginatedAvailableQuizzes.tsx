@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,7 +14,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { paginateStudents } from "@/lib/paginate-students";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { usePagination } from "@/hooks/usePagination";
 import { SPEKIT } from "@/lib/spekit-targets";
 import type { TeacherStudentAnalytics } from "@/types/database";
 
@@ -84,18 +81,10 @@ interface PaginatedAvailableQuizzesProps {
 export function PaginatedAvailableQuizzes({
   availableQuizzes = [],
 }: PaginatedAvailableQuizzesProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const totalItems = availableQuizzes.length;
-  const { items, page, totalPages } = paginateStudents(
+  const { items, page, totalPages, total, setPage } = usePagination(
     availableQuizzes,
-    currentPage,
     ITEMS_PER_PAGE
   );
-
-  useEffect(() => {
-    if (currentPage !== page) setCurrentPage(page);
-  }, [currentPage, page]);
 
   return (
     <Card
@@ -113,13 +102,13 @@ export function PaginatedAvailableQuizzes({
               variant="secondary"
               className="shrink-0 bg-emerald-500/10 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
             >
-              {totalItems} اختبار
+              {total} اختبار
             </Badge>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-3 p-4">
-          {totalItems === 0 ? (
+          {total === 0 ? (
             <div className="py-10 text-center text-xs text-muted-foreground">
               لا توجد اختبارات متاحة حالياً.
             </div>
@@ -151,38 +140,17 @@ export function PaginatedAvailableQuizzes({
       </div>
 
       {totalPages > 1 && (
-        <CardFooter className="mt-auto flex items-center justify-between border-t bg-muted/10 px-4 py-3">
-          <span className="text-xs font-medium text-muted-foreground">
-            صفحة{" "}
-            <span className="font-bold text-foreground">{page}</span> من{" "}
-            <span className="font-bold text-foreground">{totalPages}</span>
-          </span>
-
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 rounded-lg px-2.5 text-xs"
-              disabled={page <= 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            >
-              <ChevronRight className="size-3.5" />
-              <span>السابق</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 rounded-lg px-2.5 text-xs"
-              disabled={page >= totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            >
-              <span>التالي</span>
-              <ChevronLeft className="size-3.5" />
-            </Button>
-          </div>
+        <CardFooter className="mt-auto border-t bg-muted/10 px-4 py-3">
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={ITEMS_PER_PAGE}
+            onPageChange={setPage}
+            itemLabel="اختبار"
+            variant="compact"
+            className="w-full"
+          />
         </CardFooter>
       )}
     </Card>

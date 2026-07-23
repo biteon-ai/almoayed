@@ -7,6 +7,9 @@ import {
   stopProgress,
 } from "next-nprogress-bar";
 
+/**
+ * Clears the global route progress bar after navigation completes (App Router + hash).
+ */
 function NavigationEventListener() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -17,20 +20,15 @@ function NavigationEventListener() {
 
   useEffect(() => {
     const finish = () => stopProgress(true);
-
     finish();
-
     window.addEventListener("hashchange", finish);
     return () => window.removeEventListener("hashchange", finish);
   }, [pathname, searchParams]);
 
-  useEffect(() => {
-    stopProgress(true);
-  }, []);
-
   return null;
 }
 
+/** App-wide top loading bar (RTL emerald theme) via next-nprogress-bar. */
 export function TopLoaderProvider({
   children,
 }: {

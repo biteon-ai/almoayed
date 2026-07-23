@@ -5,8 +5,6 @@ import { useState, useTransition } from "react";
 import {
   Ban,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Crown,
   Eye,
@@ -20,7 +18,6 @@ import {
   UserX,
 } from "lucide-react";
 import type { TeacherGroup, TeacherStudentRow } from "@/types/database";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -37,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StudentGroupSelect } from "@/components/teacher/StudentGroupSelect";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 
@@ -160,8 +158,6 @@ export function StudentsTable({
   const [navigatingStudentId, setNavigatingStudentId] = useState<string | null>(
     null
   );
-  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeEnd = Math.min(page * pageSize, total);
 
   const navigateToStudent = (studentId: string) => {
     setNavigatingStudentId(studentId);
@@ -441,45 +437,17 @@ export function StudentsTable({
         </Table>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-border/60 bg-muted/20 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs font-medium text-muted-foreground sm:text-sm">
-          عرض{" "}
-          <span className="tabular-nums text-foreground">
-            {rangeStart}–{rangeEnd}
-          </span>{" "}
-          من أصل{" "}
-          <span className="tabular-nums text-foreground">{total}</span> طلاب
-        </p>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1 rounded-lg px-3 text-xs"
-            disabled={page <= 1}
-            onClick={() => onPageChange(Math.max(1, page - 1))}
-            aria-label="الصفحة السابقة"
-          >
-            <ChevronRight className="size-3.5" />
-            السابق
-          </Button>
-          <span className="min-w-[3.5rem] rounded-md bg-background px-2 py-1 text-center text-[11px] font-semibold tabular-nums text-muted-foreground ring-1 ring-border/60">
-            {page}/{totalPages}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1 rounded-lg px-3 text-xs"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-            aria-label="الصفحة التالية"
-          >
-            التالي
-            <ChevronLeft className="size-3.5" />
-          </Button>
-        </div>
-      </div>
+      <PaginationControls
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        pageSize={pageSize}
+        onPageChange={onPageChange}
+        itemLabel="طلاب"
+        variant="compact"
+        showRangeSummary
+        className="border-t border-border/60 bg-muted/20 px-4 py-3.5"
+      />
     </div>
   );
 }

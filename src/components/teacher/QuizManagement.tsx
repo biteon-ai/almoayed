@@ -7,6 +7,7 @@ import { toggleQuizStatus, updateQuizFlags } from "@/actions/teacher";
 import type { TeacherQuiz } from "@/types/database";
 import { QuizListItem } from "@/components/teacher/QuizListItem";
 import { QuizMetricsKPIHeader } from "@/components/teacher/QuizMetricsKPIHeader";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,15 +28,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePagination } from "@/hooks/usePagination";
 import {
-  paginateQuizzes,
   QUIZ_PAGE_SIZE,
 } from "@/lib/paginate-students";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 import {
-  ChevronLeft,
-  ChevronRight,
   FileQuestion,
   Loader2,
   Plus,
@@ -70,7 +69,6 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
   const [filterStatus, setFilterStatus] = useState<
     "all" | "active" | "inactive"
   >("all");
-  const [page, setPage] = useState(1);
   const [pending, startTransition] = useTransition();
   const [pendingQuizId, setPendingQuizId] = useState<string | null>(null);
   const [confirmQuiz, setConfirmQuiz] = useState<TeacherQuiz | null>(null);
@@ -79,20 +77,6 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
   useEffect(() => {
     setQuizzes(initial);
   }, [initial]);
-
-  const resetPage = () => setPage(1);
-
-  const hasActiveFilters =
-    search.trim().length > 0 ||
-    filterTier !== FILTER_ALL ||
-    filterStatus !== FILTER_ALL;
-
-  const resetFilters = () => {
-    setSearch("");
-    setFilterTier("all");
-    setFilterStatus("all");
-    setPage(1);
-  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -116,17 +100,26 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
     });
   }, [quizzes, search, filterTier, filterStatus]);
 
-  const { items, page: safePage, totalPages, total } = paginateQuizzes(
-    filtered,
-    page
-  );
+  const {
+    items,
+    page: safePage,
+    totalPages,
+    total,
+    setPage,
+    resetPage,
+  } = usePagination(filtered, QUIZ_PAGE_SIZE);
 
-  useEffect(() => {
-    if (page !== safePage) setPage(safePage);
-  }, [page, safePage]);
+  const hasActiveFilters =
+    search.trim().length > 0 ||
+    filterTier !== FILTER_ALL ||
+    filterStatus !== FILTER_ALL;
 
-  const rangeStart = total === 0 ? 0 : (safePage - 1) * QUIZ_PAGE_SIZE + 1;
-  const rangeEnd = Math.min(safePage * QUIZ_PAGE_SIZE, total);
+  const resetFilters = () => {
+    setSearch("");
+    setFilterTier("all");
+    setFilterStatus("all");
+    resetPage();
+  };
 
   const patchQuiz = (id: string, patch: Partial<TeacherQuiz>) => {
     setQuizzes((prev) =>
@@ -332,33 +325,16 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
       </div>
 
       {total > 0 && (
-        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
-            عرض {rangeStart}-{rangeEnd} من أصل {total} اختبار
-            <span className="mx-2 text-border">·</span>
-            صفحة {safePage} من {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="h-10 gap-1.5"
-              disabled={safePage <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              <ChevronRight className="size-4" />
-              السابق
-            </Button>
-            <Button
-              variant="outline"
-              className="h-10 gap-1.5"
-              disabled={safePage >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              التالي
-              <ChevronLeft className="size-4" />
-            </Button>
-          </div>
-        </div>
+        <PaginationControls
+          page={safePage}
+          totalPages={totalPages}
+          total={total}
+          pageSize={QUIZ_PAGE_SIZE}
+          onPageChange={setPage}
+          itemLabel="اختبار"
+          variant="full"
+          className="rounded-xl border border-border/70 bg-card px-4 py-3"
+        />
       )}
 
       <AlertDialog

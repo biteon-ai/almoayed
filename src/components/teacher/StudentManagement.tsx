@@ -43,9 +43,9 @@ import { CreateGroupDialog } from "@/components/teacher/CreateGroupDialog";
 import { EditStudentDialog } from "@/components/teacher/EditStudentDialog";
 import { DeleteStudentConfirmDialog } from "@/components/teacher/DeleteStudentConfirmDialog";
 import { HubToast } from "@/components/teacher/HubToast";
+import { usePagination } from "@/hooks/usePagination";
 import {
   filterStudentsByQuery,
-  paginateStudents,
   STUDENT_PAGE_SIZE,
 } from "@/lib/paginate-students";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
@@ -105,7 +105,6 @@ export function StudentManagement({
   const [filterGroupId, setFilterGroupId] = useState<"all" | string>("all");
   /** Toggle from «طلبات معلقة» KPI — Pro upgrade requests (+ account pending). */
   const [filterPendingRequests, setFilterPendingRequests] = useState(false);
-  const [page, setPage] = useState(1);
   const [pending, startTransition] = useTransition();
   const [pendingActionKey, setPendingActionKey] = useState<string | null>(null);
 
@@ -176,23 +175,20 @@ export function StudentManagement({
     filterGroupId,
   ]);
 
-  const { items, page: safePage, totalPages, total } = paginateStudents(
-    filtered,
-    page,
-    STUDENT_PAGE_SIZE
-  );
-
-  useEffect(() => {
-    if (safePage !== page) setPage(safePage);
-  }, [safePage, page]);
+  const {
+    items,
+    page: safePage,
+    totalPages,
+    total,
+    setPage,
+    resetPage,
+  } = usePagination(filtered, STUDENT_PAGE_SIZE);
 
   const refreshStudent = (linkId: string, patch: Partial<TeacherStudentRow>) => {
     setStudents((prev) =>
       prev.map((s) => (s.linkId === linkId ? { ...s, ...patch } : s))
     );
   };
-
-  const resetPage = () => setPage(1);
 
   const hasActiveFilters =
     search.trim() !== "" ||
