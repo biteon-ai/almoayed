@@ -833,14 +833,33 @@ export async function addQuestion(quizId: string, formData: FormData) {
     .map((o) => (o as string)?.trim())
     .filter(Boolean);
 
+  if (options.length < 2) {
+    throw new Error("أضف خيارين على الأقل.");
+  }
+
+  const question_text = (formData.get("question_text") as string)?.trim();
+  if (!question_text) throw new Error("نص السؤال مطلوب.");
+
+  const { data: maxRow } = await supabase
+    .from("questions")
+    .select("sort_order")
+    .eq("quiz_id", quizId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const sort_order =
+    Number(formData.get("sort_order")) ||
+    ((maxRow?.sort_order as number | undefined) ?? 0) + 1;
+
   const { error } = await supabase.from("questions").insert({
     quiz_id: quizId,
-    question_text: (formData.get("question_text") as string)?.trim(),
+    question_text,
     options,
     correct_answer: (formData.get("correct_answer") as string)?.trim(),
     explanation_text: (formData.get("explanation_text") as string)?.trim() ?? "",
     category_tag: (formData.get("category_tag") as string)?.trim() || "عام",
-    sort_order: Number(formData.get("sort_order") ?? 0) || 1,
+    sort_order,
   });
 
   if (error) throw new Error("فشل إضافة السؤال.");
@@ -914,7 +933,8 @@ async function assertQuizOwnedByTeacher(quizId: string, profileId: string) {
 
 export async function importQuestionRows(
   quizId: string,
-  rows: ImportQuestionRow[]
+  rows: ImportQuestionRow[],
+  options?: { mode?: "append" | "replace" }
 ) {
   const session = await requireTeacher();
   await assertQuizOwnedByTeacher(quizId, session.profileId);
@@ -932,6 +952,16 @@ export async function importQuestionRows(
   }
 
   const supabase = createAdminClient();
+  const mode = options?.mode === "replace" ? "replace" : "append";
+
+  if (mode === "replace") {
+    const { error: clearErr } = await supabase
+      .from("questions")
+      .delete()
+      .eq("quiz_id", quizId);
+    if (clearErr) throw new Error("فشل مسح الأسئلة الحالية قبل الاستبدال.");
+  }
+
   const inserts = importRowsToQuestionInserts(validRows).map((q) => ({
     ...q,
     quiz_id: quizId,
@@ -953,6 +983,10 @@ export async function importQuestions(quizId: string, formData: FormData) {
   const buffer = await file.arrayBuffer();
   const text = await file.text();
   const ext = file.name.split(".").pop()?.toLowerCase();
+  const importMode =
+    formData.get("import_mode") === "replace" ? "replace" : "append";
+  const defaultCategory =
+    ((formData.get("default_category") as string) || "").trim() || "عام";
 
   let rows;
   if (ext === "csv") {
@@ -969,18 +1003,15 @@ export async function importQuestions(quizId: string, formData: FormData) {
     throw new Error("صيغة غير مدعومة. استخدم CSV أو XLSX أو TXT أو DOCX.");
   }
 
-  const supabase = createAdminClient();
-  const inserts = importRowsToQuestionInserts(rows).map((q) => ({
-    ...q,
-    quiz_id: quizId,
+  const normalized = rows.map((row) => ({
+    ...row,
+    category_tag:
+      !row.category_tag || row.category_tag === "عام"
+        ? defaultCategory
+        : row.category_tag,
   }));
 
-  if (!inserts.length) throw new Error("ما لقينا أسئلة صالحة بالملف.");
-
-  const { error } = await supabase.from("questions").insert(inserts);
-  if (error) throw new Error("فشل استيراد الأسئلة.");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
-  return { imported: inserts.length };
+  return importQuestionRows(quizId, normalized, { mode: importMode });
 }
 
 export async function deleteQuestion(quizId: string, questionId: string) {
@@ -997,5 +1028,45 @@ export async function deleteQuestion(quizId: string, questionId: string) {
   if (!quiz) throw new Error("غير مصرح.");
 
   await supabase.from("questions").delete().eq("id", questionId).eq("quiz_id", quizId);
+  revalidatePath(`/teacher/quizzes/${quizId}`);
+}
+
+export async function duplicateQuestion(quizId: string, questionId: string) {
+  const session = await requireTeacher();
+  await assertQuizOwnedByTeacher(quizId, session.profileId);
+  const supabase = createAdminClient();
+
+  const { data: source } = await supabase
+    .from("questions")
+    .select("*")
+    .eq("id", questionId)
+    .eq("quiz_id", quizId)
+    .single();
+
+  if (!source) throw new Error("السؤال غير موجود.");
+
+  const { data: maxRow } = await supabase
+    .from("questions")
+    .select("sort_order")
+    .eq("quiz_id", quizId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const sort_order = ((maxRow?.sort_order as number | undefined) ?? 0) + 1;
+
+  const { error } = await supabase.from("questions").insert({
+    quiz_id: quizId,
+    question_text: source.question_text,
+    question_image_url: source.question_image_url,
+    options: source.options,
+    correct_answer: source.correct_answer,
+    explanation_text: source.explanation_text,
+    explanation_media_url: source.explanation_media_url,
+    category_tag: source.category_tag,
+    sort_order,
+  });
+
+  if (error) throw new Error("فشل تكرار السؤال.");
   revalidatePath(`/teacher/quizzes/${quizId}`);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { FileSpreadsheet, UploadCloud, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
@@ -64,35 +65,54 @@ export function FileUploadZone({
           void applyFile(file);
         }}
         className={cn(
-          "flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 bg-muted/20 p-8 text-center transition-colors",
-          "hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-500/20",
-          isDragging && "border-brand-400 bg-brand-50/40",
+          "flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/20 bg-muted/10 p-10 text-center transition-all",
+          "hover:border-emerald-500 hover:bg-emerald-50/30 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-500/20",
+          isDragging && "border-emerald-500 bg-emerald-50/40",
           disabled && "cursor-not-allowed opacity-50"
         )}
       >
-        <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-background shadow-sm ring-1 ring-border/60">
+        <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-background shadow-sm ring-1 ring-border/60">
           {parsingLabel ? (
-            <Loader2 className="size-6 animate-spin text-brand-600" />
+            <Loader2 className="size-8 animate-spin text-emerald-600" />
           ) : (
-            <UploadCloud className="size-6 text-brand-600" />
+            <UploadCloud className="size-8 text-emerald-600" />
           )}
         </div>
-        <p className="text-sm font-semibold text-foreground">
+        <p className="text-sm font-semibold text-foreground sm:text-base">
           {parsingLabel
             ? parsingLabel
             : fileName
               ? fileName
-              : "اسحب ملف الأسئلة هنا أو انقر للاختيار"}
+              : "اسحب وأسقط ملف الأسئلة هنا، أو انقر للاختيار"}
         </p>
-        <p className="mt-2 max-w-md text-xs leading-relaxed text-muted-foreground">
-          يدعم Excel (.xlsx / .csv) و Word (.docx) والنص (.txt)
-        </p>
+        {!parsingLabel && !fileName ? (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Badge
+              variant="secondary"
+              className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+            >
+              Excel (.xlsx)
+            </Badge>
+            <Badge
+              variant="secondary"
+              className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+            >
+              Word (.docx)
+            </Badge>
+            <Badge
+              variant="secondary"
+              className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+            >
+              CSV
+            </Badge>
+          </div>
+        ) : null}
       </button>
       {fileName && !parsingLabel ? (
         <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-brand-700">
           <FileSpreadsheet className="size-3.5" />
           {fileName.endsWith(".docx")
-            ? "ملف Word — ستظهر المعاينة في تبويب «معاينة وتعديل»"
+            ? "ملف Word — ستظهر المعاينة أسفل منطقة الرفع بعد التحليل"
             : "تم اختيار الملف — اضغط «رفع واستيراد الأسئلة» للمتابعة"}
         </p>
       ) : null}

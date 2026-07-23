@@ -8,21 +8,15 @@ import {
   type StagedImportRow,
 } from "@/components/teacher/DocxImportPreview";
 import { FileUploadZone } from "@/components/teacher/FileUploadZone";
-import { ImportFormatTabs } from "@/components/teacher/import/ImportFormatTabs";
-import { ImportValidationTips } from "@/components/teacher/import/ImportValidationTips";
+import {
+  ImportAccordionPanels,
+  type ImportAdvancedSettings,
+} from "@/components/teacher/import/ImportAccordionPanels";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isDocxFile } from "@/lib/docx-file";
 import { sanitizeImportRows } from "@/lib/parse-docx-questions";
 import { SPEKIT } from "@/lib/spekit-targets";
-import {
-  Eye,
-  FileSearch,
-  HelpCircle,
-  Loader2,
-  SkipForward,
-  UploadCloud,
-} from "lucide-react";
+import { FileSearch, Loader2, SkipForward, UploadCloud } from "lucide-react";
 
 interface BulkQuestionUploadProps {
   quizId: string;
@@ -31,7 +25,6 @@ interface BulkQuestionUploadProps {
 }
 
 type ParsePhase = "idle" | "parsing" | "preview" | "importing";
-type ImportTab = "upload" | "guide" | "preview";
 
 function toStagedRows(
   rows: ReturnType<typeof sanitizeImportRows>
@@ -41,6 +34,12 @@ function toStagedRows(
     stagingId: `stage-${index}-${row.question_text.slice(0, 12)}`,
   }));
 }
+
+const DEFAULT_SETTINGS: ImportAdvancedSettings = {
+  defaultMarks: "1",
+  defaultCategory: "عام",
+  importMode: "append",
+};
 
 export function BulkQuestionUpload({
   quizId,
@@ -52,7 +51,8 @@ export function BulkQuestionUpload({
   const [parsePhase, setParsePhase] = useState<ParsePhase>("idle");
   const [stagedRows, setStagedRows] = useState<StagedImportRow[]>([]);
   const [docxFileName, setDocxFileName] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ImportTab>("upload");
+  const [settings, setSettings] =
+    useState<ImportAdvancedSettings>(DEFAULT_SETTINGS);
   const [isPending, startTransition] = useTransition();
 
   const isBusy =
@@ -66,6 +66,14 @@ export function BulkQuestionUpload({
     setStagedRows([]);
     setDocxFileName(null);
     setParsePhase("idle");
+  };
+
+  const appendImportOptions = (formData: FormData) => {
+    formData.set("import_mode", settings.importMode);
+    formData.set(
+      "default_category",
+      settings.defaultCategory.trim() || "عام"
+    );
   };
 
   const handleFileSelect = async (file: File) => {
@@ -95,7 +103,6 @@ export function BulkQuestionUpload({
 
       setStagedRows(toStagedRows(parsed));
       setParsePhase("preview");
-      setActiveTab("preview");
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -113,13 +120,19 @@ export function BulkQuestionUpload({
 
     startTransition(async () => {
       try {
+        const defaultCategory = settings.defaultCategory.trim() || "عام";
         const payload = stagedRows.map(({ stagingId, ...row }) => {
           void stagingId;
-          return row;
+          const category =
+            !row.category_tag || row.category_tag === "عام"
+              ? defaultCategory
+              : row.category_tag;
+          return { ...row, category_tag: category };
         });
-        const result = await importQuestionRows(quizId, payload);
+        const result = await importQuestionRows(quizId, payload, {
+          mode: settings.importMode,
+        });
         resetDocxPreview();
-        setActiveTab("upload");
         onSuccess(result.imported);
       } catch (cause) {
         setParsePhase("preview");
@@ -137,11 +150,12 @@ export function BulkQuestionUpload({
     setError(null);
 
     if (parsePhase === "preview") {
-      setActiveTab("preview");
+      setError("راجع معاينة Word بالأسفل ثم أكّد الحفظ.");
       return;
     }
 
     const formData = new FormData(event.currentTarget);
+    appendImportOptions(formData);
     const file = formData.get("file");
     if (!file || !(file instanceof File) || file.size === 0) {
       setError("اختار ملف CSV أو XLSX أو TXT أو DOCX للاستيراد.");
@@ -150,7 +164,6 @@ export function BulkQuestionUpload({
 
     if (isDocxFile(file)) {
       setError("انتظر انتهاء معاينة ملف Word قبل الحفظ.");
-      setActiveTab("preview");
       return;
     }
 
@@ -172,74 +185,86 @@ export function BulkQuestionUpload({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="space-y-5"
+      className="space-y-6"
       dir="rtl"
       data-spekit={SPEKIT.bulkImportZone}
     >
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => {
-          if (
-            value === "upload" ||
-            value === "guide" ||
-            value === "preview"
-          ) {
-            setActiveTab(value);
+      <div className="space-y-4">
+        <FileUploadZone
+          disabled={isBusy}
+          onFileSelect={handleFileSelect}
+          parsingLabel={
+            parsePhase === "parsing"
+              ? "جاري قراءة بنية ملف Word..."
+              : undefined
           }
-        }}
-        className="w-full"
-      >
-        <TabsList className="h-auto min-h-12 w-full flex-wrap gap-1 p-1.5">
-          <TabsTrigger
-            value="upload"
-            className="flex-1 gap-1.5 whitespace-normal px-2 py-2.5 text-[11px] sm:text-xs"
-          >
-            <UploadCloud className="size-3.5 shrink-0" aria-hidden />
-            رفع الملف
-          </TabsTrigger>
-          <TabsTrigger
-            value="guide"
-            className="flex-1 gap-1.5 whitespace-normal px-2 py-2.5 text-[11px] sm:text-xs"
-          >
-            <HelpCircle className="size-3.5 shrink-0" aria-hidden />
-            دليل التنسيق والربط
-          </TabsTrigger>
-          <TabsTrigger
-            value="preview"
-            className="flex-1 gap-1.5 whitespace-normal px-2 py-2.5 text-[11px] sm:text-xs"
-          >
-            <Eye className="size-3.5 shrink-0" aria-hidden />
-            معاينة وتعديل
-            {hasPreview ? (
-              <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-800">
-                {stagedRows.length}
-              </span>
-            ) : null}
-          </TabsTrigger>
-        </TabsList>
+        />
 
-        <TabsContent value="upload" className="mt-5 space-y-4">
-          <FileUploadZone
-            disabled={isBusy}
-            onFileSelect={handleFileSelect}
-            parsingLabel={
-              parsePhase === "parsing"
-                ? "جاري قراءة بنية ملف Word..."
-                : undefined
-            }
-          />
+        {parsePhase === "parsing" ? (
+          <p
+            role="status"
+            className="flex items-center gap-2 rounded-xl border border-brand-200/50 bg-brand-50/30 px-3.5 py-3 text-xs font-semibold text-brand-800"
+          >
+            <FileSearch className="size-4 animate-pulse" />
+            جاري تحليل الجداول والمعادلات في المستند...
+          </p>
+        ) : null}
 
-          {parsePhase === "parsing" ? (
-            <p
-              role="status"
-              className="flex items-center gap-2 rounded-xl border border-brand-200/50 bg-brand-50/30 px-3.5 py-3 text-xs font-semibold text-brand-800"
+        {error && !hasPreview ? (
+          <p
+            role="alert"
+            className="rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-xs font-semibold text-destructive"
+          >
+            {error}
+          </p>
+        ) : null}
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            type="submit"
+            variant="brand"
+            className="h-11 flex-1 gap-2"
+            disabled={isBusy || hasPreview}
+            data-spekit={SPEKIT.bulkImportSubmit}
+          >
+            {isPending && !hasPreview ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                جاري الاستيراد...
+              </>
+            ) : (
+              <>
+                <UploadCloud className="size-4" />
+                رفع واستيراد الأسئلة
+              </>
+            )}
+          </Button>
+          {onSkip ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 gap-2"
+              disabled={isBusy}
+              onClick={onSkip}
             >
-              <FileSearch className="size-4 animate-pulse" />
-              جاري تحليل الجداول والمعادلات في المستند...
-            </p>
+              <SkipForward className="size-4" />
+              تخطي — إضافة يدوية
+            </Button>
           ) : null}
+        </div>
+      </div>
 
-          {error && activeTab === "upload" ? (
+      {hasPreview && docxFileName ? (
+        <div className="space-y-3 border-t border-border/60 pt-5">
+          <div className="text-start">
+            <h3 className="text-sm font-bold text-foreground">
+              معاينة وتعديل ({stagedRows.length})
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              راجع الأسئلة المستخرجة من Word قبل الحفظ النهائي.
+            </p>
+          </div>
+          {error ? (
             <p
               role="alert"
               className="rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-xs font-semibold text-destructive"
@@ -247,94 +272,28 @@ export function BulkQuestionUpload({
               {error}
             </p>
           ) : null}
+          <DocxImportPreview
+            rows={stagedRows}
+            fileName={docxFileName}
+            onChange={setStagedRows}
+            onConfirm={handleConfirmDocx}
+            onCancel={() => {
+              resetDocxPreview();
+              if (formRef.current) formRef.current.reset();
+            }}
+            isConfirming={parsePhase === "importing" || isPending}
+          />
+        </div>
+      ) : null}
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button
-              type="submit"
-              variant="brand"
-              className="h-11 flex-1 gap-2"
-              disabled={isBusy}
-              data-spekit={SPEKIT.bulkImportSubmit}
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  جاري الاستيراد...
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="size-4" />
-                  رفع واستيراد الأسئلة
-                </>
-              )}
-            </Button>
-            {onSkip ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 gap-2"
-                disabled={isBusy}
-                onClick={onSkip}
-              >
-                <SkipForward className="size-4" />
-                تخطي — إضافة يدوية
-              </Button>
-            ) : null}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="guide" className="mt-5 space-y-4">
-          <ImportFormatTabs />
-          <ImportValidationTips />
-        </TabsContent>
-
-        <TabsContent value="preview" className="mt-5 space-y-4">
-          {hasPreview && docxFileName ? (
-            <>
-              {error ? (
-                <p
-                  role="alert"
-                  className="rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-xs font-semibold text-destructive"
-                >
-                  {error}
-                </p>
-              ) : null}
-              <DocxImportPreview
-                rows={stagedRows}
-                fileName={docxFileName}
-                onChange={setStagedRows}
-                onConfirm={handleConfirmDocx}
-                onCancel={() => {
-                  resetDocxPreview();
-                  if (formRef.current) formRef.current.reset();
-                  setActiveTab("upload");
-                }}
-                isConfirming={parsePhase === "importing" || isPending}
-              />
-            </>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-border/80 bg-muted/15 px-6 py-12 text-center">
-              <Eye className="mx-auto size-8 text-muted-foreground/70" />
-              <p className="mt-3 text-sm font-semibold text-foreground">
-                لا توجد معاينة بعد
-              </p>
-              <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
-                ارفع ملف Word (.docx) من تبويب «رفع الملف» لتظهر الأسئلة هنا
-                للمراجعة قبل الحفظ. ملفات Excel/CSV تُستورد مباشرة بعد الرفع.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-5 h-10 gap-2 rounded-xl"
-                onClick={() => setActiveTab("upload")}
-              >
-                <UploadCloud className="size-4" />
-                الانتقال لرفع الملف
-              </Button>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      <div className="border-t border-border/60 pt-5">
+        <ImportAccordionPanels
+          settings={settings}
+          onSettingsChange={(patch) =>
+            setSettings((prev) => ({ ...prev, ...patch }))
+          }
+        />
+      </div>
     </form>
   );
 }

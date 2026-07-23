@@ -6,8 +6,8 @@ import { updateQuestion } from "@/actions/teacher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { MathText } from "@/components/ui/MathText";
+import { CorrectAnswerPicker } from "@/components/teacher/CorrectAnswerPicker";
 import {
   inferCorrectLetter,
   optionsArrayToFields,
@@ -25,13 +25,6 @@ const optionFields = [
   { key: "option_b" as const, letter: "ب" },
   { key: "option_c" as const, letter: "ج" },
   { key: "option_d" as const, letter: "د" },
-];
-
-const correctChoices: { value: ArabicOptionLetter; label: string }[] = [
-  { value: "أ", label: "أ" },
-  { value: "ب", label: "ب" },
-  { value: "ج", label: "ج" },
-  { value: "د", label: "د" },
 ];
 
 interface QuestionEditDialogProps {
@@ -216,7 +209,8 @@ export function QuestionEditDialog({
                           htmlFor={`${key}-${question.id}`}
                           className="text-xs font-semibold text-muted-foreground"
                         >
-                          الخيار {letter}
+                          {"الخيار "}
+                          {letter}
                         </Label>
                         <div className="relative">
                           <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-sm font-bold text-brand-700">
@@ -236,26 +230,11 @@ export function QuestionEditDialog({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>الإجابة الصحيحة</Label>
-                <RadioGroup
-                  value={correctAnswer}
-                  onValueChange={(value) =>
-                    setCorrectAnswer(value as ArabicOptionLetter)
-                  }
-                  className="grid grid-cols-4 gap-2"
-                >
-                  {correctChoices.map((choice) => (
-                    <label
-                      key={choice.value}
-                      className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-border/70 bg-muted/20 px-3 py-2.5 text-sm font-semibold has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/50"
-                    >
-                      <RadioGroupItem value={choice.value} />
-                      {choice.label}
-                    </label>
-                  ))}
-                </RadioGroup>
-              </div>
+              <CorrectAnswerPicker
+                value={correctAnswer}
+                onChange={setCorrectAnswer}
+                disabled={isPending}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor={`explain-${question.id}`}>الشرح</Label>

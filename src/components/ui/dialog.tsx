@@ -31,9 +31,10 @@ interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: ReactNode;
+  className?: string;
 }
 
-export function Dialog({ open, onOpenChange, children }: DialogProps) {
+export function Dialog({ open, onOpenChange, children, className }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
     null
@@ -63,7 +64,10 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
         ref={dialogRef}
         // `open:flex` only — bare `flex` overrides UA `dialog:not([open]){display:none}`
         // and stacks every closed Dialog on screen (modal collision / focus freeze).
-        className="fixed inset-0 z-50 m-auto max-h-[90vh] w-[95vw] max-w-md flex-col overflow-visible rounded-2xl border border-border bg-background p-0 shadow-xl backdrop:bg-black/50 open:flex"
+        className={cn(
+          "fixed inset-0 z-50 m-auto max-h-[90vh] w-[95vw] max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-background p-0 shadow-xl backdrop:bg-black/50 open:flex",
+          className
+        )}
         onClose={() => onOpenChange(false)}
       >
         {children}

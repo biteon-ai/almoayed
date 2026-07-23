@@ -5,6 +5,7 @@ import {
 } from "@/lib/import-template";
 import {
   importRowsToQuestionInserts,
+  parseArabicTxtQuiz,
   parseCsvQuestions,
   parseWordLikeText,
   parseXlsxQuestions,
@@ -92,6 +93,61 @@ describe(`${FEATURE} Bulk question parser`, () => {
   it("skips txt blocks missing question or answer", () => {
     const incomplete = "س: سؤال بدون جواب\nأ) 1\nب) 2";
     expect(parseWordLikeText(incomplete)).toEqual([]);
+  });
+
+  it("parses numbered inline MCQ .txt with (a (b (c (d options", () => {
+    const txt = [
+      "1) ما ناتج 2 + 2؟ (a 3 (b 4 (c 5 (d 6",
+      "2) ما ناتج 3 × 3؟ (a 6 (b 9 (c 12 (d 15",
+    ].join("\n");
+
+    const rows = parseArabicTxtQuiz(txt);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.question_text).toBe("ما ناتج 2 + 2؟");
+    expect(rows[0]?.option_a).toBe("3");
+    expect(rows[0]?.option_b).toBe("4");
+    expect(rows[0]?.option_c).toBe("5");
+    expect(rows[0]?.option_d).toBe("6");
+    expect(rows[0]?.correct_answer).toBe("أ");
+    expect(rows[1]?.option_b).toBe("9");
+  });
+
+  it("parses inline MCQ with Arabic أ) ب) markers and الجواب key", () => {
+    const txt =
+      "1) اختر الناتج الصحيح أ) 10 ب) 20 ج) 30 د) 40 الجواب: ب";
+
+    const rows = parseArabicTxtQuiz(txt);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.question_text).toContain("اختر الناتج الصحيح");
+    expect(rows[0]?.option_b).toBe("20");
+    expect(rows[0]?.correct_answer).toBe("ب");
+  });
+
+  it("falls back from labeled parser to inline numbered MCQ via parseWordLikeText", () => {
+    const txt =
+      "1) سؤال تجريبي (a خيار1 (b خيار2 (c خيار3 (d خيار4";
+    const rows = parseWordLikeText(txt);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.option_a).toBe("خيار1");
+    expect(rows[0]?.option_d).toBe("خيار4");
+  });
+
+  it("strips encoding replacement noise before parsing inline MCQ", () => {
+    const txt =
+      "1) ما قيمة ?? في المعادلة؟ (a 1 (b 2 (c 3 (d 4";
+    const rows = parseArabicTxtQuiz(txt);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.question_text).toMatch(/ما قيمة/);
+    expect(rows[0]?.question_text).not.toContain("??");
+  });
+
+  it("keeps math f(a) inside question text without treating it as an option", () => {
+    const txt =
+      "1) إذا كان f(a) = 2 فما قيمة a؟ (a 1 (b 2 (c 3 (d 4";
+    const rows = parseArabicTxtQuiz(txt);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.question_text).toContain("f(a)");
+    expect(rows[0]?.option_a).toBe("1");
   });
 
   it("parses .xlsx buffer with column aliases", async () => {

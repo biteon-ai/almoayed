@@ -1,20 +1,8 @@
-import {
-  addQuestion,
-  getQuizQuestions,
-  getTeacherQuizzes,
-} from "@/actions/teacher";
-import { EditQuizBulkImportSection } from "@/components/teacher/EditQuizBulkImportSection";
-import { QuestionAddForm } from "@/components/teacher/QuestionAddForm";
-import { TeacherQuestionsList } from "@/components/teacher/TeacherQuestionsList";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { getQuizQuestions, getTeacherQuizzes } from "@/actions/teacher";
+import { QuizQuestionsDashboard } from "@/components/teacher/QuizQuestionsDashboard";
+import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { notFound } from "next/navigation";
-import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
 import { Suspense } from "react";
 
 export const metadata = { title: "تحرير الاختبار | المؤيد" };
@@ -31,14 +19,9 @@ export default async function EditQuizPage({ params }: PageProps) {
 
   const questions = await getQuizQuestions(id);
 
-  async function handleAddQuestion(formData: FormData) {
-    "use server";
-    await addQuestion(id, formData);
-  }
-
   return (
     <div
-      className="mx-auto w-full max-w-6xl space-y-8"
+      className="mx-auto w-full max-w-7xl"
       data-spekit={SPEKIT.teacherQuizEditPage}
     >
       <Suspense fallback={null}>
@@ -47,28 +30,17 @@ export default async function EditQuizPage({ params }: PageProps) {
 
       <Suspense
         fallback={
-          <Card className="overflow-hidden border-border/70 shadow-sm">
-            <CardContent className="p-6 text-sm text-muted-foreground">
-              جاري تحميل الاستيراد...
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border border-border/70 bg-card p-6 text-sm text-muted-foreground shadow-sm">
+            جاري تحميل إدارة الأسئلة...
+          </div>
         }
       >
-        <EditQuizBulkImportSection quizId={id} quizTitle={quiz.title} />
+        <QuizQuestionsDashboard
+          quizId={id}
+          quizTitle={quiz.title}
+          questions={questions}
+        />
       </Suspense>
-
-      <Card className="overflow-hidden border-border/70 shadow-sm">
-        <CardHeader className="space-y-1 p-6 pb-4 text-start">
-          <CardTitle className="text-base font-semibold">
-            إضافة سؤال يدوياً
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 pt-0">
-          <QuestionAddForm action={handleAddQuestion} />
-        </CardContent>
-      </Card>
-
-      <TeacherQuestionsList quizId={id} questions={questions} />
     </div>
   );
 }

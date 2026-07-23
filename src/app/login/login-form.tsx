@@ -117,15 +117,25 @@ function WhatsAppField({
         <MessageCircle className="size-3.5 shrink-0 text-brand-600" />
         رقم واتساب
       </Label>
-      <div className="input-touch-group h-11 items-stretch [@media(max-height:700px)]:h-10 sm:h-12">
+      {/*
+        Native <input> + suppressHydrationWarning: password-manager extensions
+        often inject wrapper nodes around tel fields and break Base UI Input hydration.
+      */}
+      <div
+        className="input-touch-group h-11 items-stretch [@media(max-height:700px)]:h-10 sm:h-12"
+        suppressHydrationWarning
+      >
         <span
           className="input-touch-prefix !gap-1.5 !px-3 !text-xs !font-semibold sm:!text-sm"
           dir="ltr"
         >
-          <span className="size-1.5 shrink-0 rounded-full bg-[#25D366]" />
+          <span
+            className="size-1.5 shrink-0 rounded-full bg-[#25D366]"
+            aria-hidden
+          />
           +963
         </span>
-        <Input
+        <input
           id={id}
           name="whatsapp_number"
           type="tel"
@@ -136,10 +146,12 @@ function WhatsAppField({
           onChange={(e) => onChange(e.target.value)}
           className={cn(
             inputClass,
-            "min-w-0 flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0"
+            "min-w-0 flex-1 rounded-none border-0 bg-transparent shadow-none outline-none",
+            "focus-visible:ring-0"
           )}
           dir="ltr"
           required
+          suppressHydrationWarning
         />
       </div>
     </div>
@@ -182,6 +194,8 @@ export function LoginForm({
       ? "تم التحقق من واتساب. أدخل رمز الأستاذ لإكمال الدخول."
       : null
   );
+  /** Avoid SSR/client DOM mismatches (tabs + extension-injected tel wrappers). */
+  const [hydrated, setHydrated] = useState(false);
   const [, startTransition] = useTransition();
 
   const demoFormRef = useRef<HTMLFormElement>(null);
@@ -196,6 +210,10 @@ export function LoginForm({
     linkTeacherCodeAction,
     initialLogin
   );
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     setTab(defaultTab);
@@ -307,7 +325,7 @@ export function LoginForm({
             <div className="h-0.5 shrink-0 bg-gradient-to-l from-brand-400 via-brand-600 to-brand-800 sm:h-1" />
 
             <div className="flex min-h-0 flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
-              {(banner || errorMessage) && !busy && (
+              {(banner || errorMessage) && !busy ? (
                 <div
                   role="alert"
                   className={cn(
@@ -322,9 +340,17 @@ export function LoginForm({
                     <p className="mt-1 text-destructive">{errorMessage}</p>
                   ) : null}
                 </div>
-              )}
+              ) : null}
 
-              {showLinkPanel ? (
+              {!hydrated ? (
+                <div
+                  className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3"
+                  aria-busy="true"
+                >
+                  <Loader2 className="size-5 animate-spin text-brand-600" />
+                  <p className="text-xs text-muted-foreground">جاري التحميل…</p>
+                </div>
+              ) : showLinkPanel ? (
                 <form
                   action={linkAction}
                   className={cn(fieldGap, "flex min-h-0 flex-1 flex-col justify-center")}

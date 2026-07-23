@@ -11,6 +11,176 @@ function stripLabelPrefix(line: string, prefixes: string[]): string | null {
   return null;
 }
 
+/** Map Latin / Arabic choice letters to the app's Arabic أ–د keys. */
+function normalizeChoiceLetter(raw: string): "أ" | "ب" | "ج" | "د" | null {
+  const ch = raw.trim().charAt(0);
+  const map: Record<string, "أ" | "ب" | "ج" | "د"> = {
+    a: "أ",
+    A: "أ",
+    أ: "أ",
+    إ: "أ",
+    ا: "أ",
+    b: "ب",
+    B: "ب",
+    ب: "ب",
+    c: "ج",
+    C: "ج",
+    ج: "ج",
+    d: "د",
+    D: "د",
+    د: "د",
+  };
+  return map[ch] ?? null;
+}
+
+/**
+ * Sanitize encoding noise. Choice-marker normalization is handled during option
+ * extraction so math like `f(a)` is not corrupted.
+ */
+export function sanitizeArabicTxt(rawText: string): string {
+  let text = rawText.replace(/^\uFEFF/, "");
+
+  text = text
+    .replace(/\uFFFD+/g, " ")
+    .replace(/\u0000/g, "")
+    .replace(/(?<![\w\u0600-\u06FF])\?{2,}(?![\w\u0600-\u06FF])/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\r\n?/g, "\n");
+
+  // Ensure numbered question starts sit on line boundaries for block splitting
+  text = text.replace(/([^\n])(\d{1,3}[\)\.]\s+)/g, "$1\n$2");
+
+  return text.replace(/[ \t]{2,}/g, " ").trim();
+}
+
+const QUESTION_BLOCK_REGEX =
+  /(?:^|\n)\s*(\d{1,3})[\)\.]\s*([\s\S]*?)(?=(?:\n\s*\d{1,3}[\)\.]\s*)|$)/g;
+
+/**
+ * Option marker: `(a)`, `(a `, `a)`, `أ)` — letter may be Latin or Arabic.
+ * Open form `(a text` (no close paren) is common in Syrian exam .txt exports.
+ */
+const OPTION_MARKER_REGEX =
+  /(?:^|[\s\n])(?:\(([a-dA-Dأإابججد])\)?|([a-dA-Dأإابججد])\))\s+/g;
+
+function extractInlineOptions(block: string): {
+  questionText: string;
+  options: Partial<Record<"أ" | "ب" | "ج" | "د", string>>;
+} | null {
+  const markers: { letter: "أ" | "ب" | "ج" | "د"; start: number; end: number }[] =
+    [];
+
+  OPTION_MARKER_REGEX.lastIndex = 0;
+  for (const match of block.matchAll(OPTION_MARKER_REGEX)) {
+    const raw = match[1] ?? match[2] ?? "";
+    const letter = normalizeChoiceLetter(raw);
+    if (!letter || match.index === undefined) continue;
+    markers.push({
+      letter,
+      start: match.index,
+      end: match.index + match[0].length,
+    });
+  }
+
+  if (markers.length < 2) return null;
+
+  // Prefer a contiguous أ→ب→ج→د (or a→b→c→d) cluster; fall back to all markers.
+  let cluster = markers;
+  for (let i = 0; i < markers.length; i++) {
+    const slice = markers.slice(i);
+    const letters = slice.map((m) => m.letter).join("");
+    if (
+      letters.startsWith("أب") ||
+      letters.startsWith("أبج") ||
+      letters.startsWith("أبجد")
+    ) {
+      cluster = slice;
+      break;
+    }
+  }
+
+  const options: Partial<Record<"أ" | "ب" | "ج" | "د", string>> = {};
+  for (let i = 0; i < cluster.length; i++) {
+    const current = cluster[i]!;
+    const next = cluster[i + 1];
+    const valueStart = current.end;
+    const valueEnd = next ? next.start : block.length;
+    const value = stripAnswerLabels(block.slice(valueStart, valueEnd).trim())
+      .replace(/\s+/g, " ")
+      .trim();
+    if (value) options[current.letter] = value;
+  }
+
+  if (!options["أ"] && !options["ب"]) return null;
+
+  const questionText = stripAnswerLabels(block.slice(0, cluster[0]!.start).trim())
+    .replace(/[\s:：\-–—]+$/u, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!questionText) return null;
+  return { questionText, options };
+}
+
+function extractAnswerFromBlock(block: string): string {
+  const patterns = [
+    /(?:الجواب|الإجابة|Correct|Answer)\s*[:：]\s*([a-dA-Dأإاابججد])/i,
+    /(?:الجواب|الإجابة)\s+([a-dA-Dأإاابججد])\b/,
+  ];
+  for (const pattern of patterns) {
+    const match = block.match(pattern);
+    if (match?.[1]) {
+      return normalizeChoiceLetter(match[1]) ?? match[1];
+    }
+  }
+  return "";
+}
+
+function stripAnswerLabels(text: string): string {
+  return text
+    .replace(
+      /(?:الجواب|الإجابة|Correct|Answer)\s*[:：]\s*[a-dA-Dأإاابججد]\s*/gi,
+      ""
+    )
+    .replace(/(?:الشرح|شرح|Explanation)\s*[:：][\s\S]*$/i, "")
+    .replace(/(?:التصنيف|قسم|Category)\s*[:：][\s\S]*$/i, "")
+    .trim();
+}
+
+/**
+ * Parse numbered Arabic/Latin MCQ `.txt` exams with inline options, e.g.
+ * `1) نص السؤال (a خيار (b خيار (c خيار (d خيار`
+ */
+export function parseArabicTxtQuiz(rawText: string): ImportQuestionRow[] {
+  const sanitized = sanitizeArabicTxt(rawText);
+  if (!sanitized.trim()) return [];
+
+  const rows: ImportQuestionRow[] = [];
+
+  for (const match of sanitized.matchAll(QUESTION_BLOCK_REGEX)) {
+    const blockBody = (match[2] ?? "").trim();
+    if (!blockBody) continue;
+
+    const extracted = extractInlineOptions(blockBody);
+    if (!extracted) continue;
+
+    const answerFromBlock = extractAnswerFromBlock(blockBody);
+    rows.push({
+      question_text: extracted.questionText,
+      option_a: extracted.options["أ"] ?? "",
+      option_b: extracted.options["ب"] ?? "",
+      option_c: extracted.options["ج"] ?? "",
+      option_d: extracted.options["د"] ?? "",
+      // Default to أ when the exam file omits an answer key (teacher can edit).
+      correct_answer: answerFromBlock || "أ",
+      explanation_text: "",
+      category_tag: "عام",
+    });
+  }
+
+  return rows;
+}
+
 export function parseCsvQuestions(content: string): ImportQuestionRow[] {
   const lines = content
     .split(/\r?\n/)
@@ -46,7 +216,9 @@ export function parseCsvQuestions(content: string): ImportQuestionRow[] {
   return rows;
 }
 
-export async function parseXlsxQuestions(buffer: ArrayBuffer): Promise<ImportQuestionRow[]> {
+export async function parseXlsxQuestions(
+  buffer: ArrayBuffer
+): Promise<ImportQuestionRow[]> {
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(buffer, { type: "array" });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -68,12 +240,16 @@ export async function parseXlsxQuestions(buffer: ArrayBuffer): Promise<ImportQue
     }));
 }
 
-export function parseWordLikeText(content: string): ImportQuestionRow[] {
+/** Labeled block format: `س:` / `أ)` / `الجواب:` (TEACH-004). */
+function parseLabeledWordBlocks(content: string): ImportQuestionRow[] {
   const blocks = content.split(/\n\s*\n/).filter(Boolean);
   const rows: ImportQuestionRow[] = [];
 
   for (const block of blocks) {
-    const lines = block.split(/\n/).map((l) => l.trim()).filter(Boolean);
+    const lines = block
+      .split(/\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
     if (!lines.length) continue;
 
     const row: ImportQuestionRow = {
@@ -119,6 +295,15 @@ export function parseWordLikeText(content: string): ImportQuestionRow[] {
   }
 
   return rows;
+}
+
+/**
+ * Parse `.txt` / Word-like text: labeled blocks first, then numbered inline MCQ.
+ */
+export function parseWordLikeText(content: string): ImportQuestionRow[] {
+  const labeled = parseLabeledWordBlocks(content);
+  if (labeled.length > 0) return labeled;
+  return parseArabicTxtQuiz(content);
 }
 
 export function importRowsToQuestionInserts(rows: ImportQuestionRow[]) {

@@ -362,14 +362,18 @@ features:
     routes: ["/teacher/quizzes/[id]"]
     files:
       - src/app/teacher/quizzes/[id]/page.tsx
+      - src/components/teacher/QuizQuestionsManager.tsx
       - src/components/teacher/TeacherQuestionsList.tsx
       - src/components/teacher/QuestionEditDialog.tsx
+      - src/components/teacher/QuestionAddForm.tsx
       - src/lib/question-options.ts
       - src/actions/teacher.ts
     acceptance:
-      - Each MCQ in edit list shows تحرير button opening prepopulated dialog
-      - Edit form supports question text, 2x2 options, correct letter radio, explanation, category tag
-      - Save calls updateQuestion and router.refresh without full page reload
+      - QuizQuestionsManager uses 2 tabs: جميع الأسئلة + إضافة/تعديل سؤال
+      - List tab search, option tags with correct answer highlight, edit/duplicate/delete
+      - Edit loads Tab 2 form; delete confirms via AlertDialog; duplicate clones question
+      - Add form supports textarea, A–D options, correct letter radio, explanation, category
+      - Save / save-and-add-another; updateQuestion/addQuestion + router.refresh
     spekit:
       [
         question-list-item,
@@ -377,6 +381,7 @@ features:
         question-edit-dialog,
         question-edit-form,
         teacher-questions-list,
+        manual-question-form,
       ]
 
   # ── UI / PWA ────────────────────────────────────────────────────────────────

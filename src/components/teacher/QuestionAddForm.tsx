@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CorrectAnswerPicker } from "@/components/teacher/CorrectAnswerPicker";
+import type { ArabicOptionLetter } from "@/lib/question-options";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -21,6 +24,9 @@ interface QuestionAddFormProps {
 }
 
 export function QuestionAddForm({ action }: QuestionAddFormProps) {
+  const [correctAnswer, setCorrectAnswer] =
+    useState<ArabicOptionLetter>("أ");
+
   return (
     <form action={action} className="space-y-6" {...spekit(SPEKIT.manualQuestionForm)}>
       <div className="space-y-2">
@@ -49,7 +55,8 @@ export function QuestionAddForm({ action }: QuestionAddFormProps) {
                 htmlFor={option.id}
                 className="text-xs font-semibold text-muted-foreground"
               >
-                الخيار {option.letter}
+                {"الخيار "}
+                {option.letter}
               </Label>
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-sm font-bold text-brand-700">
@@ -68,21 +75,11 @@ export function QuestionAddForm({ action }: QuestionAddFormProps) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label
-          htmlFor="correct_answer"
-          className="text-sm font-medium text-muted-foreground"
-        >
-          الإجابة الصحيحة
-        </Label>
-        <Input
-          id="correct_answer"
-          name="correct_answer"
-          required
-          placeholder="أ، ب، ج، أو د — أو النص الكامل"
-          className={fieldClass}
-        />
-      </div>
+      <CorrectAnswerPicker
+        name="correct_answer"
+        value={correctAnswer}
+        onChange={setCorrectAnswer}
+      />
 
       <div className="space-y-2">
         <Label

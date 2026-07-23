@@ -52,7 +52,7 @@ export function EditQuizBulkImportSection({
         <CardContent className="p-5 md:p-6 lg:p-8">
           <ImportSectionHeader
             quizTitle={quizTitle}
-            backHref={`/teacher/quizzes/${quizId}`}
+            backHref={`/teacher/quizzes/${quizId}#quiz-questions`}
           />
           <BulkQuestionUpload
             quizId={quizId}

@@ -40,6 +40,7 @@ function TabsTrigger({
         "flex h-9 min-w-0 flex-1 items-center justify-center rounded-xl px-3 text-center text-xs font-bold transition-all duration-200",
         "text-slate-500 hover:text-slate-700",
         "data-[active]:bg-white data-[active]:text-slate-800 data-[active]:shadow-sm",
+        "data-disabled:pointer-events-none data-disabled:opacity-45 data-disabled:hover:text-slate-500",
         className
       )}
       {...props}

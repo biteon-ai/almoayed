@@ -1,14 +1,34 @@
+"use client";
+
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
+import type { MouseEvent } from "react";
 
 interface ImportSectionHeaderProps {
   quizTitle: string;
-  /** Prefer `/teacher/quizzes/{id}` for «العودة للاختبار». */
+  /** Prefer `/teacher/quizzes/{id}#quiz-questions` for «العودة للاختبار». */
   backHref?: string;
   backLabel?: string;
+}
+
+/** Same-page hash links need an explicit scroll — Next.js soft-nav is a no-op on identical paths. */
+function handleBackClick(event: MouseEvent<HTMLAnchorElement>, href: string) {
+  const hashIndex = href.indexOf("#");
+  if (hashIndex === -1 || typeof window === "undefined") return;
+
+  const path = href.slice(0, hashIndex) || window.location.pathname;
+  const hash = href.slice(hashIndex + 1);
+  if (window.location.pathname !== path) return;
+
+  const target = document.getElementById(hash);
+  if (!target) return;
+
+  event.preventDefault();
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.history.replaceState(null, "", `${path}#${hash}`);
 }
 
 export function ImportSectionHeader({
@@ -23,7 +43,7 @@ export function ImportSectionHeader({
     >
       <div className="min-w-0 space-y-2.5 text-start">
         <h2 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">
-          استيراد أسئلة بالجملة
+          استيراد وتنسيق الأسئلة
         </h2>
         <Badge
           variant="secondary"
@@ -35,13 +55,14 @@ export function ImportSectionHeader({
 
       <Link
         href={backHref}
+        onClick={(event) => handleBackClick(event, backHref)}
         className={cn(
           buttonVariants({ variant: "outline" }),
-          "h-10 shrink-0 gap-2 self-start rounded-xl sm:self-center"
+          "h-10 shrink-0 gap-2 self-start rounded-xl text-sm font-medium sm:self-center"
         )}
       >
         <ArrowRight className="size-4" aria-hidden />
-        {backLabel}
+        <span>{backLabel}</span>
       </Link>
     </header>
   );
