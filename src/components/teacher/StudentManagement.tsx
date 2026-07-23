@@ -103,8 +103,11 @@ export function StudentManagement({
     "all" | "pending" | "active" | "deactivated"
   >("all");
   const [filterGroupId, setFilterGroupId] = useState<"all" | string>("all");
+  /** Toggle from «طلبات معلقة» KPI — Pro upgrade requests (+ account pending). */
+  const [filterPendingRequests, setFilterPendingRequests] = useState(false);
   const [page, setPage] = useState(1);
   const [pending, startTransition] = useTransition();
+  const [pendingActionKey, setPendingActionKey] = useState<string | null>(null);
 
   const [activeModal, setActiveModal] = useState<HubModalType>(null);
   const [selectedStudent, setSelectedStudent] =
@@ -132,19 +135,22 @@ export function StudentManagement({
     setToast(message);
   };
 
+  const isPendingRequest = (s: TeacherStudentRow) => Boolean(s.upgradeRequested);
+
   const kpi = useMemo(() => {
     const totalStudents = students.length;
     const activePro = students.filter(
       (s) => s.tier === "pro" && s.status === "active"
     ).length;
-    const pendingRequests = students.filter(
-      (s) => s.status === "pending" || s.upgradeRequested
-    ).length;
+    const pendingRequests = students.filter(isPendingRequest).length;
     return { totalStudents, activePro, pendingRequests };
   }, [students]);
 
   const filtered = useMemo(() => {
     let rows = filterStudentsByQuery(students, search);
+    if (filterPendingRequests) {
+      rows = rows.filter(isPendingRequest);
+    }
     if (filterTier !== "all") {
       rows = rows.filter((s) => s.tier === filterTier);
     }
@@ -154,8 +160,21 @@ export function StudentManagement({
     if (filterGroupId !== "all") {
       rows = rows.filter((s) => s.groupId === filterGroupId);
     }
-    return rows;
-  }, [students, search, filterTier, filterStatus, filterGroupId]);
+
+    // Newest registration / link first
+    return [...rows].sort((a, b) => {
+      const aTime = new Date(a.createdAt || 0).getTime();
+      const bTime = new Date(b.createdAt || 0).getTime();
+      return bTime - aTime;
+    });
+  }, [
+    students,
+    search,
+    filterPendingRequests,
+    filterTier,
+    filterStatus,
+    filterGroupId,
+  ]);
 
   const { items, page: safePage, totalPages, total } = paginateStudents(
     filtered,
@@ -179,14 +198,35 @@ export function StudentManagement({
     search.trim() !== "" ||
     filterTier !== FILTER_ALL ||
     filterStatus !== FILTER_ALL ||
-    filterGroupId !== FILTER_ALL;
+    filterGroupId !== FILTER_ALL ||
+    filterPendingRequests;
 
   const resetFilters = () => {
     setSearch("");
     setFilterTier(FILTER_ALL);
     setFilterStatus(FILTER_ALL);
     setFilterGroupId(FILTER_ALL);
+    setFilterPendingRequests(false);
     resetPage();
+  };
+
+  const togglePendingRequestsFilter = () => {
+    setFilterPendingRequests((prev) => !prev);
+    resetPage();
+  };
+
+  const runStudentAction = (
+    actionKey: string,
+    action: () => Promise<void>
+  ) => {
+    setPendingActionKey(actionKey);
+    startTransition(async () => {
+      try {
+        await action();
+      } finally {
+        setPendingActionKey(null);
+      }
+    });
   };
 
   return (
@@ -218,19 +258,35 @@ export function StudentManagement({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-xl border border-amber-200/80 bg-card p-4 shadow-sm">
+        <button
+          type="button"
+          onClick={togglePendingRequestsFilter}
+          aria-pressed={filterPendingRequests}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-xl border p-4 text-start shadow-sm transition-all",
+            "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-amber-500/25",
+            filterPendingRequests
+              ? "border-amber-400 bg-amber-50 ring-2 ring-amber-300/60 dark:border-amber-600 dark:bg-amber-950/40"
+              : "border-amber-200/80 bg-card hover:border-amber-300 hover:bg-amber-50/50"
+          )}
+        >
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700 ring-1 ring-amber-100">
             <Clock className="size-5" />
           </span>
-          <div className="min-w-0 text-start">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-medium text-muted-foreground">
-              طلبيات معلقة
+              طلبات معلقة
             </p>
             <p className="text-2xl font-bold tabular-nums text-foreground">
               {kpi.pendingRequests}
             </p>
+            <p className="mt-0.5 text-[10px] font-semibold text-amber-800/80">
+              {filterPendingRequests
+                ? "الفلتر مفعّل — اضغط للإلغاء"
+                : "اضغط لعرض الطلبات فقط"}
+            </p>
           </div>
-        </div>
+        </button>
       </div>
 
       <div
@@ -395,6 +451,7 @@ export function StudentManagement({
             students={items}
             groups={groups}
             pending={pending}
+            pendingActionKey={pendingActionKey}
             page={safePage}
             totalPages={totalPages}
             total={total}
@@ -407,7 +464,7 @@ export function StudentManagement({
               })
             }
             onActivate={(student) =>
-              startTransition(async () => {
+              runStudentAction(`activate:${student.linkId}`, async () => {
                 const result = await toggleStudentStatus(
                   student.linkId,
                   "active"
@@ -424,7 +481,7 @@ export function StudentManagement({
               openModal("DEACTIVATE_STUDENT", student)
             }
             onApprovePro={(student) =>
-              startTransition(async () => {
+              runStudentAction(`approve-pro:${student.linkId}`, async () => {
                 await approveProUpgrade(student.linkId);
                 refreshStudent(student.linkId, {
                   tier: "pro",
@@ -434,14 +491,14 @@ export function StudentManagement({
               })
             }
             onUpgradePro={(student) =>
-              startTransition(async () => {
+              runStudentAction(`upgrade-pro:${student.linkId}`, async () => {
                 await updateStudentTier(student.linkId, "pro");
                 refreshStudent(student.linkId, { tier: "pro" });
                 showToast("تمت ترقية الطالب إلى Pro.");
               })
             }
             onRevokePro={(student) =>
-              startTransition(async () => {
+              runStudentAction(`revoke-pro:${student.linkId}`, async () => {
                 await updateStudentTier(student.linkId, "free");
                 refreshStudent(student.linkId, { tier: "free" });
                 showToast("تم سحب صلاحية Pro.");

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toggleQuizStatus, updateQuizFlags } from "@/actions/teacher";
 import type { TeacherQuiz } from "@/types/database";
 import { QuizListItem } from "@/components/teacher/QuizListItem";
+import { QuizMetricsKPIHeader } from "@/components/teacher/QuizMetricsKPIHeader";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -71,6 +72,7 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
   >("all");
   const [page, setPage] = useState(1);
   const [pending, startTransition] = useTransition();
+  const [pendingQuizId, setPendingQuizId] = useState<string | null>(null);
   const [confirmQuiz, setConfirmQuiz] = useState<TeacherQuiz | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -94,13 +96,23 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return quizzes.filter((quiz) => {
+    const rows = quizzes.filter((quiz) => {
       if (q && !quiz.title.toLowerCase().includes(q)) return false;
       if (filterTier === "free" && !quiz.is_free) return false;
       if (filterTier === "pro" && quiz.is_free) return false;
       if (filterStatus === "active" && !quiz.is_active) return false;
       if (filterStatus === "inactive" && quiz.is_active) return false;
       return true;
+    });
+
+    // Newest activity first (updated_at, then created_at)
+    return [...rows].sort((a, b) => {
+      const aUpdated = new Date(a.updated_at || a.created_at).getTime();
+      const bUpdated = new Date(b.updated_at || b.created_at).getTime();
+      if (bUpdated !== aUpdated) return bUpdated - aUpdated;
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     });
   }, [quizzes, search, filterTier, filterStatus]);
 
@@ -132,6 +144,8 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
           بحث، تصفية، وتفعيل اختباراتك من مكان واحد
         </p>
       </div>
+
+      <QuizMetricsKPIHeader quizzes={quizzes} />
 
       <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -250,12 +264,14 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
             key={quiz.id}
             quiz={quiz}
             pending={pending}
+            pendingQuizId={pendingQuizId}
             onRequestToggleActive={(q) => {
               setActionError(null);
               setConfirmQuiz(q);
             }}
             onToggleFree={(q) => {
               setActionError(null);
+              setPendingQuizId(q.id);
               startTransition(async () => {
                 try {
                   await updateQuizFlags(q.id, { is_free: !q.is_free });
@@ -267,6 +283,8 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
                       ? cause.message
                       : "فشل تحديث المستوى."
                   );
+                } finally {
+                  setPendingQuizId(null);
                 }
               });
             }}
@@ -365,15 +383,20 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
                 const quiz = confirmQuiz;
                 const nextActive = !quiz.is_active;
                 setConfirmQuiz(null);
+                setPendingQuizId(quiz.id);
                 startTransition(async () => {
-                  const result = await toggleQuizStatus(quiz.id, nextActive);
-                  if (!result.ok) {
-                    setActionError(result.error);
-                    return;
+                  try {
+                    const result = await toggleQuizStatus(quiz.id, nextActive);
+                    if (!result.ok) {
+                      setActionError(result.error);
+                      return;
+                    }
+                    patchQuiz(quiz.id, { is_active: nextActive });
+                    setActionError(null);
+                    router.refresh();
+                  } finally {
+                    setPendingQuizId(null);
                   }
-                  patchQuiz(quiz.id, { is_active: nextActive });
-                  setActionError(null);
-                  router.refresh();
                 });
               }}
               className="inline-flex gap-2"

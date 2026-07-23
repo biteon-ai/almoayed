@@ -1,8 +1,8 @@
-import { PageLoadingView } from "@/components/ui/page-loading-view";
+import { TeacherRouteLoading } from "@/components/ui/teacher-route-loading";
 
 export default function TeacherDashboardLoading() {
   return (
-    <PageLoadingView
+    <TeacherRouteLoading
       message="جاري فتح لوحة الأستاذ…"
       subMessage="نحضّر إحصائياتك وطلابك"
     />

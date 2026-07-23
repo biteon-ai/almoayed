@@ -44,7 +44,7 @@ test.describe(`${FEATURE} Dashboard UI structure`, () => {
 test.describe(`${FEATURE} Mobile dashboard density`, () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("student dashboard shows stats, carousel section, and tabs after login", async ({
+  test("student quizzes and results pages available after login", async ({
     page,
   }) => {
     test.skip(
@@ -57,13 +57,12 @@ test.describe(`${FEATURE} Mobile dashboard density`, () => {
     await page.locator('[data-spekit="login-demo-student"]').click();
     await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
 
-    const dashboard = page.locator('[data-spekit="student-dashboard"]');
-    await expect(dashboard).toBeVisible();
-    await expect(dashboard.getByText("المعدل العام").first()).toBeVisible();
-    await expect(dashboard.getByText("اختبارات مكتملة").first()).toBeVisible();
-    await expect(dashboard.getByText("الاختبارات المتاحة").first()).toBeVisible();
-    await expect(page.getByRole("tab", { name: "نتائجي" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "نقاط الضعف" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "أساتذتي" })).toBeVisible();
+    await page.goto("/quizzes");
+    await expect(page.locator('[data-spekit="student-quizzes-page"]')).toBeVisible();
+    await expect(page.getByText("الاختبارات المتاحة").first()).toBeVisible();
+
+    await page.goto("/results");
+    await expect(page.locator('[data-spekit="student-results-page"]')).toBeVisible();
+    await expect(page.getByText("نتائجي").first()).toBeVisible();
   });
 });

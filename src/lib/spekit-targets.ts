@@ -24,6 +24,8 @@ export const SPEKIT = {
   // ── Student dashboard ────────────────────────────────────────
   studentDashboard: "student-dashboard",
   studentWelcome: "student-welcome",
+  studentQuizzesPage: "student-quizzes-page",
+  studentResultsPage: "student-results-page",
   studentQuizList: "student-quiz-list",
   studentQuizItem: "student-quiz-item",
   studentQuizEmpty: "student-quiz-empty",
@@ -60,6 +62,11 @@ export const SPEKIT = {
   teacherStatQuizzes: "teacher-stat-quizzes",
   teacherStatProRequests: "teacher-stat-pro-requests",
   teacherQuickActions: "teacher-quick-actions",
+  teacherAnalyticsKpis: "teacher-analytics-kpis",
+  teacherGradeDistributionChart: "teacher-grade-distribution-chart",
+  teacherWeeklyActivityChart: "teacher-weekly-activity-chart",
+  teacherExamDifficultyPanel: "teacher-exam-difficulty-panel",
+  teacherPopularExamsPanel: "teacher-popular-exams-panel",
 
   // ── TEACH-001 ────────────────────────────────────────────────
   teacherStudentsPage: "teacher-students-page",
@@ -72,6 +79,13 @@ export const SPEKIT = {
   addStudentDialog: "add-student-dialog",
   studentSearch: "student-search",
   studentPagination: "student-pagination",
+  teacherStudentDetailPage: "teacher-student-detail-page",
+  studentDetailBackLink: "student-detail-back-link",
+  studentDetailKpis: "student-detail-kpis",
+  studentDetailScoreChart: "student-detail-score-chart",
+  studentDetailWeakPoints: "student-detail-weak-points",
+  studentDetailRecentSubmissions: "student-detail-recent-submissions",
+  studentDetailQuizBreakdown: "student-detail-quiz-breakdown",
 
   // ── TEACH-002 ────────────────────────────────────────────────
   createGroupForm: "create-group-form",
@@ -79,6 +93,7 @@ export const SPEKIT = {
 
   // ── TEACH-003 ────────────────────────────────────────────────
   teacherQuizzesPage: "teacher-quizzes-page",
+  teacherQuizKpis: "teacher-quiz-kpis",
   teacherQuizNewButton: "teacher-quiz-new-button",
   quizListItem: "quiz-list-item",
   quizStatusBadges: "quiz-status-badges",

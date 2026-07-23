@@ -77,6 +77,7 @@ const config: Config = {
         "fade-in": "fadeIn 0.3s ease-out forwards",
         "slide-up": "slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "pulse-subtle": "pulseSubtle 2.5s infinite ease-in-out",
+        "top-loading-bar": "topLoadingBar 1.2s ease-in-out infinite",
       },
       keyframes: {
         fadeIn: {
@@ -90,6 +91,10 @@ const config: Config = {
         pulseSubtle: {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
+        },
+        topLoadingBar: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
         },
       },
     },

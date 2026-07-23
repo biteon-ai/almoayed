@@ -92,20 +92,27 @@ export interface DashboardStats {
   overallAverageScore: number;
 }
 
-/** [DASH-001] Recent completed quiz row for My Scores tab */
-export interface RecentScoreRow {
-  quizId: string;
-  quizTitle: string;
-  score: number;
-  submittedAt: string;
-}
-
 /** [DASH-001] Quiz card in horizontal carousel */
 export interface QuizCarouselItem extends QuizListItem {
   questionCount: number;
   hasSubmission: boolean;
   /** Latest submission timestamp when the student has activity on this quiz */
   lastActivityAt: string | null;
+  /** Resolved category label for student UI filters */
+  categoryName: string;
+  /** Latest submission score when completed */
+  lastScore: number | null;
+  /** Estimated duration derived from question count */
+  estimatedMinutes: number;
+}
+
+/** [DASH-001] Recent completed quiz row for My Scores tab */
+export interface RecentScoreRow {
+  quizId: string;
+  quizTitle: string;
+  score: number;
+  submittedAt: string;
+  categoryName: string;
 }
 
 /** [DASH-001] Bundled dashboard read model */
@@ -192,6 +199,8 @@ export interface TeacherStudentRow {
   groupNames: string[];
   /** Singular group for this teacher (hub UX); null if unassigned */
   groupId: string | null;
+  /** student_teachers.created_at — registration / link date */
+  createdAt: string;
 }
 
 export interface StudentTeacherOption {
@@ -201,6 +210,89 @@ export interface StudentTeacherOption {
   teacherCode: string;
   tier: StudentTier;
   status: StudentTeacherStatus;
+}
+
+/** [TEACH-005] Teacher dashboard analytics read model */
+export interface TeacherDashboardAnalytics {
+  studentCount: number;
+  quizCount: number;
+  pendingUpgrades: number;
+  kpis: {
+    completionRate: number;
+    completedAttempts: number;
+    totalAttempts: number;
+    completionTrendPct: number;
+    passRate: number;
+    perfectScoreStudentPct: number;
+    perfectScoreStudentCount: number;
+    averageScore: number;
+    averageScoreLabel: string;
+    topPerformer: {
+      studentId: string;
+      name: string;
+      averageScore: number;
+    } | null;
+  };
+  gradeDistribution: Array<{
+    range: string;
+    label: string;
+    count: number;
+    fill: string;
+  }>;
+  weeklyActivity: Array<{
+    day: string;
+    passed: number;
+    failed: number;
+  }>;
+  examDifficulty: {
+    hardest: { title: string; avgScore: number; passRate: number } | null;
+    easiest: { title: string; avgScore: number; passRate: number } | null;
+  };
+  popularExams: Array<{
+    rank: number;
+    title: string;
+    attempts: number;
+    completionRate: number;
+  }>;
+}
+
+/** [TEACH-001] Per-student analytics read model for teacher detail view */
+export interface TeacherStudentAnalytics {
+  kpis: {
+    completionRate: number;
+    completedAttempts: number;
+    totalAccessibleQuizzes: number;
+    passRate: number;
+    averageScore: number;
+    averageScoreLabel: string;
+    perfectScores: number;
+  };
+  recentSubmissions: Array<{
+    quizId: string;
+    quizTitle: string;
+    score: number;
+    submittedAt: string;
+    passed: boolean;
+  }>;
+  scoreHistory: Array<{
+    date: string;
+    score: number;
+    quizTitle: string;
+  }>;
+  quizBreakdown: Array<{
+    quizId: string;
+    title: string;
+    score: number | null;
+    submittedAt: string | null;
+    accessible: boolean;
+    passed: boolean | null;
+  }>;
+  weakPoints: CategoryPerformance[];
+}
+
+export interface TeacherStudentDetail {
+  student: TeacherStudentRow;
+  analytics: TeacherStudentAnalytics;
 }
 
 /** [PROFILE-001] Aggregated settings page read model */

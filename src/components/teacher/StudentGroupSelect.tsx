@@ -10,10 +10,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UsersRound } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
+import { cn } from "@/lib/utils";
 
 const NONE = "none";
+
+const GROUP_ACCENT = [
+  "border-emerald-200/80 bg-emerald-50/80 text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300",
+  "border-sky-200/80 bg-sky-50/80 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-300",
+  "border-violet-200/80 bg-violet-50/80 text-violet-800 dark:border-violet-800/50 dark:bg-violet-950/30 dark:text-violet-300",
+  "border-rose-200/80 bg-rose-50/80 text-rose-800 dark:border-rose-800/50 dark:bg-rose-950/30 dark:text-rose-300",
+] as const;
+
+function groupAccentClass(groupId: string | null): string {
+  if (!groupId) {
+    return "border-muted bg-background text-muted-foreground hover:bg-muted/50";
+  }
+  let hash = 0;
+  for (let i = 0; i < groupId.length; i += 1) {
+    hash = (hash + groupId.charCodeAt(i)) % GROUP_ACCENT.length;
+  }
+  return GROUP_ACCENT[hash]!;
+}
 
 interface StudentGroupSelectProps {
   studentId: string;
@@ -48,7 +67,7 @@ export function StudentGroupSelect({
   const selectedLabel =
     items[selectedValue] ??
     (groupId ? groups.find((g) => g.id === groupId)?.group_name : null) ??
-    "اختار مجموعة...";
+    "اختر مجموعة";
 
   return (
     <Select
@@ -73,29 +92,39 @@ export function StudentGroupSelect({
     >
       <SelectTrigger
         size="sm"
-        className={
+        className={cn(
           compact
-            ? "h-8 w-full min-w-[8.5rem] max-w-[11rem] rounded-md border-border/70 bg-background px-2 text-xs shadow-none"
-            : "h-10 w-full min-w-[10rem] max-w-xs bg-muted/40 px-3 text-start shadow-none"
-        }
+            ? "h-8 w-[160px] rounded-xl border px-2.5 text-xs font-medium shadow-none transition-colors focus-visible:ring-1 focus-visible:ring-emerald-500"
+            : "h-10 w-full min-w-[10rem] max-w-xs rounded-xl bg-muted/40 px-3 text-start shadow-none",
+          groupAccentClass(groupId)
+        )}
         {...spekit(SPEKIT.studentGroupSelect)}
       >
-        {!compact && (
-          <UsersRound className="size-3.5 shrink-0 text-muted-foreground" />
-        )}
-        <SelectValue placeholder="اختار مجموعة..." className="text-start">
-          {(value: string | null) =>
-            value == null || value === NONE
-              ? "بدون مجموعة"
-              : (items[value] ?? selectedLabel)
-          }
-        </SelectValue>
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
+          {pending ? (
+            <Loader2 className="size-3.5 shrink-0 animate-spin opacity-70" />
+          ) : (
+            <Users className="size-3.5 shrink-0 opacity-70" />
+          )}
+          <SelectValue placeholder="اختر مجموعة" className="truncate text-start">
+            {(value: string | null) =>
+              value == null || value === NONE
+                ? "بدون مجموعة"
+                : (items[value] ?? selectedLabel)
+            }
+          </SelectValue>
+        </div>
       </SelectTrigger>
-      <SelectContent align="start" className="min-w-[var(--anchor-width)]">
-        <SelectItem value={NONE}>بدون مجموعة</SelectItem>
+      <SelectContent align="end" className="min-w-[var(--anchor-width)] rounded-xl">
+        <SelectItem value={NONE} className="text-xs">
+          بدون مجموعة
+        </SelectItem>
         {groups.map((group) => (
-          <SelectItem key={group.id} value={group.id}>
-            {group.group_name}
+          <SelectItem key={group.id} value={group.id} className="text-xs">
+            <span className="inline-flex items-center gap-1.5">
+              <Users className="size-3 text-muted-foreground" />
+              {group.group_name}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>

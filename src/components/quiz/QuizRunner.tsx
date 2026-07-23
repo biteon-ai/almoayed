@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { submitQuiz } from "@/actions/quiz";
+import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
 import { QuizSidebar } from "@/components/quiz/QuizSidebar";
@@ -38,6 +39,7 @@ export function QuizRunner({
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  useStudentLoadingBarSync(isPending);
 
   const isSubmitted = results !== null;
   const answeredCount = Object.keys(answers).length;

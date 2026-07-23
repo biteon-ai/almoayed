@@ -15,6 +15,7 @@ import {
   computeDashboardStats,
   filterScoresByTeacherQuizIds,
 } from "@/lib/dashboard-stats";
+import { estimateQuizDurationMinutes } from "@/lib/student-quiz-ui";
 import { aggregateCategoryPerformance } from "@/lib/weak-points";
 import { getStudentTeachers } from "@/actions/student";
 import type {
@@ -314,29 +315,37 @@ export async function getWeakPoints(): Promise<CategoryPerformance[]> {
   return aggregateCategoryPerformance(rows);
 }
 
-export async function getStudentDashboardData(): Promise<StudentDashboardData> {
-  const session = await requireStudent();
-  const ctx = await getStudentContext(session);
+type StudentQuizBundle = {
+  stats: StudentDashboardData["stats"];
+  quizzes: QuizCarouselItem[];
+  allScores: RecentScoreRow[];
+  weakPoints: CategoryPerformance[];
+  teachers: Awaited<ReturnType<typeof getStudentTeachers>>;
+};
 
+async function fetchStudentQuizBundle(
+  session: Awaited<ReturnType<typeof requireStudent>>,
+  ctx: Awaited<ReturnType<typeof getStudentContext>>
+): Promise<StudentQuizBundle> {
   const [weakPoints, teachers] = await Promise.all([
     getWeakPoints(),
     getStudentTeachers(),
   ]);
 
-  const emptyReturn = (): StudentDashboardData => ({
-    stats: {
-      tier: ctx.tier,
-      completedQuizCount: 0,
-      overallAverageScore: 0,
-    },
-    recentScores: [],
-    quizzes: [],
-    weakPoints,
-    teachers,
-  });
+  const emptyStats = {
+    tier: ctx.tier,
+    completedQuizCount: 0,
+    overallAverageScore: 0,
+  };
 
   if (!ctx.teacherId) {
-    return emptyReturn();
+    return {
+      stats: emptyStats,
+      quizzes: [],
+      allScores: [],
+      weakPoints,
+      teachers,
+    };
   }
 
   const supabase = createAdminClient();
@@ -349,12 +358,29 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     .order("created_at", { ascending: false });
 
   if (!quizRows?.length) {
-    return emptyReturn();
+    return {
+      stats: emptyStats,
+      quizzes: [],
+      allScores: [],
+      weakPoints,
+      teachers,
+    };
   }
 
   const quizIds = (quizRows as Quiz[]).map((q) => q.id);
+  const categoryIds = Array.from(
+    new Set(
+      (quizRows as Quiz[])
+        .map((quiz) => quiz.category_id)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
 
-  const [{ data: questionRows }, { data: submissionRows }] = await Promise.all([
+  const [
+    { data: questionRows },
+    { data: submissionRows },
+    { data: categoryRows },
+  ] = await Promise.all([
     supabase.from("questions").select("quiz_id").in("quiz_id", quizIds),
     supabase
       .from("exam_submissions")
@@ -362,7 +388,14 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
       .eq("student_id", session.profileId)
       .in("quiz_id", quizIds)
       .order("submitted_at", { ascending: false }),
+    categoryIds.length
+      ? supabase.from("categories").select("id, name").in("id", categoryIds)
+      : Promise.resolve({ data: [] as Array<{ id: string; name: string }> }),
   ]);
+
+  const categoryNameById = new Map(
+    (categoryRows ?? []).map((row) => [row.id as string, row.name as string])
+  );
 
   const questionCountByQuiz = new Map<string, number>();
   for (const row of questionRows ?? []) {
@@ -382,13 +415,19 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         tier: ctx.tier,
         groupIds: ctx.groupIds,
       });
+      const questionCount = questionCountByQuiz.get(quiz.id) ?? 0;
+      const submission = submissionByQuiz.get(quiz.id);
+
       return {
         ...listItem,
-        questionCount: questionCountByQuiz.get(quiz.id) ?? 0,
+        questionCount,
         hasSubmission: submissionByQuiz.has(quiz.id),
-        lastActivityAt:
-          (submissionByQuiz.get(quiz.id)?.submitted_at as string | undefined) ??
-          null,
+        lastActivityAt: (submission?.submitted_at as string | undefined) ?? null,
+        categoryName: quiz.category_id
+          ? (categoryNameById.get(quiz.category_id) ?? "عام")
+          : "عام",
+        lastScore: submission ? (submission.score as number) : null,
+        estimatedMinutes: estimateQuizDurationMinutes(questionCount),
       };
     });
 
@@ -403,17 +442,25 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   const { completedQuizCount, overallAverageScore } =
     computeDashboardStats(teacherScores);
 
-  const quizTitleById = new Map(quizzes.map((q) => [q.id, q.title]));
+  const quizMetaById = new Map(
+    quizzes.map((quiz) => [
+      quiz.id,
+      { title: quiz.title, categoryName: quiz.categoryName },
+    ])
+  );
 
-  const recentScores: RecentScoreRow[] = (submissionRows ?? [])
+  const allScores: RecentScoreRow[] = (submissionRows ?? [])
     .filter((row) => teacherQuizIds.has(row.quiz_id as string))
-    .slice(0, 5)
-    .map((row) => ({
-      quizId: row.quiz_id as string,
-      quizTitle: quizTitleById.get(row.quiz_id as string) ?? "اختبار",
-      score: row.score as number,
-      submittedAt: row.submitted_at as string,
-    }));
+    .map((row) => {
+      const meta = quizMetaById.get(row.quiz_id as string);
+      return {
+        quizId: row.quiz_id as string,
+        quizTitle: meta?.title ?? "اختبار",
+        score: row.score as number,
+        submittedAt: row.submitted_at as string,
+        categoryName: meta?.categoryName ?? "عام",
+      };
+    });
 
   return {
     stats: {
@@ -421,10 +468,54 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
       completedQuizCount,
       overallAverageScore,
     },
-    recentScores,
     quizzes,
+    allScores,
     weakPoints,
     teachers,
+  };
+}
+
+export async function getStudentDashboardData(): Promise<StudentDashboardData> {
+  const session = await requireStudent();
+  const ctx = await getStudentContext(session);
+  const bundle = await fetchStudentQuizBundle(session, ctx);
+
+  return {
+    stats: bundle.stats,
+    recentScores: bundle.allScores.slice(0, 5),
+    quizzes: bundle.quizzes,
+    weakPoints: bundle.weakPoints,
+    teachers: bundle.teachers,
+  };
+}
+
+export async function getStudentQuizzesPageData(): Promise<{
+  stats: StudentDashboardData["stats"];
+  quizzes: QuizCarouselItem[];
+}> {
+  const session = await requireStudent();
+  const ctx = await getStudentContext(session);
+  const bundle = await fetchStudentQuizBundle(session, ctx);
+
+  return {
+    stats: bundle.stats,
+    quizzes: bundle.quizzes,
+  };
+}
+
+export async function getStudentResultsPageData(): Promise<{
+  stats: StudentDashboardData["stats"];
+  scores: RecentScoreRow[];
+  totalQuizzes: number;
+}> {
+  const session = await requireStudent();
+  const ctx = await getStudentContext(session);
+  const bundle = await fetchStudentQuizBundle(session, ctx);
+
+  return {
+    stats: bundle.stats,
+    scores: bundle.allScores,
+    totalQuizzes: bundle.quizzes.length,
   };
 }
 

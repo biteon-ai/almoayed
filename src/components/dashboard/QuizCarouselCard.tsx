@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { requestProUpgrade } from "@/actions/student";
+import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import type { QuizCarouselItem } from "@/types/database";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Crown, FileText, Lock } from "lucide-react";
@@ -146,6 +147,7 @@ export function QuizCarouselCard({
 function LockedQuizCarouselCard({ quiz }: QuizCarouselCardProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  useStudentLoadingBarSync(pending);
 
   return (
     <article

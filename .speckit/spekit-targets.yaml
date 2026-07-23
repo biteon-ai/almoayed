@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 64
+  total_targets: 69
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -66,6 +66,8 @@ MT-002:
 UI-001:
   student-dashboard: "Student dashboard page root"
   student-welcome: "Welcome greeting section"
+  student-quizzes-page: "Dedicated available quizzes page"
+  student-results-page: "Dedicated student results page"
   student-quiz-list: "Available quizzes section"
   student-quiz-item: "Single accessible quiz card link"
   student-quiz-empty: "Empty state when no quizzes"
@@ -106,6 +108,11 @@ TEACH-000:
   teacher-stat-quizzes: "Quiz count stat"
   teacher-stat-pro-requests: "Pending Pro requests stat"
   teacher-quick-actions: "Manage students / quizzes links"
+  teacher-analytics-kpis: "Analytics KPI cards row"
+  teacher-grade-distribution-chart: "Grade distribution bar chart"
+  teacher-weekly-activity-chart: "Weekly attempts line chart"
+  teacher-exam-difficulty-panel: "Hardest / easiest exam insights"
+  teacher-popular-exams-panel: "Most solved popular exams list"
 
 TEACH-001:
   teacher-students-page: "Student management page root"
@@ -118,6 +125,13 @@ TEACH-001:
   add-student-dialog: "Manual add student dialog"
   student-search: "Search by name or WhatsApp"
   student-pagination: "Roster pagination controls"
+  teacher-student-detail-page: "Student detail & analytics page root"
+  student-detail-back-link: "Back to students list link"
+  student-detail-kpis: "Student detail KPI cards"
+  student-detail-score-chart: "Student score trend chart"
+  student-detail-weak-points: "Student weak points by category"
+  student-detail-recent-submissions: "Recent quiz submissions list"
+  student-detail-quiz-breakdown: "Accessible quiz completion breakdown"
 
 TEACH-002:
   create-group-form: "Create study group card"
@@ -125,6 +139,7 @@ TEACH-002:
 
 TEACH-003:
   teacher-quizzes-page: "Quiz management page root"
+  teacher-quiz-kpis: "Quiz management KPI summary bar (total/pro/free)"
   teacher-quiz-new-button: "Create new quiz button"
   quiz-list-item: "Single quiz row card"
   quiz-status-badges: "Quiz status badges (نشط/Pro/عادي)"

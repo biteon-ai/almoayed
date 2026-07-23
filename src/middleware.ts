@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions, type SessionData } from "@/lib/session";
 
-const studentPaths = ["/dashboard", "/quiz"];
+const studentPaths = ["/dashboard", "/quiz", "/quizzes", "/results"];
 const teacherPaths = ["/teacher"];
 
 export async function middleware(request: NextRequest) {
@@ -65,5 +65,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/quiz/:path*", "/teacher/:path*", "/settings"],
+  matcher: [
+    "/dashboard/:path*",
+    "/quiz/:path*",
+    "/quizzes/:path*",
+    "/results/:path*",
+    "/teacher/:path*",
+    "/settings",
+  ],
 };

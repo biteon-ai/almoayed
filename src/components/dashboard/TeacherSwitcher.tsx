@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { switchTeacher } from "@/actions/student";
+import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import type { StudentTeacherOption } from "@/types/database";
 import { GraduationCap, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ export function TeacherSwitcher({
 }: TeacherSwitcherProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  useStudentLoadingBarSync(pending);
 
   if (teachers.length <= 1) {
     const t = teachers[0];

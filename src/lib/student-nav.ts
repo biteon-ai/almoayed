@@ -35,19 +35,17 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
     bottomNav: true,
   },
   {
-    href: "/dashboard#quizzes",
+    href: "/quizzes",
     label: "الاختبارات",
     icon: BookOpen,
-    pathMatch: "/dashboard",
-    hash: "quizzes",
+    pathMatch: "/quizzes",
     bottomNav: true,
   },
   {
-    href: "/dashboard#scores",
+    href: "/results",
     label: "نتائجي",
     icon: BarChart3,
-    pathMatch: "/dashboard",
-    hash: "scores",
+    pathMatch: "/results",
     bottomNav: true,
   },
   {
@@ -200,17 +198,20 @@ export function isStudentNavItemActive(
   }
 
   if (pathname.startsWith("/quiz/")) {
-    return item.hash === "quizzes";
+    return item.pathMatch === "/quizzes";
   }
 
   if (item.pathMatch === "/dashboard") {
-    if (pathname !== "/dashboard") {
-      return false;
-    }
-    if (item.hash) {
-      return normalizedHash === item.hash;
-    }
-    return !normalizedHash || normalizedHash === "welcome";
+    return (
+      pathname === "/dashboard" &&
+      (!normalizedHash || normalizedHash === "welcome")
+    );
+  }
+
+  if (item.pathMatch) {
+    return (
+      pathname === item.pathMatch || pathname.startsWith(`${item.pathMatch}/`)
+    );
   }
 
   return pathname === item.href;

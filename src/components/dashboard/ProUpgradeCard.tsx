@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { requestProUpgrade } from "@/actions/student";
+import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +21,7 @@ interface ProUpgradeCardProps {
 export function ProUpgradeCard({ quizTitle }: ProUpgradeCardProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  useStudentLoadingBarSync(pending);
 
   const handleUpgrade = () => {
     startTransition(async () => {

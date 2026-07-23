@@ -17,8 +17,10 @@ import type {
   Quiz,
   StudentTeacherStatus,
   StudentTier,
+  TeacherDashboardAnalytics,
   TeacherGroup,
   TeacherQuiz,
+  TeacherStudentDetail,
   TeacherStudentRow,
   Topic,
 } from "@/types/database";
@@ -26,6 +28,8 @@ import {
   isValidWhatsAppE164,
   sanitizeWhatsAppForDb,
 } from "@/lib/constants";
+import { computeTeacherDashboardAnalytics } from "@/lib/teacher-analytics";
+import { computeTeacherStudentAnalytics } from "@/lib/student-analytics";
 
 function teacherId(session: { profileId: string }) {
   return session.profileId;
@@ -70,6 +74,91 @@ export async function getTeacherStats() {
   };
 }
 
+export async function getTeacherDashboardAnalytics(): Promise<TeacherDashboardAnalytics> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+  const tid = teacherId(session);
+
+  const [studentsRes, quizzesRes, pendingRes, groupsRes] = await Promise.all([
+    supabase
+      .from("student_teachers")
+      .select("student_id, tier")
+      .eq("teacher_id", tid)
+      .eq("status", "active"),
+    supabase.from("quizzes").select("*").eq("created_by", tid),
+    supabase
+      .from("student_teachers")
+      .select("id", { count: "exact", head: true })
+      .eq("teacher_id", tid)
+      .eq("upgrade_requested", true),
+    supabase.from("teacher_groups").select("id").eq("teacher_id", tid),
+  ]);
+
+  const studentLinks =
+    (studentsRes.data as Array<{ student_id: string; tier: StudentTier }>) ?? [];
+  const quizzes = (quizzesRes.data as Quiz[]) ?? [];
+  const studentIds = studentLinks.map((link) => link.student_id);
+  const quizIds = quizzes.map((quiz) => quiz.id);
+  const groupIds = (groupsRes.data ?? []).map((group) => group.id as string);
+
+  const groupIdsByStudent = new Map<string, string[]>();
+  if (groupIds.length && studentIds.length) {
+    const { data: members } = await supabase
+      .from("teacher_group_members")
+      .select("student_id, group_id")
+      .in("group_id", groupIds)
+      .in("student_id", studentIds);
+
+    for (const member of members ?? []) {
+      const sid = member.student_id as string;
+      const list = groupIdsByStudent.get(sid) ?? [];
+      list.push(member.group_id as string);
+      groupIdsByStudent.set(sid, list);
+    }
+  }
+
+  let submissions: Array<{
+    student_id: string;
+    quiz_id: string;
+    score: number;
+    submitted_at: string;
+  }> = [];
+
+  if (studentIds.length && quizIds.length) {
+    const { data } = await supabase
+      .from("exam_submissions")
+      .select("student_id, quiz_id, score, submitted_at")
+      .in("student_id", studentIds)
+      .in("quiz_id", quizIds);
+    submissions = data ?? [];
+  }
+
+  let profiles: Array<{ id: string; full_name: string }> = [];
+  if (studentIds.length) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", studentIds);
+    profiles = data ?? [];
+  }
+
+  const { count: studentCount } = await supabase
+    .from("student_teachers")
+    .select("id", { count: "exact", head: true })
+    .eq("teacher_id", tid);
+
+  return computeTeacherDashboardAnalytics({
+    studentLinks,
+    quizzes,
+    submissions,
+    profiles,
+    groupIdsByStudent,
+    studentCount: studentCount ?? 0,
+    quizCount: quizzes.length,
+    pendingUpgrades: pendingRes.count ?? 0,
+  });
+}
+
 export async function getTeacherStudents(filters?: {
   tier?: StudentTier | "all";
   status?: StudentTeacherStatus | "all";
@@ -82,7 +171,7 @@ export async function getTeacherStudents(filters?: {
     .from("student_teachers")
     .select(
       `
-      id, student_id, status, tier, upgrade_requested,
+      id, student_id, status, tier, upgrade_requested, created_at,
       profiles:student_id (full_name, whatsapp_number)
     `
     )
@@ -144,8 +233,133 @@ export async function getTeacherStudents(filters?: {
       upgradeRequested: l.upgrade_requested as boolean,
       groupNames: groupMap.get(sid) ?? [],
       groupId: groupIdMap.get(sid) ?? null,
+      createdAt: (l.created_at as string) ?? "",
     };
   });
+}
+
+export async function getTeacherStudentDetail(
+  studentId: string
+): Promise<TeacherStudentDetail | null> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+  const tid = teacherId(session);
+
+  const { data: link } = await supabase
+    .from("student_teachers")
+    .select(
+      `
+      id, student_id, status, tier, upgrade_requested, created_at,
+      profiles:student_id (full_name, whatsapp_number)
+    `
+    )
+    .eq("teacher_id", tid)
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  if (!link) return null;
+
+  const profile = link.profiles as unknown as {
+    full_name: string;
+    whatsapp_number: string;
+  };
+
+  const [{ data: groups }, { data: quizzes }] = await Promise.all([
+    supabase
+      .from("teacher_groups")
+      .select("id, group_name")
+      .eq("teacher_id", tid),
+    supabase.from("quizzes").select("*").eq("created_by", tid),
+  ]);
+
+  const groupIds = (groups ?? []).map((group) => group.id as string);
+  const groupNameById = new Map(
+    (groups ?? []).map((group) => [group.id as string, group.group_name as string])
+  );
+
+  const studentGroupIds: string[] = [];
+  let studentGroupId: string | null = null;
+  const groupNames: string[] = [];
+
+  if (groupIds.length) {
+    const { data: members } = await supabase
+      .from("teacher_group_members")
+      .select("group_id")
+      .eq("student_id", studentId)
+      .in("group_id", groupIds);
+
+    for (const member of members ?? []) {
+      const gid = member.group_id as string;
+      studentGroupIds.push(gid);
+      const name = groupNameById.get(gid);
+      if (name) groupNames.push(name);
+      if (!studentGroupId) studentGroupId = gid;
+    }
+  }
+
+  const quizList = (quizzes as Quiz[]) ?? [];
+  const quizIds = quizList.map((quiz) => quiz.id);
+
+  let submissions: Array<{
+    quiz_id: string;
+    score: number;
+    submitted_at: string;
+  }> = [];
+
+  if (quizIds.length) {
+    const { data } = await supabase
+      .from("exam_submissions")
+      .select("quiz_id, score, submitted_at")
+      .eq("student_id", studentId)
+      .in("quiz_id", quizIds)
+      .order("submitted_at", { ascending: false });
+    submissions = data ?? [];
+  }
+
+  let answerStats: Array<{ is_correct: boolean; category_tag: string }> = [];
+  if (quizIds.length) {
+    const { data: answers } = await supabase
+      .from("student_answers")
+      .select(
+        `
+        is_correct,
+        questions (category_tag),
+        exam_submissions!inner (student_id, quiz_id)
+      `
+      )
+      .eq("exam_submissions.student_id", studentId)
+      .in("exam_submissions.quiz_id", quizIds);
+
+    answerStats = (answers ?? []).map((row) => ({
+      is_correct: row.is_correct as boolean,
+      category_tag:
+        (row.questions as unknown as { category_tag: string })?.category_tag ??
+        "عام",
+    }));
+  }
+
+  const student: TeacherStudentRow = {
+    linkId: link.id as string,
+    studentId,
+    fullName: profile.full_name,
+    whatsappNumber: profile.whatsapp_number,
+    status: link.status as StudentTeacherStatus,
+    tier: link.tier as StudentTier,
+    upgradeRequested: link.upgrade_requested as boolean,
+    groupNames,
+    groupId: studentGroupId,
+    createdAt: (link.created_at as string) ?? "",
+  };
+
+  const analytics = computeTeacherStudentAnalytics({
+    tier: student.tier,
+    groupIds: studentGroupIds,
+    quizzes: quizList,
+    submissions,
+    answerStats,
+  });
+
+  return { student, analytics };
 }
 
 export async function updateStudentStatus(
@@ -703,6 +917,7 @@ export async function getTeacherQuizzes(): Promise<TeacherQuiz[]> {
     .from("quizzes")
     .select("*, questions(count)")
     .eq("created_by", session.profileId)
+    .order("updated_at", { ascending: false })
     .order("created_at", { ascending: false });
 
   return (data ?? []).map((row) => {

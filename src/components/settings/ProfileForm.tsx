@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateProfileName } from "@/actions/profile";
+import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { Button } from "@/components/ui/button";
 import {
   SettingsCard,
@@ -29,6 +30,7 @@ export function ProfileForm({
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [pending, startTransition] = useTransition();
+  useStudentLoadingBarSync(pending);
 
   const handleSave = () => {
     startTransition(async () => {

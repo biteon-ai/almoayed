@@ -84,6 +84,9 @@ function quiz(overrides: Partial<QuizCarouselItem> & Pick<QuizCarouselItem, "id"
     questionCount: 3,
     hasSubmission: false,
     lastActivityAt: null,
+    categoryName: "عام",
+    lastScore: null,
+    estimatedMinutes: 6,
     ...overrides,
   };
 }

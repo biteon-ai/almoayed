@@ -172,15 +172,22 @@ features:
     spekit: [weak-points-card, weak-points-recommendations]
 
   - id: DASH-001
-    name: Student Dashboard Mobile Density
+    name: Student Dashboard Gamified Hub
     status: implemented
     persona: [STUDENT]
-    routes: ["/dashboard"]
+    routes: ["/dashboard", "/quizzes", "/results"]
     files:
-      - src/app/dashboard/page.tsx
+      - src/app/(student)/dashboard/page.tsx
+      - src/app/(student)/quizzes/page.tsx
+      - src/app/(student)/results/page.tsx
       - src/actions/quiz.ts
       - src/lib/dashboard-stats.ts
-      - src/components/dashboard/DashboardStatsRow.tsx
+      - src/lib/student-gamification.ts
+      - src/lib/student-quiz-ui.ts
+      - src/components/dashboard/StudentDashboardView.tsx
+      - src/components/student/StudentQuizzesView.tsx
+      - src/components/student/StudentResultsView.tsx
+      - src/components/student/StudentQuizGridCard.tsx
       - src/components/dashboard/QuizCarousel.tsx
       - src/components/dashboard/QuizCarouselCard.tsx
       - src/components/dashboard/DashboardTabs.tsx
@@ -189,11 +196,14 @@ features:
       - src/components/dashboard/TeachersTab.tsx
       - src/components/ui/tabs.tsx
     acceptance:
-      - Quick stats row shows tier, completed count, and average score
-      - Quizzes render in horizontal carousel with Start/Continue and inline locked Pro cards
-      - Bottom tabs for scores, weak points, and teacher switcher (no top switcher)
-      - Primary content visible on 390×844 without scrolling
-    spekit: [student-dashboard, student-quiz-list, weak-points-card, teacher-switcher, pro-upgrade-card]
+      - Hero banner shows welcome, study streak, daily goal progress, and quick actions
+      - KPI cards show completed exams, average score, and subscription tier with trend hints
+      - Continue-learning section highlights the most recent active quiz with progress and launch CTA
+      - Achievements section surfaces earned badges (streak, high score, milestones)
+      - /quizzes page shows searchable quiz grid with category filters, metadata, and Pro/Free badges
+      - /results page shows gamified score cards with grade pills and retake/review actions
+      - Quiz carousel and bottom tabs for scores, weak points, and teacher switcher remain on dashboard
+    spekit: [student-dashboard, student-welcome, student-quizzes-page, student-results-page, student-quiz-list, weak-points-card, teacher-switcher, pro-upgrade-card]
 
   - id: QUIZ-003
     name: WhatsApp Results Share
@@ -241,8 +251,11 @@ features:
     name: Student Management
     status: implemented
     persona: [TEACHER]
-    routes: ["/teacher/students"]
+    routes: ["/teacher/students", "/teacher/students/[id]"]
     files:
+      - src/app/teacher/students/page.tsx
+      - src/app/teacher/students/[id]/page.tsx
+      - src/components/teacher/StudentDetailDashboard.tsx
       - src/components/teacher/StudentManagement.tsx
       - src/components/teacher/AddStudentDialog.tsx
       - src/components/teacher/EditStudentDialog.tsx
@@ -252,10 +265,13 @@ features:
     acceptance:
       - Manual add student (name + WhatsApp) defaults free/active
       - Search by name or WhatsApp; filter by tier, status, study group
+      - Default sort: newest student_teachers.created_at first (query + client after filters)
       - Paginate at 8 students per page with RTL prev/next
       - Activate/deactivate (confirm on deactivate); Pro approve/revoke without confirm
       - Edit name + group (WhatsApp read-only); unlink with confirm
       - Group clear via بدون مجموعة; MT-002 scoped to teacher
+      - Click student row to open /teacher/students/[id] detail & analytics dashboard
+      - WhatsApp link, group select, and actions menu do not trigger row navigation
     spekit:
       [
         student-filters,
@@ -265,6 +281,10 @@ features:
         add-student-button,
         student-search,
         student-pagination,
+        teacher-student-detail-page,
+        student-detail-kpis,
+        student-detail-score-chart,
+        student-detail-weak-points,
       ]
 
   - id: TEACH-002
@@ -350,10 +370,25 @@ features:
     files:
       - src/app/teacher/dashboard/page.tsx
       - src/components/teacher/StatCard.tsx
+      - src/components/teacher/TeacherDashboardAnalytics.tsx
+      - src/lib/teacher-analytics.ts
+      - src/actions/teacher.ts
     acceptance:
       - Shows student count, quiz count, pending Pro requests
       - Displays shareable teacher_code card
-    spekit: [teacher-stats-grid, teacher-code-card]
+      - Analytics KPI row: completion rate, pass rate, average score, top performer
+      - Grade distribution bar chart and weekly activity line chart (Recharts)
+      - Exam difficulty extremes and most popular exams panels
+    spekit:
+      [
+        teacher-stats-grid,
+        teacher-code-card,
+        teacher-analytics-kpis,
+        teacher-grade-distribution-chart,
+        teacher-weekly-activity-chart,
+        teacher-exam-difficulty-panel,
+        teacher-popular-exams-panel,
+      ]
 
   - id: TEACH-006
     name: Interactive Question Editing
