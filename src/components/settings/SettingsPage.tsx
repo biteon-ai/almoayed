@@ -3,6 +3,7 @@ import { requireAuthenticated } from "@/lib/auth";
 import { ActiveSessionsCard } from "@/components/settings/ActiveSessionsCard";
 import { LogoutConfirmButton } from "@/components/settings/LogoutConfirmButton";
 import { ProfileForm } from "@/components/settings/ProfileForm";
+import { StudentDemographicsSettings } from "@/components/settings/StudentDemographicsSettings";
 import {
   SettingsPageShell,
   type SettingsNavItem,
@@ -26,6 +27,7 @@ interface SettingsPageProps {
 
 const STUDENT_NAV: SettingsNavItem[] = [
   { id: "profile", label: "معلومات الحساب" },
+  { id: "demographics", label: "البيانات الشخصية" },
   { id: "subscription", label: "اشتراكك" },
   { id: "teacher-code", label: "رمز الأستاذ" },
   { id: "sessions", label: "الجلسات النشطة" },
@@ -65,6 +67,14 @@ export async function SettingsPage({
 
       {profile.role === "STUDENT" ? (
         <>
+          {profile.demographics ? (
+            <SettingsSection id="demographics">
+              <StudentDemographicsSettings
+                fullName={profile.fullName}
+                demographics={profile.demographics}
+              />
+            </SettingsSection>
+          ) : null}
           <SettingsSection id="subscription">
             <StudentSubscriptionCard
               tier={profile.tier}

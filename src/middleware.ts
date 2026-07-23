@@ -3,7 +3,14 @@ import type { NextRequest } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions, type SessionData } from "@/lib/session";
 
-const studentPaths = ["/dashboard", "/quiz", "/quizzes", "/results"];
+const studentPaths = [
+  "/dashboard",
+  "/quiz",
+  "/quizzes",
+  "/results",
+  "/onboarding",
+  "/profile",
+];
 const teacherPaths = ["/teacher"];
 const adminPublicPaths = ["/admin/login", "/admin/emergency"];
 
@@ -97,6 +104,8 @@ export const config = {
     "/quiz/:path*",
     "/quizzes/:path*",
     "/results/:path*",
+    "/onboarding/:path*",
+    "/profile/:path*",
     "/teacher/:path*",
     "/admin/:path*",
     "/settings",

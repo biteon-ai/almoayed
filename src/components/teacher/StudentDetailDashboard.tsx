@@ -28,6 +28,10 @@ import { StudentOverviewSection } from "@/components/teacher/StudentOverviewSect
 import { cn } from "@/lib/utils";
 import { SPEKIT } from "@/lib/spekit-targets";
 import type { TeacherStudentDetail } from "@/types/database";
+import {
+  EDUCATION_STAGE_LABELS,
+  REFERRAL_SOURCE_LABELS,
+} from "@/lib/student-profile";
 
 interface StudentDetailDashboardProps {
   detail: TeacherStudentDetail;
@@ -81,7 +85,7 @@ function ChartTooltip({
 }
 
 export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) {
-  const { student, analytics } = detail;
+  const { student, analytics, demographics } = detail;
   const { kpis } = analytics;
 
   const scoreChartData = analytics.scoreHistory.map((point, index) => ({
@@ -174,6 +178,58 @@ export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) 
           العودة للطلاب
         </Link>
       </div>
+
+      {demographics &&
+      (demographics.educationStage ||
+        demographics.province ||
+        demographics.city ||
+        demographics.primarySubject) ? (
+        <Card className="rounded-2xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">بيانات الملف الشخصي</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
+            {demographics.educationStage ? (
+              <p>
+                <span className="text-muted-foreground">المرحلة: </span>
+                {EDUCATION_STAGE_LABELS[demographics.educationStage]}
+              </p>
+            ) : null}
+            {demographics.province || demographics.city ? (
+              <p>
+                <span className="text-muted-foreground">الموقع: </span>
+                {[demographics.province, demographics.city]
+                  .filter(Boolean)
+                  .join(" — ")}
+              </p>
+            ) : null}
+            {demographics.primarySubject ? (
+              <p>
+                <span className="text-muted-foreground">المادة: </span>
+                {demographics.primarySubject}
+              </p>
+            ) : null}
+            {demographics.referralSource ? (
+              <p>
+                <span className="text-muted-foreground">المصدر: </span>
+                {REFERRAL_SOURCE_LABELS[demographics.referralSource]}
+              </p>
+            ) : null}
+            {demographics.birthDate ? (
+              <p>
+                <span className="text-muted-foreground">الميلاد: </span>
+                {demographics.birthDate}
+              </p>
+            ) : null}
+            {demographics.email ? (
+              <p>
+                <span className="text-muted-foreground">البريد: </span>
+                <span dir="ltr">{demographics.email}</span>
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"

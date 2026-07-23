@@ -153,6 +153,35 @@ features:
       - Logout with confirmation dialog
     spekit: [profile-tier-info, profile-teacher-code, profile-session-management]
 
+  - id: PROFILE-002
+    name: Student Profile Onboarding & Completion Gate
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    routes: ["/onboarding", "/profile/complete", "/quiz/[id]", "/settings"]
+    files:
+      - supabase/migrations/009_student_profile_demographics.sql
+      - src/lib/student-profile.ts
+      - src/lib/syria-provinces.ts
+      - src/lib/student-onboarding-guard.ts
+      - src/actions/profile.ts
+      - src/app/(student-flows)/
+      - src/components/student/OnboardingWizard.tsx
+      - src/components/student/ProfileCompletionForm.tsx
+      - src/components/student/StudentDemographicsFields.tsx
+      - src/components/settings/StudentDemographicsSettings.tsx
+      - tests/features/profile-002-student-profile.test.ts
+    acceptance:
+      - First onboarding (stage, referral, subject) before student shell when incomplete
+      - After ≥2 unique quizzes, new quizzes redirect to full-page profile completion
+      - Completed quiz review remains available while gate is active
+      - Settings demographics update recomputes profile_completed
+      - Linked teachers see demographics on student detail (MT-002)
+    spekit:
+      - student-onboarding
+      - profile-completion-modal
+      - profile-completion-submit
+      - student-demographics-settings
+
   # ── Multi-tenant ────────────────────────────────────────────────────────────
   - id: MT-001
     name: Multi-Tenant Teacher Linking
