@@ -43,7 +43,8 @@ export function sanitizeArabicTxt(rawText: string): string {
   text = text
     .replace(/\uFFFD+/g, " ")
     .replace(/\u0000/g, "")
-    .replace(/(?<![\w\u0600-\u06FF])\?{2,}(?![\w\u0600-\u06FF])/g, " ")
+    // Isolated ?? runs (encoding noise) — avoid lookbehind for older TS targets
+    .replace(/([^\w\u0600-\u06FF]|^)(\?{2,})(?=[^\w\u0600-\u06FF]|$)/g, "$1 ")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\r\n?/g, "\n");
 
@@ -71,14 +72,15 @@ function extractInlineOptions(block: string): {
     [];
 
   OPTION_MARKER_REGEX.lastIndex = 0;
-  for (const match of block.matchAll(OPTION_MARKER_REGEX)) {
-    const raw = match[1] ?? match[2] ?? "";
+  let markerMatch: RegExpExecArray | null;
+  while ((markerMatch = OPTION_MARKER_REGEX.exec(block)) !== null) {
+    const raw = markerMatch[1] ?? markerMatch[2] ?? "";
     const letter = normalizeChoiceLetter(raw);
-    if (!letter || match.index === undefined) continue;
+    if (!letter || markerMatch.index === undefined) continue;
     markers.push({
       letter,
-      start: match.index,
-      end: match.index + match[0].length,
+      start: markerMatch.index,
+      end: markerMatch.index + markerMatch[0].length,
     });
   }
 
@@ -114,7 +116,7 @@ function extractInlineOptions(block: string): {
   if (!options["أ"] && !options["ب"]) return null;
 
   const questionText = stripAnswerLabels(block.slice(0, cluster[0]!.start).trim())
-    .replace(/[\s:：\-–—]+$/u, "")
+    .replace(/[\s:：\-–—]+$/, "")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -157,8 +159,10 @@ export function parseArabicTxtQuiz(rawText: string): ImportQuestionRow[] {
 
   const rows: ImportQuestionRow[] = [];
 
-  for (const match of sanitized.matchAll(QUESTION_BLOCK_REGEX)) {
-    const blockBody = (match[2] ?? "").trim();
+  QUESTION_BLOCK_REGEX.lastIndex = 0;
+  let blockMatch: RegExpExecArray | null;
+  while ((blockMatch = QUESTION_BLOCK_REGEX.exec(sanitized)) !== null) {
+    const blockBody = (blockMatch[2] ?? "").trim();
     if (!blockBody) continue;
 
     const extracted = extractInlineOptions(blockBody);
