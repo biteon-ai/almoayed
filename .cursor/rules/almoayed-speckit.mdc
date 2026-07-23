@@ -9,7 +9,7 @@ alwaysApply: true
 
 ## Product
 
-Arabic RTL PWA for Syrian Baccalaureate math. Stack: Next.js 14 App Router, Supabase, iron-session, Tailwind, Shadcn/UI.
+Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Router, Supabase, iron-session, Tailwind, Shadcn/UI.
 
 ## Implemented features (do not break)
 

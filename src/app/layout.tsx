@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { APP_NAME, APP_SLOGAN, APP_THEME_COLOR } from "@/lib/constants";
+import { APP_DESCRIPTION, APP_NAME, APP_THEME_COLOR } from "@/lib/constants";
 import { TopLoaderProvider } from "@/components/providers/top-loader-provider";
 import "./globals.css";
 
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     default: APP_NAME,
     template: `%s | ${APP_NAME}`,
   },
-  description: APP_SLOGAN,
+  description: APP_DESCRIPTION,
   manifest: "/manifest.json",
   icons: {
     icon: [

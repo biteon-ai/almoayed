@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { getStudentDashboardData, getStudentProfile } from "@/actions/quiz";
 import { requireStudent } from "@/lib/auth";
-import { APP_SLOGAN } from "@/lib/constants";
+import { APP_DESCRIPTION } from "@/lib/constants";
 import { computeStudentGamification } from "@/lib/student-gamification";
 import { StudentDashboardView } from "@/components/dashboard/StudentDashboardView";
 
 export const metadata = {
   title: "لوحة الطالب | المؤيد",
-  description: APP_SLOGAN,
+  description: APP_DESCRIPTION,
 };
 
 export default async function DashboardPage() {

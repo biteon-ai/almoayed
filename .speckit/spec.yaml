@@ -442,6 +442,29 @@ features:
     acceptance:
       - Consistent emerald/amber/slate badge tones across quiz and student views
 
+  - id: LAND-001
+    name: Marketing Landing Page
+    status: implemented
+    persona: [PUBLIC]
+    routes: ["/"]
+    files:
+      - src/app/page.tsx
+      - src/lib/landing-content.ts
+      - src/components/landing/LandingPageView.tsx
+      - src/components/landing/LandingNav.tsx
+      - src/components/landing/LandingHero.tsx
+      - src/components/landing/LandingTrustBar.tsx
+      - src/components/landing/LandingFeatures.tsx
+      - src/components/landing/LandingAudience.tsx
+      - src/components/landing/LandingFooter.tsx
+      - src/components/landing/DashboardPreviewMockup.tsx
+    acceptance:
+      - Logged-out visitors see full Arabic RTL landing at /
+      - Logged-in users redirect to role dashboard
+      - Sticky nav, hero, trust metrics, features, audience cards, footer
+      - Guest CTAs route to /login; quizzes CTA uses ?from=/quizzes
+    spekit: [landing-page]
+
   # ── Enablement ──────────────────────────────────────────────────────────────
   - id: ENABLE-001
     name: Spekit DOM Target Hooks
@@ -498,6 +521,6 @@ demo_accounts:
     whatsapp: "963987654321"
 
 routes:
-  public: [/login]
+  public: ["/", "/login"]
   student: ["/dashboard", "/quiz/[id]"]
   teacher: ["/teacher/dashboard", "/teacher/students", "/teacher/quizzes", "/teacher/quizzes/new", "/teacher/quizzes/[id]"]

@@ -1,7 +1,7 @@
 # Al-Moayed (المؤيد) — Project Constitution
 
 **Slogan:** حل بيدك ما حدا بفيدك  
-**Product:** Mobile-first, RTL Arabic PWA for Syrian Baccalaureate math (students + teachers)
+**Product:** Mobile-first, RTL Arabic PWA for all educational levels and subjects (students + teachers)
 
 ## Non-negotiable principles
 

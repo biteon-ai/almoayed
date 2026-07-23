@@ -1,5 +1,11 @@
 export const APP_NAME = "المؤيد";
 export const APP_SLOGAN = "حل بيدك ما حدا بفيدك";
+export const APP_TAGLINE =
+  "منصة التقييم الذكي الأولى لجميع المراحل الدراسية";
+export const APP_DESCRIPTION =
+  "منصة المؤيد تمنح الطلاب في كافة المراحل والمواد الدراسية تجربة اختبارات تفاعلية، تصحيحاً فورياً، وتحليلات دقيقة للأداء.";
+export const APP_PLATFORM_BADGE = "منصة تعليمية متكاملة لجميع المراحل";
+export const APP_FOOTER_COPYRIGHT = `© ${new Date().getFullYear()} منصة المؤيد التعليمية. جميع الحقوق محفوظة.`;
 export const APP_THEME_COLOR = "#0d9488";
 
 export const TEACHER_WHATSAPP =
@@ -175,7 +181,7 @@ export function buildTeacherVerificationUrl(
 
 export function buildResultShareUrl(score: number, quizUrl: string): string {
   const text = encodeURIComponent(
-    `لقد حصلت على ${score}% في اختبار الرياضيات للبكالوريا عبر تطبيق المؤيد! هل تتحداني؟ جرب الاختبار بنفسك: ${quizUrl}`
+    `لقد حصلت على ${score}% في اختبار عبر تطبيق المؤيد! هل تتحداني؟ جرب الاختبار بنفسك: ${quizUrl}`
   );
   return `https://api.whatsapp.com/send?text=${text}`;
 }
