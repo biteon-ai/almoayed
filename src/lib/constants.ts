@@ -178,9 +178,25 @@ export function buildTeacherVerificationUrl(
   return `https://api.whatsapp.com/send?phone=${TEACHER_WHATSAPP}&text=${text}`;
 }
 
+/** First strong isolate — keeps absolute URLs LTR-friendly inside Arabic WhatsApp text. */
+const LTR_ISOLATE_START = "\u2068";
+const LTR_ISOLATE_END = "\u2069";
+
+export function buildQuizAbsoluteUrl(quizId: string, origin: string): string {
+  const base = origin.replace(/\/+$/, "");
+  return `${base}/quiz/${quizId}`;
+}
+
+export function buildResultSharePayload(
+  score: number,
+  quizUrl: string
+): { text: string; url: string; whatsappText: string } {
+  const text = `لقد حصلت على ${score}% في اختبار عبر تطبيق المؤيد! هل تتحداني؟ جرب الاختبار بنفسك:`;
+  const whatsappText = `${text}\n\n${LTR_ISOLATE_START}${quizUrl}${LTR_ISOLATE_END}`;
+  return { text, url: quizUrl, whatsappText };
+}
+
 export function buildResultShareUrl(score: number, quizUrl: string): string {
-  const text = encodeURIComponent(
-    `لقد حصلت على ${score}% في اختبار عبر تطبيق المؤيد! هل تتحداني؟ جرب الاختبار بنفسك: ${quizUrl}`
-  );
-  return `https://api.whatsapp.com/send?text=${text}`;
+  const { whatsappText } = buildResultSharePayload(score, quizUrl);
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
 }
