@@ -30,13 +30,13 @@ features:
       - src/lib/auth-session.ts
       - src/lib/session.ts
     acceptance:
-      - /login uses compact top tabs: تسجيل جديد | دخول | تجربة (demo)
+      - /login uses compact top tabs: تسجيل جديد | دخول | تجربة (demo tab only when AUTH_DEMO_BYPASS enabled)
       - Existing users start BiteonSwitch hosted WhatsApp OTP from دخول tab
       - Callback verifies token server-side, enforces AUTH-003, mints iron-session
       - Students with no teacher link are prompted for رمز الأستاذ before session completes
       - Role redirect to /dashboard or /teacher/dashboard
       - Provider outage shows Arabic retry; no student emergency secret
-      - Demo one-click login on تجربة tab when AUTH_DEMO_BYPASS enabled
+      - Demo one-click login on تجربة tab when AUTH_DEMO_BYPASS enabled; tab hidden when disabled
       - No admin/emergency links on public /login (AUTH-005 is unlinked at /admin/login only)
     spekit: [login-form, login-whatsapp-field, login-otp-cta, login-submit]
 

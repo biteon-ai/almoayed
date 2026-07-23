@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Branch `006-student-management-hub`
-- Local `.env.local` with Supabase + `SESSION_SECRET`
+- Local `.env` with Supabase + `SESSION_SECRET`
 - Seeded demo teacher (e.g. WhatsApp `963912345678`, code `AlMoayed-DEMO`)
 
 ```bash

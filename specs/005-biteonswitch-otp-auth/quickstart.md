@@ -5,7 +5,7 @@ Manual verification after implementation.
 ## Prerequisites
 
 ```bash
-cp .env.local.example .env.local   # fill Supabase + new auth keys
+cp .env.example .env   # fill Supabase + new auth keys
 npx supabase db push               # includes auth_otp_states if added
 npm run dev
 ```

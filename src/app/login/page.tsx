@@ -17,7 +17,7 @@ function LoginFormFallback() {
 }
 
 export default async function LoginPage() {
-  // Gates one-click demo session mint; تجربة tab is always visible in LoginForm
+  // Gates one-click demo session mint; تجربة tab is hidden when bypass is off
   const demoEnabled = isAuthDemoBypassEnabled();
   const pending = await getPendingTeacherLinkSession();
 

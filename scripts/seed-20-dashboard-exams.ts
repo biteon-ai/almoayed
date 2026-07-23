@@ -4,7 +4,7 @@
  * Usage:
  *   npx tsx scripts/seed-20-dashboard-exams.ts
  *
- * Requires .env.local with NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+ * Requires .env with NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
  *
  * Schema note: this repo uses `quizzes` + `exam_submissions`, not a flat `exams`
  * table. The `MOCK_EXAMS` array below mirrors your requested shape for clarity;
@@ -312,20 +312,23 @@ export const MOCK_EXAMS: MockExam[] = [
   },
 ];
 
-function loadEnvLocal() {
-  try {
-    const raw = readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
-    for (const line of raw.split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
-      const eq = trimmed.indexOf("=");
-      if (eq === -1) continue;
-      const key = trimmed.slice(0, eq).trim();
-      const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
-      if (!process.env[key]) process.env[key] = value;
+function loadEnvFile() {
+  for (const file of [".env", ".env.local"] as const) {
+    try {
+      const raw = readFileSync(resolve(process.cwd(), file), "utf8");
+      for (const line of raw.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eq = trimmed.indexOf("=");
+        if (eq === -1) continue;
+        const key = trimmed.slice(0, eq).trim();
+        const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
+        if (!process.env[key]) process.env[key] = value;
+      }
+      return;
+    } catch {
+      // try next file
     }
-  } catch {
-    // .env.local optional if vars already exported
   }
 }
 
@@ -356,7 +359,7 @@ function assertComposition(exams: MockExam[]) {
 export async function seedDashboardExams() {
   assertComposition(MOCK_EXAMS);
 
-  loadEnvLocal();
+  loadEnvFile();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {

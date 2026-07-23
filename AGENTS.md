@@ -16,7 +16,7 @@ Guidance for AI coding agents working in this repository.
 
 ```bash
 npm install
-cp .env.local.example .env.local   # Supabase + SESSION_SECRET
+cp .env.example .env   # Supabase + SESSION_SECRET
 npx supabase db push
 npm run dev
 ```

@@ -220,6 +220,12 @@ export function LoginForm({
   }, [defaultTab]);
 
   useEffect(() => {
+    if (!demoEnabled && tab === "demo") {
+      setTab("register");
+    }
+  }, [demoEnabled, tab]);
+
+  useEffect(() => {
     if (otpState?.status === "redirect") {
       setOverlay(true);
       window.location.assign(otpState.redirectUrl);
@@ -403,16 +409,23 @@ export function LoginForm({
                   }}
                   className="flex min-h-0 flex-1 flex-col gap-4"
                 >
-                  <TabsList className="grid h-auto w-full shrink-0 grid-cols-3 gap-0 rounded-xl border-0 bg-muted/60 p-1 shadow-none">
+                  <TabsList
+                    className={cn(
+                      "grid h-auto w-full shrink-0 gap-0 rounded-xl border-0 bg-muted/60 p-1 shadow-none",
+                      demoEnabled ? "grid-cols-3" : "grid-cols-2"
+                    )}
+                  >
                     <TabsTrigger value="register" className={tabTriggerClass}>
                       تسجيل جديد
                     </TabsTrigger>
                     <TabsTrigger value="login" className={tabTriggerClass}>
                       دخول
                     </TabsTrigger>
-                    <TabsTrigger value="demo" className={tabTriggerClass}>
-                      تجربة
-                    </TabsTrigger>
+                    {demoEnabled ? (
+                      <TabsTrigger value="demo" className={tabTriggerClass}>
+                        تجربة
+                      </TabsTrigger>
+                    ) : null}
                   </TabsList>
 
                   <TabsContent
@@ -521,79 +534,74 @@ export function LoginForm({
                     </form>
                   </TabsContent>
 
-                  <TabsContent
-                    value="demo"
-                    className="mt-0 flex min-h-0 flex-1 flex-col data-[hidden]:hidden"
-                  >
-                    <form
-                      ref={demoFormRef}
-                      action={demoAction}
-                      className="hidden"
+                  {demoEnabled ? (
+                    <TabsContent
+                      value="demo"
+                      className="mt-0 flex min-h-0 flex-1 flex-col data-[hidden]:hidden"
                     >
-                      <input
-                        type="hidden"
-                        name="whatsapp_number"
-                        value={whatsapp}
-                      />
-                      <input
-                        type="hidden"
-                        name="full_name"
-                        value={fullName}
-                      />
-                    </form>
-                    <div
-                      className={cn(
-                        fieldGap,
-                        "flex min-h-0 flex-1 flex-col justify-center"
-                      )}
-                    >
-                      <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                        <FlaskConical className="size-3.5 shrink-0" />
-                        حسابات تجريبية للتطوير والعرض
-                      </p>
-                      <div {...spekit(SPEKIT.loginDemoStudent)}>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="default"
-                          className={touchBtnClass}
-                          disabled={!demoEnabled}
-                          onClick={() =>
-                            submitDemo(
-                              DEMO_STUDENT.whatsapp_number,
-                              DEMO_STUDENT.full_name
-                            )
-                          }
-                        >
-                          <GraduationCap className="size-4 shrink-0" />
-                          دخول كطالب تجريبي
-                        </Button>
-                      </div>
-                      <div {...spekit(SPEKIT.loginDemoTeacher)}>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="default"
-                          className={touchBtnClass}
-                          disabled={!demoEnabled}
-                          onClick={() =>
-                            submitDemo(
-                              DEMO_TEACHER.whatsapp_number,
-                              DEMO_TEACHER.full_name
-                            )
-                          }
-                        >
-                          <School className="size-4 shrink-0" />
-                          دخول كأستاذ تجريبي
-                        </Button>
-                      </div>
-                      {!demoEnabled ? (
-                        <p className="text-center text-[11px] text-muted-foreground">
-                          الدخول التجريبي غير مفعّل في هذا البيئة.
+                      <form
+                        ref={demoFormRef}
+                        action={demoAction}
+                        className="hidden"
+                      >
+                        <input
+                          type="hidden"
+                          name="whatsapp_number"
+                          value={whatsapp}
+                        />
+                        <input
+                          type="hidden"
+                          name="full_name"
+                          value={fullName}
+                        />
+                      </form>
+                      <div
+                        className={cn(
+                          fieldGap,
+                          "flex min-h-0 flex-1 flex-col justify-center"
+                        )}
+                      >
+                        <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          <FlaskConical className="size-3.5 shrink-0" />
+                          حسابات تجريبية للتطوير والعرض
                         </p>
-                      ) : null}
-                    </div>
-                  </TabsContent>
+                        <div {...spekit(SPEKIT.loginDemoStudent)}>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="default"
+                            className={touchBtnClass}
+                            onClick={() =>
+                              submitDemo(
+                                DEMO_STUDENT.whatsapp_number,
+                                DEMO_STUDENT.full_name
+                              )
+                            }
+                          >
+                            <GraduationCap className="size-4 shrink-0" />
+                            دخول كطالب تجريبي
+                          </Button>
+                        </div>
+                        <div {...spekit(SPEKIT.loginDemoTeacher)}>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="default"
+                            className={touchBtnClass}
+                            onClick={() =>
+                              submitDemo(
+                                DEMO_TEACHER.whatsapp_number,
+                                DEMO_TEACHER.full_name
+                              )
+                            }
+                          >
+                            <School className="size-4 shrink-0" />
+                            دخول كأستاذ تجريبي
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  ) : null}
                 </Tabs>
               )}
             </div>

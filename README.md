@@ -16,7 +16,7 @@ Next.js 14 · Tailwind CSS · Shadcn/UI · Supabase · iron-session
 
 ```bash
 npm install
-cp .env.local.example .env.local   # add Supabase keys
+cp .env.example .env   # add Supabase keys
 npx supabase db push
 npm run dev
 ```
