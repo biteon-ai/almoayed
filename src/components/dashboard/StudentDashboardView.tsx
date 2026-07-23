@@ -4,7 +4,6 @@ import Link from "next/link";
 import type {
   CategoryPerformance,
   DashboardStats,
-  QuizCarouselItem,
   RecentScoreRow,
   StudentTeacherOption,
 } from "@/types/database";
@@ -16,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { QuizCarousel } from "@/components/dashboard/QuizCarousel";
+import { StudentDashboardActiveQuizSection } from "@/components/dashboard/StudentDashboardActiveQuizSection";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
@@ -25,8 +24,6 @@ import {
   Trophy,
   Target,
   Sparkles,
-  ArrowLeft,
-  Play,
   CheckCircle2,
   TrendingUp,
   Crown,
@@ -39,7 +36,6 @@ interface StudentDashboardViewProps {
   studentName: string;
   stats: DashboardStats;
   gamification: StudentGamification;
-  quizzes: QuizCarouselItem[];
   recentScores: RecentScoreRow[];
   weakPoints: CategoryPerformance[];
   teachers: StudentTeacherOption[];
@@ -65,7 +61,6 @@ export function StudentDashboardView({
   studentName,
   stats,
   gamification,
-  quizzes,
   recentScores,
   weakPoints,
   teachers,
@@ -246,88 +241,12 @@ export function StudentDashboardView({
 
       {/* Continue learning & achievements */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <Card className="relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-card shadow-xs lg:col-span-7">
-          <CardHeader className="border-b bg-muted/20 px-6 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <CardTitle className="flex items-center gap-2 text-base font-bold">
-                <Play className="h-4 w-4 fill-emerald-600/20 text-emerald-600" />
-                <span>تابع من حيث توقفت</span>
-              </CardTitle>
-              {continueQuiz && (
-                <Badge className="border-amber-200 bg-amber-500/10 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                  {continueQuiz.hasSubmission ? "للمراجعة" : "قيد التقدم"} (
-                  {continueProgress}%)
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-5 p-6">
-            {continueQuiz ? (
-              <>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-foreground">
-                    {continueQuiz.title}
-                  </h3>
-                  <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>
-                      {continueQuiz.questionCount}{" "}
-                      {continueQuiz.questionCount === 1 ? "سؤال" : "أسئلة"}
-                    </span>
-                    <span>•</span>
-                    <span>
-                      {continueQuiz.is_free ? "متاح للجميع" : "اختبار Pro"}
-                    </span>
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-muted-foreground">نسبة الإنجاز</span>
-                    <span className="font-bold text-emerald-600">
-                      {continueProgress}%
-                    </span>
-                  </div>
-                  <Progress
-                    className="h-2.5 rounded-full bg-emerald-100 dark:bg-emerald-950"
-                    value={continueProgress}
-                  />
-                </div>
-
-                <Link
-                  href={`/quiz/${continueQuiz.id}`}
-                  className={cn(
-                    buttonVariants({ size: "lg" }),
-                    "h-11 w-full gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-md transition-all hover:bg-emerald-700"
-                  )}
-                >
-                  <span>
-                    {continueQuiz.hasSubmission
-                      ? "مراجعة الاختبار"
-                      : "متابعة الاختبار الآن"}
-                  </span>
-                  <ArrowLeft className="h-4 w-4" />
-                </Link>
-              </>
-            ) : (
-              <div className="space-y-4 py-4 text-center">
-                <p className="text-sm font-semibold text-muted-foreground">
-                  لا يوجد اختبار نشط حالياً
-                </p>
-                <Link
-                  href="/quizzes"
-                  className={cn(
-                    buttonVariants({ size: "lg" }),
-                    "h-11 gap-2 rounded-xl bg-emerald-600 font-bold hover:bg-emerald-700"
-                  )}
-                >
-                  <span>استكشف الاختبارات المتاحة</span>
-                  <ArrowLeft className="h-4 w-4" />
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-7">
+          <StudentDashboardActiveQuizSection
+            continueQuiz={continueQuiz}
+            continueProgress={continueProgress}
+          />
+        </div>
 
         <Card className="rounded-2xl border bg-card shadow-xs lg:col-span-5">
           <CardHeader className="border-b bg-muted/20 px-6 py-4">
@@ -376,8 +295,6 @@ export function StudentDashboardView({
           </CardContent>
         </Card>
       </div>
-
-      <QuizCarousel quizzes={quizzes} />
 
       <DashboardTabs
         recentScores={recentScores}

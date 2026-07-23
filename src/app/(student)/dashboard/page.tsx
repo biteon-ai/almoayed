@@ -30,7 +30,6 @@ export default async function DashboardPage() {
       studentName={session.fullName || profile.full_name || "بالطالب"}
       stats={dashboard.stats}
       gamification={gamification}
-      quizzes={dashboard.quizzes}
       recentScores={dashboard.recentScores}
       weakPoints={dashboard.weakPoints}
       teachers={dashboard.teachers}
