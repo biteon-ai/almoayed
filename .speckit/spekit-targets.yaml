@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 69
+  total_targets: 70
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -61,6 +61,10 @@ AUTH-005:
 # ── Multi-tenant ────────────────────────────────────────────────
 MT-002:
   teacher-switcher: "Student dashboard — switch active teacher"
+
+# ── Marketing landing ───────────────────────────────────────────
+LAND-001:
+  landing-page: "Public marketing landing page root at /"
 
 # ── Student dashboard ───────────────────────────────────────────
 UI-001:

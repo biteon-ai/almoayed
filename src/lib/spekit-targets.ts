@@ -21,6 +21,9 @@ export const SPEKIT = {
   // ── MT-001 / MT-002 ──────────────────────────────────────────
   teacherSwitcher: "teacher-switcher",
 
+  // ── LAND-001 ─────────────────────────────────────────────────
+  landingPage: "landing-page",
+
   // ── Student dashboard ────────────────────────────────────────
   studentDashboard: "student-dashboard",
   studentWelcome: "student-welcome",
