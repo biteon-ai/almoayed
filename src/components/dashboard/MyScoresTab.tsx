@@ -7,7 +7,7 @@ import {
 import { cn } from "@/lib/utils";
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 interface MyScoresTabProps {
   scores: RecentScoreRow[];

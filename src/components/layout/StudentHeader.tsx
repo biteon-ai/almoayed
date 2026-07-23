@@ -14,7 +14,7 @@ import {
   studentNavLinkClass,
 } from "@/components/layout/StudentNavLink";
 import { StudentLogoutButton } from "@/components/layout/StudentLogoutButton";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Settings } from "lucide-react";
 
 function DesktopNavLink({

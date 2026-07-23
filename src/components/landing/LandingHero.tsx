@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { DashboardPreviewMockup } from "@/components/landing/DashboardPreviewMockup";
 import { LANDING_HERO } from "@/lib/landing-content";
 import { cn } from "@/lib/utils";

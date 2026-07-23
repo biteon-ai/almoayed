@@ -4,7 +4,7 @@ import {
   getSubmissionResults,
 } from "@/actions/quiz";
 import { QuizRunnerContainer } from "@/components/quiz/QuizRunnerContainer";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { AppError, ErrorCode, toUserMessage } from "@/lib/app-errors";

@@ -7,7 +7,8 @@ import type { DashboardStats, QuizCarouselItem } from "@/types/database";
 import { StudentQuizGridCard } from "@/components/student/StudentQuizGridCard";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";

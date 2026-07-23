@@ -7,7 +7,7 @@ import type { Question } from "@/types/database";
 import { BulkQuestionUpload } from "@/components/teacher/BulkQuestionUpload";
 import { QuizQuestionsManager } from "@/components/teacher/QuizQuestionsManager";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";

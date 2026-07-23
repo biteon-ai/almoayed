@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { QuizRunner } from "@/components/quiz/QuizRunner";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { useOnlineStatus } from "@/lib/offline/connectivity";
 import { getQuizPackage, saveQuizPackage } from "@/lib/offline/quiz-cache";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";

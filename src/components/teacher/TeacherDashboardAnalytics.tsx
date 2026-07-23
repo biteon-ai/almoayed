@@ -26,7 +26,7 @@ import {
   YAxis,
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { PaginatedPopularExams } from "@/components/teacher/PaginatedPopularExams";
 import { StatCard } from "@/components/teacher/StatCard";

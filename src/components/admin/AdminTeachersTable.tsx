@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { AdminTeacherRow } from "@/types/database";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import {
   Select,

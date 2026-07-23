@@ -63,6 +63,10 @@ test.describe(`${FEATURE} Mobile dashboard density`, () => {
 
     await page.goto("/results");
     await expect(page.locator('[data-spekit="student-results-page"]')).toBeVisible();
-    await expect(page.getByText("نتائجي").first()).toBeVisible();
+    await expect(
+      page.locator('[data-spekit="student-results-page"]').getByRole("heading", {
+        name: "نتائجي",
+      })
+    ).toBeVisible();
   });
 });

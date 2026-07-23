@@ -8,7 +8,8 @@ import type { TeacherQuiz } from "@/types/database";
 import { QuizListItem } from "@/components/teacher/QuizListItem";
 import { QuizMetricsKPIHeader } from "@/components/teacher/QuizMetricsKPIHeader";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {

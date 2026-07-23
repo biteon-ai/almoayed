@@ -6,7 +6,8 @@ import Link from "next/link";
 import type { DashboardStats, RecentScoreRow } from "@/types/database";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { usePagination } from "@/hooks/usePagination";

@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { APP_NAME } from "@/lib/constants";
 import { LANDING_NAV_LINKS } from "@/lib/landing-content";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { GraduationCap, Menu, X } from "lucide-react";
 

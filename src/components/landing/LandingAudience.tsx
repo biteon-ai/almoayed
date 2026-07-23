@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { LANDING_AUDIENCE } from "@/lib/landing-content";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Check, GraduationCap, School } from "lucide-react";
