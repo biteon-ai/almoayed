@@ -52,7 +52,10 @@ function FieldLabel({
   children: ReactNode;
 }) {
   return (
-    <Label htmlFor={htmlFor} className="text-sm font-bold text-foreground">
+    <Label
+      htmlFor={htmlFor}
+      className="mb-2 block text-sm font-bold text-foreground"
+    >
       {children}
     </Label>
   );
@@ -60,7 +63,7 @@ function FieldLabel({
 
 function IconInput({
   icon: Icon,
-  inputDir,
+  inputDir = "rtl",
   className,
   ...props
 }: ComponentProps<typeof Input> & {
@@ -71,19 +74,24 @@ function IconInput({
 
   return (
     <div className="relative">
-      <Icon
+      <span
         className={cn(
-          "pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-emerald-600 dark:text-emerald-400",
-          isLtr ? "left-3.5" : "right-3.5"
+          "pointer-events-none absolute inset-y-0 flex w-14 items-center justify-center",
+          isLtr ? "left-0" : "right-0"
         )}
-        aria-hidden
-      />
+      >
+        <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900/50">
+          <Icon className="size-4" aria-hidden />
+        </span>
+      </span>
       <Input
         {...props}
         dir={inputDir}
         className={cn(
-          "h-12 rounded-xl border-emerald-100/80 bg-background focus:bg-background dark:border-emerald-900/40",
-          isLtr ? "pl-10 text-start" : "pr-10",
+          "h-[52px] rounded-2xl border-emerald-100/90 bg-white px-4 shadow-sm transition-shadow",
+          "hover:border-emerald-200 focus:border-emerald-400 focus:bg-white focus:shadow-md focus:shadow-emerald-500/10",
+          "dark:border-emerald-900/50 dark:bg-background",
+          isLtr ? "pl-[4.25rem] text-start" : "pr-[4.25rem]",
           className
         )}
       />
@@ -103,19 +111,23 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="overflow-visible rounded-2xl border-emerald-100/80 shadow-sm ring-emerald-500/10 dark:border-emerald-900/40">
-      <CardHeader className="border-b border-emerald-50 bg-gradient-to-l from-emerald-50/80 to-transparent dark:border-emerald-950/50 dark:from-emerald-950/30">
-        <div className="flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
-            <Icon className="size-5" />
+    <Card className="overflow-hidden rounded-2xl border-emerald-100/80 shadow-sm ring-1 ring-emerald-500/5 dark:border-emerald-900/40">
+      <CardHeader className="border-b border-emerald-50/90 bg-gradient-to-l from-emerald-50/70 via-white to-white px-6 py-5 dark:border-emerald-950/50 dark:from-emerald-950/25 dark:via-background dark:to-background">
+        <div className="flex items-start gap-4">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md shadow-emerald-600/25">
+            <Icon className="size-5" strokeWidth={2.25} />
           </span>
-          <div>
-            <CardTitle className="text-base font-extrabold">{title}</CardTitle>
-            <CardDescription className="mt-1 text-xs">{description}</CardDescription>
+          <div className="min-w-0 pt-0.5">
+            <CardTitle className="text-lg font-extrabold tracking-tight">
+              {title}
+            </CardTitle>
+            <CardDescription className="mt-1.5 text-sm leading-relaxed">
+              {description}
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-5 pt-5">{children}</CardContent>
+      <CardContent className="space-y-6 px-6 py-6">{children}</CardContent>
     </Card>
   );
 }
@@ -238,37 +250,55 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
   const submitLabel = isEdit ? "حفظ التغييرات" : "إنشاء المدرس";
 
   return (
-    <div dir="rtl" className="pb-28" {...spekit(SPEKIT.adminTeacherFormPage)}>
-      <header className="mb-8 space-y-4">
+    <div
+      dir="rtl"
+      className="mx-auto w-full max-w-4xl pb-32"
+      {...spekit(SPEKIT.adminTeacherFormPage)}
+    >
+      <header className="mb-8 overflow-hidden rounded-2xl border border-emerald-100/80 bg-gradient-to-bl from-emerald-50/80 via-white to-white p-6 shadow-sm ring-1 ring-emerald-500/5 dark:border-emerald-900/40 dark:from-emerald-950/30 dark:via-background dark:to-background sm:p-8">
         <Link
           href="/admin/teachers"
-          className="inline-flex items-center gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/60 px-3.5 py-2 text-xs font-bold text-emerald-800 transition-colors hover:border-emerald-300 hover:bg-emerald-100/80 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:bg-emerald-950/50"
+          className="inline-flex items-center gap-2 rounded-xl border border-emerald-200/80 bg-white/80 px-4 py-2.5 text-xs font-bold text-emerald-800 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:shadow dark:border-emerald-800/60 dark:bg-emerald-950/20 dark:text-emerald-200 dark:hover:bg-emerald-950/40"
         >
           <ArrowRight className="size-4 shrink-0" aria-hidden />
           العودة إلى قائمة المدرسين
         </Link>
 
-        <div className="flex items-start gap-4">
-          {isEdit && teacher ? <TeacherAvatar fullName={teacher.fullName} /> : null}
-          <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
-            <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
+          {isEdit && teacher ? (
+            <TeacherAvatar fullName={teacher.fullName} size="lg" />
+          ) : (
+            <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-600/20 ring-4 ring-white dark:ring-background">
+              <User className="size-7" strokeWidth={2.25} />
+            </span>
+          )}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              {title}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               {isEdit
                 ? "حدّث معلومات المدرس، المواد، وإعدادات الأمان في أقسام واضحة."
-                : "أنشئ حساب مدرس جديد بكل الحقول المطلوبة — بدون تمرير داخل نافذة منبثقة."}
+                : "أنشئ حساب مدرس جديد بكل الحقول المطلوبة."}
             </p>
+            {isEdit && teacher?.email ? (
+              <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-3 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-200">
+                <Mail className="size-3.5 shrink-0" />
+                <span dir="ltr">{teacher.email}</span>
+              </span>
+            ) : null}
           </div>
         </div>
       </header>
 
-      <form id={formId} onSubmit={onSubmit} className="mx-auto max-w-3xl space-y-5">
+      <form id={formId} onSubmit={onSubmit} className="space-y-6">
         <SectionCard
           title="المعلومات الأساسية"
           description="الاسم وبيانات التواصل المستخدمة في الحساب."
           icon={User}
         >
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="lg:col-span-2">
               <FieldLabel htmlFor="full_name">الاسم الكامل</FieldLabel>
               <IconInput
                 id="full_name"
@@ -278,7 +308,7 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div>
               <FieldLabel htmlFor="email">البريد الإلكتروني</FieldLabel>
               <IconInput
                 id="email"
@@ -288,9 +318,10 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="off"
               />
             </div>
-            <div className="space-y-2">
+            <div>
               <FieldLabel htmlFor="phone">رقم الهاتف</FieldLabel>
               <IconInput
                 id="phone"
@@ -309,37 +340,43 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
           description="اختر المواد والفروع التي يدرّسها المدرس."
           icon={BookOpen}
         >
-          <div className="flex flex-wrap gap-2.5">
-            {subjects.map((subject) => {
-              const active = subjectIds.includes(subject.id);
-              return (
-                <button
-                  key={subject.id}
-                  type="button"
-                  onClick={() => toggleSubject(subject.id)}
-                  aria-pressed={active}
-                  className={cn(
-                    "inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-bold transition-all duration-200",
-                    active
-                      ? "border-emerald-500 bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400/35"
-                      : "border-border/80 bg-muted/40 text-muted-foreground hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 hover:shadow-sm dark:hover:bg-emerald-950/40 dark:hover:text-emerald-200"
-                  )}
-                >
-                  {active ? (
-                    <span className="flex size-5 items-center justify-center rounded-full bg-white/20">
-                      <Check className="size-3.5" strokeWidth={3} />
-                    </span>
-                  ) : null}
-                  {subject.nameAr}
-                </button>
-              );
-            })}
+          <div className="rounded-2xl border border-dashed border-emerald-200/80 bg-emerald-50/30 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/15 sm:p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-bold text-muted-foreground">
+                {subjectIds.length > 0
+                  ? `تم اختيار ${subjectIds.length.toLocaleString("en-US")} ${subjectIds.length === 1 ? "مادة" : "مواد"}`
+                  : "لم يتم اختيار أي مادة بعد"}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {subjects.map((subject) => {
+                const active = subjectIds.includes(subject.id);
+                return (
+                  <button
+                    key={subject.id}
+                    type="button"
+                    onClick={() => toggleSubject(subject.id)}
+                    aria-pressed={active}
+                    className={cn(
+                      "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-bold transition-all duration-200",
+                      active
+                        ? "border-emerald-500 bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400/30"
+                        : "border-emerald-100/90 bg-white text-muted-foreground shadow-sm hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 hover:shadow-md dark:border-emerald-900/50 dark:bg-background dark:hover:bg-emerald-950/40 dark:hover:text-emerald-200"
+                    )}
+                  >
+                    {active ? (
+                      <span className="flex size-5 items-center justify-center rounded-full bg-white/25">
+                        <Check className="size-3.5" strokeWidth={3} />
+                      </span>
+                    ) : (
+                      <span className="size-5 rounded-full border-2 border-emerald-200/80 dark:border-emerald-800/60" />
+                    )}
+                    {subject.nameAr}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          {subjectIds.length === 0 ? (
-            <p className="text-xs font-semibold text-muted-foreground">
-              لم يتم اختيار أي مادة بعد.
-            </p>
-          ) : null}
         </SectionCard>
 
         <SectionCard
@@ -347,29 +384,32 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
           description="الحالة، حدود الاختبارات، وكلمة المرور."
           icon={Shield}
         >
-          <div className="space-y-5">
-            <div className="space-y-2">
+          <div className="space-y-6">
+            <div>
               <FieldLabel>حالة الحساب</FieldLabel>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {(["active", "inactive"] as const).map((value) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setStatus(value)}
                     className={cn(
-                      "rounded-xl px-5 py-2.5 text-sm font-bold transition",
+                      "inline-flex min-h-11 items-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all",
                       status === value
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "bg-muted text-muted-foreground"
+                        ? "border-emerald-500 bg-emerald-600 text-white shadow-md shadow-emerald-600/25"
+                        : "border-border/80 bg-muted/30 text-muted-foreground hover:border-emerald-200 hover:bg-emerald-50/80 hover:text-emerald-800 dark:hover:bg-emerald-950/30"
                     )}
                   >
+                    {status === value ? (
+                      <Check className="size-4" strokeWidth={3} />
+                    ) : null}
                     {value === "active" ? "نشط" : "معطّل"}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div>
               <FieldLabel htmlFor="max_quiz">حد الاختبارات المتاحة</FieldLabel>
               <IconInput
                 id="max_quiz"
@@ -380,34 +420,34 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
                 value={maxQuizLimit}
                 onChange={(e) => setMaxQuizLimit(e.target.value)}
                 placeholder="اتركه فارغاً للافتراضي"
-                className="max-w-xs"
+                className="max-w-sm"
               />
             </div>
 
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+            <div className="rounded-2xl border border-emerald-100/90 bg-emerald-50/40 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
               <FieldLabel>
                 {isEdit ? "إعادة تعيين كلمة المرور" : "كلمة المرور الأولية"}
               </FieldLabel>
 
               {isEdit ? (
-                <div className="mt-3 space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold">
+                <div className="mt-4 space-y-3">
+                  <label className="flex cursor-pointer items-center gap-2.5 text-sm font-semibold">
                     <input
                       type="checkbox"
                       checked={resetPassword}
                       onChange={(e) => setResetPassword(e.target.checked)}
-                      className="size-4 rounded border-emerald-300"
+                      className="size-4 rounded border-emerald-300 text-emerald-600"
                     />
                     تفعيل إعادة تعيين كلمة المرور
                   </label>
                   {resetPassword ? (
                     <>
-                      <label className="flex items-center gap-2 text-sm font-semibold">
+                      <label className="flex cursor-pointer items-center gap-2.5 text-sm font-semibold">
                         <input
                           type="checkbox"
                           checked={resetGeneratePassword}
                           onChange={(e) => setResetGeneratePassword(e.target.checked)}
-                          className="size-4 rounded border-emerald-300"
+                          className="size-4 rounded border-emerald-300 text-emerald-600"
                         />
                         توليد كلمة مرور جديدة تلقائياً
                       </label>
@@ -427,13 +467,13 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
                   ) : null}
                 </div>
               ) : (
-                <div className="mt-3 space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold">
+                <div className="mt-4 space-y-3">
+                  <label className="flex cursor-pointer items-center gap-2.5 text-sm font-semibold">
                     <input
                       type="checkbox"
                       checked={generatePassword}
                       onChange={(e) => setGeneratePassword(e.target.checked)}
-                      className="size-4 rounded border-emerald-300"
+                      className="size-4 rounded border-emerald-300 text-emerald-600"
                     />
                     توليد كلمة مرور تلقائياً
                   </label>
@@ -460,20 +500,21 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
         {error ? (
           <div
             role="alert"
-            className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-semibold text-destructive"
+            className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm font-semibold text-destructive"
           >
             {error}
           </div>
         ) : null}
       </form>
 
-      <footer className="sticky bottom-0 z-20 mt-10 border-t border-emerald-100/90 bg-background/95 shadow-[0_-8px_30px_-12px_rgba(5,150,105,0.18)] backdrop-blur-md dark:border-emerald-900/50 supports-[backdrop-filter]:bg-background/90">
-        <div className="mx-auto flex max-w-3xl flex-col-reverse gap-3 px-1 py-4 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-emerald-100/90 bg-background/95 shadow-[0_-10px_40px_-12px_rgba(5,150,105,0.22)] backdrop-blur-lg dark:border-emerald-900/50 supports-[backdrop-filter]:bg-background/90">
+        <div className="mx-auto flex w-full max-w-4xl flex-col-reverse gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:px-6">
           <Link
             href="/admin/teachers"
             className={cn(
               buttonVariants({ variant: "outline", size: "touch" }),
-              "rounded-xl border-emerald-200/80 bg-background text-center shadow-sm hover:bg-emerald-50/50 dark:border-emerald-800/60"
+              "w-full rounded-2xl border-emerald-200/80 bg-background text-center shadow-sm sm:w-auto",
+              "hover:bg-emerald-50/60 dark:border-emerald-800/60"
             )}
           >
             إلغاء والعودة
@@ -484,7 +525,7 @@ export function TeacherFormView({ mode, subjects, teacher }: TeacherFormViewProp
             variant="brand"
             size="touch"
             disabled={pending}
-            className="rounded-xl shadow-lg shadow-emerald-600/25"
+            className="w-full rounded-2xl shadow-lg shadow-emerald-600/30 sm:min-w-[11rem]"
             {...spekit(
               isEdit ? SPEKIT.adminEditTeacherSubmit : SPEKIT.adminCreateTeacherSubmit
             )}

@@ -82,7 +82,7 @@ export function AdminKpiCards({ kpis }: AdminKpiCardsProps) {
               <div>
                 <p className="text-xs font-bold text-muted-foreground">{card.label}</p>
                 <p className="mt-2 text-3xl font-extrabold tabular-nums text-foreground">
-                  {value.toLocaleString("ar-SY")}
+                  {value.toLocaleString("en-US")}
                 </p>
                 {sub ? (
                   <p className="mt-1.5 text-[11px] font-semibold text-brand-700 dark:text-brand-300">

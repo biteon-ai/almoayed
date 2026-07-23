@@ -1,6 +1,7 @@
 "use client";
 
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
+import { cn } from "@/lib/utils";
 import { BookOpen, GraduationCap, UserCheck } from "lucide-react";
 
 export interface AdminTeachersStatsSummary {
@@ -62,7 +63,7 @@ export function AdminTeachersStats({ stats }: AdminTeachersStatsProps) {
               <div>
                 <p className="text-xs font-bold text-muted-foreground">{card.label}</p>
                 <p className="mt-1 text-2xl font-extrabold tabular-nums">
-                  {value.toLocaleString("ar-SY")}
+                  {value.toLocaleString("en-US")}
                 </p>
               </div>
               <div className="rounded-2xl bg-white/70 p-2.5 shadow-sm dark:bg-white/10">
@@ -83,12 +84,21 @@ function getInitials(fullName: string): string {
   return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`;
 }
 
-export function TeacherAvatar({ fullName }: { fullName: string }) {
+export function TeacherAvatar({
+  fullName,
+  size = "md",
+}: {
+  fullName: string;
+  size?: "md" | "lg";
+}) {
   const initials = getInitials(fullName);
   return (
     <div
       aria-hidden
-      className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-teal-600 text-sm font-extrabold text-white shadow-sm"
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 font-extrabold text-white shadow-md shadow-emerald-600/20 ring-4 ring-white dark:ring-background",
+        size === "lg" ? "size-16 text-lg" : "size-12 text-sm"
+      )}
     >
       {initials}
     </div>
