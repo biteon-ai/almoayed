@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { submitQuiz } from "@/actions/quiz";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
+import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
 import { QuizSidebar } from "@/components/quiz/QuizSidebar";
@@ -15,31 +16,82 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  CloudUpload,
   HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toUserMessage, uiMessage, ErrorCode } from "@/lib/app-errors";
+import { useOnlineStatus } from "@/lib/offline/connectivity";
+import {
+  getInProgress,
+  saveInProgressDebounced,
+} from "@/lib/offline/in-progress";
+import {
+  enqueuePendingSubmission,
+  getPendingForQuiz,
+} from "@/lib/offline/pending-queue";
+import { flushPendingSubmissions } from "@/lib/offline/sync-processor";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface QuizRunnerProps {
   quiz: Quiz;
   questions: ExamQuestion[];
   initialResults?: QuizSubmitResult | null;
+  teacherId: string;
 }
 
 export function QuizRunner({
   quiz,
   questions,
   initialResults,
+  teacherId,
 }: QuizRunnerProps) {
+  const online = useOnlineStatus();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<QuizSubmitResult | null>(
     initialResults ?? null
   );
+  const [pendingSync, setPendingSync] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   useStudentLoadingBarSync(isPending);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreState() {
+      const [draft, pending] = await Promise.all([
+        getInProgress(quiz.id),
+        getPendingForQuiz(quiz.id),
+      ]);
+
+      if (cancelled) return;
+
+      if (draft?.answers) {
+        setAnswers(draft.answers);
+        if (typeof draft.activeIndex === "number") {
+          setActiveIndex(draft.activeIndex);
+        }
+      }
+
+      if (pending) {
+        setPendingSync(true);
+        setAnswers(pending.answers);
+      }
+    }
+
+    void restoreState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [quiz.id]);
+
+  useEffect(() => {
+    if (results || pendingSync) return;
+    saveInProgressDebounced(quiz.id, { answers, activeIndex });
+  }, [answers, activeIndex, quiz.id, results, pendingSync]);
 
   const isSubmitted = results !== null;
   const answeredCount = Object.keys(answers).length;
@@ -54,7 +106,7 @@ export function QuizRunner({
   );
 
   const handleAnswer = (questionId: string, value: string) => {
-    if (isSubmitted) return;
+    if (isSubmitted || pendingSync) return;
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
@@ -70,12 +122,38 @@ export function QuizRunner({
     setError(null);
 
     startTransition(async () => {
+      if (!online) {
+        await enqueuePendingSubmission({
+          quizId: quiz.id,
+          teacherId,
+          answers,
+          questionIds,
+        });
+        setPendingSync(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
       try {
         const result = await submitQuiz(quiz.id, answers);
         setResults(result);
+        setPendingSync(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (e) {
         setError(toUserMessage(e, "صار خطأ أثناء تسليم الإجابات."));
+      }
+    });
+  };
+
+  const handleRetrySync = () => {
+    startTransition(async () => {
+      try {
+        await flushPendingSubmissions();
+        const result = await submitQuiz(quiz.id, answers);
+        setResults(result);
+        setPendingSync(false);
+      } catch (e) {
+        setError(toUserMessage(e, "تعذرت مزامنة المحاولة. جرّب مرة تانية."));
       }
     });
   };
@@ -94,12 +172,43 @@ export function QuizRunner({
       className="mx-auto max-w-7xl px-4 py-6 pb-36 md:py-8 md:pb-24"
       {...spekit(SPEKIT.quizPage)}
     >
+      {!online && !isSubmitted && !pendingSync && <OfflineStatusBanner />}
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
-        {/* Main workspace — RTL: right column */}
         <main
           className="order-2 space-y-6 md:order-1 md:col-span-8 lg:col-span-8"
           {...spekit(SPEKIT.quizQuestionList)}
         >
+          {pendingSync && !isSubmitted && (
+            <Card
+              className="border-teal-200 bg-teal-50/80"
+              {...spekit(SPEKIT.quizPendingSync)}
+            >
+              <CardContent className="space-y-3 p-6 text-center">
+                <CloudUpload className="mx-auto size-8 text-teal-700" />
+                <p className="text-sm font-extrabold text-teal-900">
+                  تم حفظ محاولتك على هذا الجهاز
+                </p>
+                <p className="text-xs leading-relaxed text-teal-800/90">
+                  ستُرسل إجاباتك تلقائياً عند عودة الاتصال. النتيجة والشروحات
+                  ستظهر بعد قبول الخادم للمحاولة.
+                </p>
+                {online && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 font-bold"
+                    onClick={handleRetrySync}
+                    disabled={isPending}
+                    data-spekit={SPEKIT.offlineSyncNow}
+                  >
+                    مزامنة الآن
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {questions.length === 0 ? (
             <Card
               className="border-dashed border-slate-200"
@@ -121,58 +230,59 @@ export function QuizRunner({
               </CardContent>
             </Card>
           ) : (
-            <>
-              <div className="mx-auto w-full max-w-3xl">
-                {activeQuestion && (
-                  <QuestionCard
-                    key={activeQuestion.id}
-                    question={activeQuestion}
-                    index={activeIndex}
-                    value={
-                      isSubmitted
-                        ? activeResult?.studentAnswer
-                        : answers[activeQuestion.id]
-                    }
-                    onChange={(v) => handleAnswer(activeQuestion.id, v)}
-                    disabled={isSubmitted}
-                    showResult={isSubmitted}
-                    correctAnswer={activeResult?.correctAnswer}
-                    categoryTag={activeResult?.categoryTag}
-                    explanationText={activeResult?.explanationText}
-                    explanationMediaUrl={activeResult?.explanationMediaUrl}
-                  />
-                )}
-              </div>
+            !pendingSync && (
+              <>
+                <div className="mx-auto w-full max-w-3xl">
+                  {activeQuestion && (
+                    <QuestionCard
+                      key={activeQuestion.id}
+                      question={activeQuestion}
+                      index={activeIndex}
+                      value={
+                        isSubmitted
+                          ? activeResult?.studentAnswer
+                          : answers[activeQuestion.id]
+                      }
+                      onChange={(v) => handleAnswer(activeQuestion.id, v)}
+                      disabled={isSubmitted}
+                      showResult={isSubmitted}
+                      correctAnswer={activeResult?.correctAnswer}
+                      categoryTag={activeResult?.categoryTag}
+                      explanationText={activeResult?.explanationText}
+                      explanationMediaUrl={activeResult?.explanationMediaUrl}
+                    />
+                  )}
+                </div>
 
-              {/* Question pager */}
-              <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-10 gap-1 rounded-xl font-bold"
-                  disabled={activeIndex === 0}
-                  onClick={() => goToQuestion(activeIndex - 1)}
-                >
-                  <ChevronRight className="size-4" />
-                  السابق
-                </Button>
-                <span className="text-xs font-bold tabular-nums text-slate-500">
-                  {activeIndex + 1} / {questions.length}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-10 gap-1 rounded-xl font-bold"
-                  disabled={activeIndex >= questions.length - 1}
-                  onClick={() => goToQuestion(activeIndex + 1)}
-                >
-                  التالي
-                  <ChevronLeft className="size-4" />
-                </Button>
-              </div>
-            </>
+                <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-10 gap-1 rounded-xl font-bold"
+                    disabled={activeIndex === 0}
+                    onClick={() => goToQuestion(activeIndex - 1)}
+                  >
+                    <ChevronRight className="size-4" />
+                    السابق
+                  </Button>
+                  <span className="text-xs font-bold tabular-nums text-slate-500">
+                    {activeIndex + 1} / {questions.length}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-10 gap-1 rounded-xl font-bold"
+                    disabled={activeIndex >= questions.length - 1}
+                    onClick={() => goToQuestion(activeIndex + 1)}
+                  >
+                    التالي
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                </div>
+              </>
+            )
           )}
 
           {isSubmitted && results && (
@@ -233,7 +343,6 @@ export function QuizRunner({
           )}
         </main>
 
-        {/* Sidebar — RTL: left column; stacks above on mobile */}
         <QuizSidebar
           className="order-1 md:order-2 md:col-span-4 lg:col-span-4"
           quiz={quiz}
@@ -241,7 +350,7 @@ export function QuizRunner({
           questionIds={questionIds}
           answeredCount={answeredCount}
           progress={progress}
-          isSubmitted={isSubmitted}
+          isSubmitted={isSubmitted || pendingSync}
           activeIndex={activeIndex}
           answers={answers}
           results={results}
@@ -249,8 +358,7 @@ export function QuizRunner({
         />
       </div>
 
-      {/* Sticky submit bar */}
-      {!isSubmitted && questions.length > 0 && (
+      {!isSubmitted && !pendingSync && questions.length > 0 && (
         <div className="fixed inset-x-0 bottom-16 z-40 border-t border-slate-100 bg-white/90 p-4 shadow-lg backdrop-blur-md safe-bottom md:bottom-0 md:z-30">
           <div className="mx-auto max-w-3xl space-y-3">
             {error && (
@@ -275,8 +383,12 @@ export function QuizRunner({
               {...spekit(SPEKIT.quizSubmitButton)}
             >
               {isPending
-                ? "جاري تسليم الإجابات وحساب النتيجة..."
-                : "تسليم الإجابات وإنهاء الاختبار 🏁"}
+                ? online
+                  ? "جاري تسليم الإجابات وحساب النتيجة..."
+                  : "جاري حفظ المحاولة على الجهاز..."
+                : online
+                  ? "تسليم الإجابات وإنهاء الاختبار 🏁"
+                  : "حفظ المحاولة للمزامنة لاحقاً 📥"}
             </Button>
           </div>
         </div>

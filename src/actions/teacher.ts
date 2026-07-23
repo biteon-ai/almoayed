@@ -1146,6 +1146,14 @@ async function assertQuizOwnedByTeacher(quizId: string, profileId: string) {
   if (!quiz) throw new Error("الاختبار غير موجود.");
 }
 
+/**
+ * NOTE: Bulk Import Strategy — Append-Only
+ * Duplicate detection is explicitly out of scope.
+ * Every imported item is treated as a new entry with a fresh unique ID.
+ *
+ * Default mode is `append`: all valid rows insert as new questions.
+ * `replace` clears existing quiz questions first — still no per-row dedup.
+ */
 export async function importQuestionRows(
   quizId: string,
   rows: ImportQuestionRow[],
@@ -1188,6 +1196,7 @@ export async function importQuestionRows(
   return { imported: inserts.length };
 }
 
+/** File-upload entry point for bulk question import — delegates to `importQuestionRows`. */
 export async function importQuestions(quizId: string, formData: FormData) {
   const session = await requireTeacher();
   await assertQuizOwnedByTeacher(quizId, session.profileId);

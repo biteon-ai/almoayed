@@ -88,6 +88,12 @@ QUIZ-001:
   quiz-submit-button: "Submit quiz button"
   quiz-results-share: "WhatsApp share results card"
   quiz-results-review: "Post-submit review guidance"
+  quiz-pending-sync: "Pending offline sync state card"
+
+OFFLINE-001:
+  offline-status-banner: "Offline mode banner during quiz"
+  offline-sync-now: "Manual sync pending submissions button"
+  pending-sync-badge: "Pending sync count badge on student pages"
 
 QUIZ-002:
   weak-points-card: "Category performance rings"

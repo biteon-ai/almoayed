@@ -1,3 +1,7 @@
+/**
+ * DOCX/HTML question parsers for bulk import (TEACH-004).
+ * NOTE: Bulk Import Strategy — Append-Only — no duplicate detection; see `import-questions.ts`.
+ */
 import type { ImportQuestionRow } from "@/types/database";
 import {
   extractTableCellTexts,
@@ -135,7 +139,7 @@ export function parseQuestionBlockHtml(blockHtml: string): ImportQuestionRow | n
 }
 
 /**
- * Parses mammoth HTML output from Syrian Baccalaureate math exam .docx files.
+ * Parses mammoth HTML output from standard exam .docx exports.
  * Expects numbered MCQ blocks `(1`, `(2`, … with option grids in `<table>` rows.
  */
 export function parseDocxHtmlQuestions(html: string): ImportQuestionRow[] {

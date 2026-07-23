@@ -196,7 +196,11 @@ export async function submitQuiz(
   answers: Record<string, string>
 ): Promise<QuizSubmitResult> {
   const session = await requireStudent();
-  await getQuizForStudent(quizId);
+  const gate = await getQuizForStudent(quizId);
+
+  if (!gate.quiz) {
+    throw appError(ErrorCode.QUIZ_INACTIVE);
+  }
 
   const supabase = createAdminClient();
 
@@ -210,6 +214,31 @@ export async function submitQuiz(
   if (existing) {
     const results = await getSubmissionResults(existing.id);
     if (results) return results;
+  }
+
+  const { data: liveQuestions, error: liveError } = await supabase
+    .from("questions")
+    .select("id")
+    .eq("quiz_id", quizId)
+    .order("sort_order", { ascending: true });
+
+  if (liveError) {
+    logRequestError("QUIZ_QUESTIONS_FETCH_FAILED", liveError);
+    throw appError(ErrorCode.QUIZ_QUESTIONS_FETCH_FAILED);
+  }
+
+  if (!liveQuestions?.length) {
+    throw appError(ErrorCode.QUIZ_EMPTY);
+  }
+
+  const liveQuestionIds = new Set(liveQuestions.map((q) => q.id as string));
+  const answerQuestionIds = Object.keys(answers);
+
+  if (
+    answerQuestionIds.some((id) => !liveQuestionIds.has(id)) ||
+    answerQuestionIds.length !== liveQuestions.length
+  ) {
+    throw appError(ErrorCode.QUIZ_CHANGED);
   }
 
   const { data: questions, error: qError } = await supabase

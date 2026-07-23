@@ -12,6 +12,7 @@ import { StudentDashboardActiveQuizSection } from "@/components/dashboard/Studen
 import { StudentDashboardHero } from "@/components/dashboard/StudentDashboardHero";
 import { StudentDashboardStatsRow } from "@/components/dashboard/StudentDashboardStatsRow";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { PendingSyncBadge } from "@/components/quiz/PendingSyncBadge";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 import {
@@ -74,6 +75,7 @@ export function StudentDashboardView({
       className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6"
       data-spekit={SPEKIT.studentDashboard}
     >
+      <PendingSyncBadge />
       <StudentDashboardHero studentName={studentName} gamification={gamification} />
 
       <StudentDashboardStatsRow stats={stats} gamification={gamification} />

@@ -248,7 +248,8 @@ export function ImportAccordionPanels({
                         إضافة إلى الأسئلة الحالية
                       </span>
                       <span className="mt-0.5 block text-xs text-muted-foreground">
-                        الإبقاء على الأسئلة الموجودة وإضافة الجديدة.
+                        الإبقاء على الأسئلة الموجودة وإضافة الجديدة — بدون كشف
+                        تكرار؛ رفع نفس الملف مرتين يُنشئ نسخاً إضافية.
                       </span>
                     </span>
                   </label>

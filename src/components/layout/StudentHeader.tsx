@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { APP_SLOGAN } from "@/lib/constants";
 import {
   isStudentNavItemActive,
   STUDENT_NAV_ITEMS,
@@ -61,7 +62,7 @@ export function StudentHeader() {
               المؤيد
             </span>
             <span className="mt-0.5 block truncate text-[11px] font-medium text-slate-500 md:text-xs">
-              حل بيدك ما حدا بفيدك
+              {APP_SLOGAN}
             </span>
           </Link>
 

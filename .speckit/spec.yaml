@@ -4,7 +4,7 @@
 product:
   name: المؤيد
   name_en: Al-Moayed
-  slogan: حل بيدك ما حدا بفيدك
+  slogan: منصتك الأولى للتقييم الذكي واجتياز الامتحانات
   locale: ar-SY
   direction: rtl
   stack: Next.js 14 · Supabase · iron-session · Tailwind · Shadcn
@@ -432,6 +432,41 @@ features:
     acceptance:
       - RTL html lang=ar, safe-area insets, touch-friendly inputs
       - manifest + mobile-web-app-capable meta
+
+  - id: OFFLINE-001
+    name: Offline Quiz PWA
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/dashboard", "/quizzes", "/quiz/[id]"]
+    files:
+      - public/sw.js
+      - public/offline.html
+      - src/lib/offline/db.ts
+      - src/lib/offline/quiz-cache.ts
+      - src/lib/offline/pending-queue.ts
+      - src/lib/offline/sync-processor.ts
+      - src/components/pwa/ServiceWorkerRegister.tsx
+      - src/components/pwa/OfflineSyncProvider.tsx
+      - src/components/quiz/QuizRunnerContainer.tsx
+      - src/components/quiz/OfflineStatusBanner.tsx
+      - src/components/quiz/PendingSyncBadge.tsx
+      - src/actions/quiz.ts
+    acceptance:
+      - Student app shell loads offline after prior online visit
+      - Uncached routes show Arabic offline.html fallback
+      - Only explicitly opened quizzes are offline-startable
+      - Offline submit queues locally without revealing grading pre-sync
+      - Pending attempts auto-sync on reconnect and after re-login
+      - Manual «مزامنة الآن» retries failed sync while online
+      - submitQuiz rejects stale quiz attempts (inactive or changed question IDs)
+      - QUIZ-001 gatekeeper preserved in IndexedDB cache
+    spekit:
+      [
+        offline-status-banner,
+        offline-sync-now,
+        pending-sync-badge,
+        quiz-pending-sync,
+      ]
 
   - id: UI-002
     name: Unified Status Badges
