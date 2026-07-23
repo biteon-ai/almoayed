@@ -15,6 +15,8 @@ describe("student-quiz-ui", () => {
   it("maps score to grade bands", () => {
     expect(getScoreGrade(85).label).toBe("ممتاز");
     expect(getScoreGrade(70).label).toBe("جيد جداً");
+    expect(getScoreGrade(50).label).toBe("جيد جداً");
+    expect(getScoreGrade(49).label).toBe("يحتاج مراجعة");
     expect(getScoreGrade(40).label).toBe("يحتاج مراجعة");
   });
 

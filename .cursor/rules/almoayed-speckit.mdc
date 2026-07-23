@@ -23,6 +23,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **TEACH-001–005** — Students, groups, quizzes, bulk import, dashboard stats
 - **UI-001/002** — RTL mobile shell, StatusBadge
 - **UI-006** — Header-edge nav progress (`NavbarProgress`, Tailwind `animate-pulse`)
+- **UI-007** — Results card score badge + action layout
 - **ENABLE-001** — `data-spekit` hooks via `src/lib/spekit-targets.ts`
 
 ## Code rules

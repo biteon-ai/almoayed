@@ -41,6 +41,7 @@ describe(`${FEATURE} gamification aggregates`, () => {
     const now = Date.now();
     const recentScores: RecentScoreRow[] = [
       {
+        submissionId: "s1",
         quizId: "q1",
         quizTitle: "A",
         score: 90,
@@ -48,6 +49,7 @@ describe(`${FEATURE} gamification aggregates`, () => {
         categoryName: "رياضيات",
       },
       {
+        submissionId: "s2",
         quizId: "q2",
         quizTitle: "B",
         score: 80,
@@ -64,6 +66,7 @@ describe(`${FEATURE} gamification aggregates`, () => {
       streakDays: 5,
       recentScores: [
         {
+          submissionId: "s1",
           quizId: "q1",
           quizTitle: "A",
           score: 90,

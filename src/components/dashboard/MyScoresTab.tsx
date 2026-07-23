@@ -56,9 +56,9 @@ export function MyScoresTab({ scores }: MyScoresTabProps) {
                   {grade.label} {grade.emoji}
                 </span>
               </div>
-              <span
+    <span
                 className={cn(
-                  "shrink-0 rounded-lg px-3 py-1 text-sm font-black tabular-nums",
+                  "flex h-10 shrink-0 items-center justify-center rounded-full border px-2.5 text-sm font-bold tabular-nums shadow-sm",
                   scoreBadgeClassName(grade.tone)
                 )}
               >

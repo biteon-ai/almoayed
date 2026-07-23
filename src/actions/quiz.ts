@@ -413,7 +413,7 @@ async function fetchStudentQuizBundle(
     supabase.from("questions").select("quiz_id").in("quiz_id", quizIds),
     supabase
       .from("exam_submissions")
-      .select("score, submitted_at, quiz_id")
+      .select("id, score, submitted_at, quiz_id")
       .eq("student_id", session.profileId)
       .in("quiz_id", quizIds)
       .order("submitted_at", { ascending: false }),
@@ -483,6 +483,7 @@ async function fetchStudentQuizBundle(
     .map((row) => {
       const meta = quizMetaById.get(row.quiz_id as string);
       return {
+        submissionId: row.id as string,
         quizId: row.quiz_id as string,
         quizTitle: meta?.title ?? "اختبار",
         score: row.score as number,

@@ -149,6 +149,7 @@ export interface QuizCarouselItem extends QuizListItem {
 
 /** [DASH-001] Recent completed quiz row for My Scores tab */
 export interface RecentScoreRow {
+  submissionId: string;
   quizId: string;
   quizTitle: string;
   score: number;

@@ -28,13 +28,14 @@ import { cn } from "@/lib/utils";
 import {
   BarChart3,
   BookOpen,
+  Calendar,
   CheckCircle2,
-  CalendarDays,
+  Clock,
+  Eye,
   RotateCcw,
   Search,
   Sparkles,
   Target,
-  Eye,
 } from "lucide-react";
 
 interface StudentResultsViewProps {
@@ -44,11 +45,17 @@ interface StudentResultsViewProps {
   teacherGamification: TeacherGamificationStatus | null;
 }
 
-function formatSubmittedAt(iso: string): string {
+function formatSubmittedDate(iso: string): string {
   return new Intl.DateTimeFormat("ar", {
     year: "numeric",
     month: "long",
     day: "numeric",
+    numberingSystem: "latn",
+  }).format(new Date(iso));
+}
+
+function formatSubmittedTime(iso: string): string {
+  return new Intl.DateTimeFormat("ar", {
     hour: "2-digit",
     minute: "2-digit",
     numberingSystem: "latn",
@@ -211,9 +218,9 @@ export function StudentResultsView({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {paginatedScores.map((row) => (
-              <ResultCard key={`${row.quizId}-${row.submittedAt}`} row={row} />
+              <ResultCard key={row.submissionId} row={row} />
             ))}
           </div>
 
@@ -225,9 +232,7 @@ export function StudentResultsView({
             onPageChange={handlePageChange}
             itemLabel="نتيجة"
             variant="compact"
-            showRangeSummary
-            showQuickJump
-            className="rounded-2xl border border-border/60 bg-card px-3 py-3 sm:px-4"
+            className="mt-2 flex flex-row items-center justify-center gap-3 rounded-2xl border border-border bg-card px-3 py-3 sm:px-4"
             dataSpekit={SPEKIT.studentPagination}
           />
         </section>
@@ -240,10 +245,19 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
   const grade = getScoreGrade(row.score);
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-all hover:border-emerald-400/50 hover:shadow-md">
-      <CardContent className="space-y-5 p-5 sm:p-6">
+    <Card
+      data-spekit={`results-card-${row.submissionId}`}
+      className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md"
+    >
+      <CardContent className="flex h-full flex-col gap-4 p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-2.5">
+          <div className="min-w-0 flex-1 space-y-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-foreground sm:text-lg">
+                {row.quizTitle}
+              </h3>
+            </div>
+
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
@@ -257,50 +271,56 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
                   gradePillClassName(grade.tone)
                 )}
               >
-                {grade.label} {grade.emoji}
+                {grade.label}
               </Badge>
             </div>
-            <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-foreground sm:text-lg">
-              {row.quizTitle}
-            </h3>
-            <p className="inline-flex items-center gap-1.5 text-xs font-medium leading-relaxed text-muted-foreground">
-              <CalendarDays className="size-3.5 shrink-0 text-emerald-600/80" />
-              <span dir="ltr" className="tabular-nums">
-                {formatSubmittedAt(row.submittedAt)}
+
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="size-3.5 shrink-0" aria-hidden />
+                <span dir="ltr" className="tabular-nums">
+                  {formatSubmittedDate(row.submittedAt)}
+                </span>
               </span>
-            </p>
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="size-3.5 shrink-0" aria-hidden />
+                <span dir="ltr" className="tabular-nums">
+                  {formatSubmittedTime(row.submittedAt)}
+                </span>
+              </span>
+            </div>
           </div>
 
           <span
             className={cn(
-              "flex size-14 shrink-0 flex-col items-center justify-center rounded-2xl border text-lg font-black tabular-nums",
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-lg font-bold tabular-nums shadow-sm",
               scoreBadgeClassName(grade.tone)
             )}
+            aria-label={`النتيجة ${row.score}%`}
           >
-            {row.score}
-            <span className="text-[10px] font-bold opacity-80">%</span>
+            {row.score}%
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
           <Link
-            href={`/quiz/${row.quizId}`}
+            href={`/results/${row.submissionId}`}
             className={cn(
-              buttonVariants({ size: "lg" }),
-              "h-12 gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700"
+              buttonVariants({ size: "sm" }),
+              "h-9 gap-1.5 rounded-xl bg-emerald-600 text-sm font-medium text-white hover:bg-emerald-700"
             )}
           >
-            <Eye className="size-4 shrink-0" />
+            <Eye className="size-3.5 shrink-0" aria-hidden />
             مراجعة الإجابات
           </Link>
           <Link
             href={`/quiz/${row.quizId}`}
             className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "h-12 gap-2 rounded-2xl border-emerald-200 bg-emerald-50/60 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-200"
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "h-9 gap-1.5 rounded-xl border-border text-sm font-medium"
             )}
           >
-            <RotateCcw className="size-4 shrink-0" />
+            <RotateCcw className="size-3.5 shrink-0" aria-hidden />
             إعادة المحاولة
           </Link>
         </div>

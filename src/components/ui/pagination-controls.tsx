@@ -146,12 +146,7 @@ export function PaginationControls({
           <span className="tabular-nums text-foreground">{total}</span>{" "}
           {itemLabel}
         </p>
-      ) : (
-        <span className="text-xs font-medium text-muted-foreground">
-          صفحة <span className="font-bold text-foreground">{page}</span> من{" "}
-          <span className="font-bold text-foreground">{totalPages}</span>
-        </span>
-      )}
+      ) : null}
 
       {showNav ? navButtons : variant === "full" ? navButtons : null}
     </div>

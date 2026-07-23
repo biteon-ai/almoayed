@@ -209,6 +209,10 @@ ADMIN-001:
 UI-006:
   navbar-progress: "Header bottom-edge route progress line"
 
+# ── Student results cards ───────────────────────────────────────
+UI-007:
+  results-card: "Quiz result history card wrapper (suffix -<submissionId>)"
+
 # ── Teacher gamification ────────────────────────────────────────
 GAMIF-001:
   gamif-settings-page: "Teacher gamification settings page root"

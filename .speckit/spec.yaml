@@ -666,6 +666,26 @@ partial_features:
     spekit:
       - navbar-progress
 
+  - id: UI-007
+    name: Quiz Results Card Redesign
+    status: done
+    notes: |
+      Compact inline score badge (55%), semantic color bands (≥80 / 50–79 / <50),
+      review → /results/[submissionId] → quiz review (QUIZ-001), retake → /quiz/[id].
+    acceptance:
+      - Score shows as single-line percent in circular badge
+      - Review and retake are equal-height grid actions
+      - Cards in md:grid-cols-2 with hover lift
+      - data-spekit=results-card-<submissionId> on each card
+    files:
+      - src/components/student/StudentResultsView.tsx
+      - src/lib/student-quiz-ui.ts
+      - src/types/database.ts
+      - src/actions/quiz.ts
+      - src/app/(student)/results/[submissionId]/page.tsx
+    spekit:
+      - results-card
+
 # ─────────────────────────────────────────────────────────────────────────────
 demo_accounts:
   teacher:
