@@ -686,6 +686,27 @@ partial_features:
     spekit:
       - results-card
 
+  - id: GAMIF-004
+    name: Rewards Hall Horizontal Carousel
+    status: done
+    notes: |
+      قاعة المكافآت as single-row snap carousel (default) with عرض الكل /
+      عرض شريطي toggle into a full responsive grid. Hidden scrollbars + touch snap.
+    acceptance:
+      - Default view is horizontal overflow-x snap carousel
+      - Header shows unlocked ratio (N من M) and expand toggle
+      - Expanded view is grid-cols-3/4/6 without leaving the page
+      - Unlocked vs locked visual states remain clear
+    files:
+      - src/components/dashboard/RewardsHall.tsx
+      - src/components/dashboard/BadgeGallery.tsx
+      - src/components/dashboard/StudentDashboardView.tsx
+    spekit:
+      - gamif-badge-gallery
+      - gamif-rewards-count
+      - gamif-rewards-expand
+      - gamif-rewards-track
+
 # ─────────────────────────────────────────────────────────────────────────────
 demo_accounts:
   teacher:

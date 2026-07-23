@@ -173,6 +173,9 @@ export const SPEKIT = {
   gamificationPresetBtn: "gamification-preset-btn",
   gamifLevelCard: "gamif-level-card",
   gamifBadgeGallery: "gamif-badge-gallery",
+  gamifRewardsCount: "gamif-rewards-count",
+  gamifRewardsExpand: "gamif-rewards-expand",
+  gamifRewardsTrack: "gamif-rewards-track",
   gamifResultsSummary: "gamif-results-summary",
 } as const;
 

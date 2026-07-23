@@ -13,7 +13,7 @@ import { StudentDashboardActiveQuizSection } from "@/components/dashboard/Studen
 import { StudentDashboardHero } from "@/components/dashboard/StudentDashboardHero";
 import { StudentDashboardStatsRow } from "@/components/dashboard/StudentDashboardStatsRow";
 import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
-import { BadgeGallery } from "@/components/dashboard/BadgeGallery";
+import { RewardsHall } from "@/components/dashboard/RewardsHall";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { PendingSyncBadge } from "@/components/quiz/PendingSyncBadge";
 import { SPEKIT } from "@/lib/spekit-targets";
@@ -91,7 +91,7 @@ export function StudentDashboardView({
             <LevelProgressCard status={teacherGamification} />
           </div>
           <div className="lg:col-span-5">
-            <BadgeGallery status={teacherGamification} />
+            <RewardsHall status={teacherGamification} />
           </div>
         </div>
       ) : null}
