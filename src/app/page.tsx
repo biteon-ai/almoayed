@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { LandingPageView } from "@/components/landing/LandingPageView";
 import { getSession } from "@/lib/auth";
-import { APP_NAME, APP_SLOGAN } from "@/lib/constants";
+import { APP_DESCRIPTION, APP_NAME, APP_SLOGAN } from "@/lib/constants";
 
 export const metadata = {
   title: `${APP_NAME} — ${APP_SLOGAN}`,
-  description: APP_SLOGAN,
+  description: APP_DESCRIPTION,
 };
 
 export default async function HomePage() {

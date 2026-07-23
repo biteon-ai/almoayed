@@ -1,4 +1,4 @@
-import { APP_NAME } from "@/lib/constants";
+import { APP_FOOTER_COPYRIGHT, APP_TAGLINE, APP_DESCRIPTION } from "@/lib/constants";
 
 export interface LandingCta {
   label: string;
@@ -31,9 +31,9 @@ export interface NavLink {
 }
 
 export const LANDING_HERO = {
+  badge: APP_TAGLINE,
   title: "اختبر مهاراتك، تتبع إنجازاتك، وحقق التميّز الدراسي",
-  subtitle:
-    "منصة المؤيد تجمع الاختبارات التفاعلية، تحليل الأداء، وسلسلة المذاكرة في تجربة واحدة مصممة لطلاب البكالوريا.",
+  subtitle: APP_DESCRIPTION,
   primaryCta: {
     label: "تجربة المنصة مجاناً",
     href: "/login",
@@ -43,6 +43,7 @@ export const LANDING_HERO = {
     href: "/login?from=/quizzes",
   },
 } as const satisfies {
+  badge: string;
   title: string;
   subtitle: string;
   primaryCta: LandingCta;
@@ -88,7 +89,7 @@ export const LANDING_AUDIENCE: AudienceCard[] = [
     role: "student",
     title: "للطلاب",
     benefits: [
-      "اختبارات يومية جاهزة للبكالوريا",
+      "اختبارات شاملة لكافة المواد والمراحل التعليمية",
       "متابعة التقدم ونقاط الضعف",
       "تجربة مجانية للبدء فوراً",
     ],
@@ -100,7 +101,7 @@ export const LANDING_AUDIENCE: AudienceCard[] = [
     title: "للمدرسين",
     benefits: [
       "إدارة الطلاب والمجموعات بسهولة",
-      "إنشاء واستيراد الاختبارات",
+      "إنشاء واختبار جميع الصفوف والمناهج الدراسية بكل سهولة",
       "لوحة تحكم وإحصائيات فورية",
     ],
     ctaLabel: "ابدأ كمدرس",
@@ -109,7 +110,7 @@ export const LANDING_AUDIENCE: AudienceCard[] = [
 ];
 
 export const LANDING_FOOTER = {
-  copyright: `© ${new Date().getFullYear()} ${APP_NAME}. جميع الحقوق محفوظة.`,
+  copyright: APP_FOOTER_COPYRIGHT,
   links: [
     { label: "تسجيل الدخول", href: "/login" },
     { label: "المميزات", href: "#features" },

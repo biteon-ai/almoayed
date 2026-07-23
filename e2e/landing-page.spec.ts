@@ -45,7 +45,7 @@ test.describe(`${FEATURE} Marketing landing (logged in)`, () => {
     );
 
     await page.goto("/login");
-    await page.getByRole("tab", { name: "تجربة" }).click();
+    await page.getByRole("tab", { name: "حساب تجريبي" }).click();
     await page.locator('[data-spekit="login-demo-student"]').click();
     await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
 

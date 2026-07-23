@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
 import { getStudentProfile, getStudentQuizzesPageData } from "@/actions/quiz";
 import { requireStudent } from "@/lib/auth";
-import { APP_SLOGAN } from "@/lib/constants";
+import { APP_DESCRIPTION } from "@/lib/constants";
 import { StudentQuizzesView } from "@/components/student/StudentQuizzesView";
 
 export const metadata = {
   title: "الاختبارات | المؤيد",
-  description: APP_SLOGAN,
+  description: APP_DESCRIPTION,
 };
 
 export default async function StudentQuizzesPage() {

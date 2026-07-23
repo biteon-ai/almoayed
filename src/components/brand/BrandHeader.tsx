@@ -1,7 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { APP_NAME, APP_SLOGAN } from "@/lib/constants";
+import { APP_NAME, APP_PLATFORM_BADGE, APP_SLOGAN } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -56,7 +56,7 @@ export function BrandHeader({
               compact ? "size-3" : "size-3.5"
             )}
           />
-          بكالوريا رياضيات سورية
+          {APP_PLATFORM_BADGE}
         </span>
       </div>
       {showSlogan && (

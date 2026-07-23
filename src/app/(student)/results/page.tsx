@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
 import { getStudentProfile, getStudentResultsPageData } from "@/actions/quiz";
 import { requireStudent } from "@/lib/auth";
-import { APP_SLOGAN } from "@/lib/constants";
+import { APP_DESCRIPTION } from "@/lib/constants";
 import { StudentResultsView } from "@/components/student/StudentResultsView";
 
 export const metadata = {
   title: "نتائجي | المؤيد",
-  description: APP_SLOGAN,
+  description: APP_DESCRIPTION,
 };
 
 export default async function StudentResultsPage() {

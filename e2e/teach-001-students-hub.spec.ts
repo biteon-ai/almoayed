@@ -28,7 +28,7 @@ test.describe(`${FEATURE} Students hub (authed)`, () => {
     );
 
     await page.goto("/login");
-    await page.getByRole("tab", { name: "تجربة" }).click();
+    await page.getByRole("tab", { name: "حساب تجريبي" }).click();
     await page.locator('[data-spekit="login-demo-teacher"]').click();
     await page.waitForURL(/\/teacher/, { timeout: 15_000 });
 

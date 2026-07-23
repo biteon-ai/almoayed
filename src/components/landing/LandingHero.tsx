@@ -16,7 +16,7 @@ export function LandingHero() {
         <div className="space-y-6 text-center lg:text-start">
           <Badge className="gap-1.5 rounded-full border-emerald-200/60 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
             <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            <span>منصة البكالوريا الذكية</span>
+            <span>{LANDING_HERO.badge}</span>
           </Badge>
 
           <h1 className="text-3xl font-black leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl">
