@@ -44,6 +44,12 @@ export const SPEKIT = {
   quizSubmitButton: "quiz-submit-button",
   quizResultsShare: "quiz-results-share",
   quizResultsReview: "quiz-results-review",
+  quizPendingSync: "quiz-pending-sync",
+
+  // ── OFFLINE-001 ──────────────────────────────────────────────
+  offlineStatusBanner: "offline-status-banner",
+  offlineSyncNow: "offline-sync-now",
+  pendingSyncBadge: "pending-sync-badge",
 
   // ── QUIZ-002 ─────────────────────────────────────────────────
   weakPointsCard: "weak-points-card",

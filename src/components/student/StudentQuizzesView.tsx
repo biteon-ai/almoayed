@@ -18,6 +18,7 @@ import {
   formatDurationAr,
 } from "@/lib/student-quiz-ui";
 import { splitQuizExamSections } from "@/lib/quiz-exam-list";
+import { PendingSyncBadge } from "@/components/quiz/PendingSyncBadge";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 import {
@@ -63,6 +64,7 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
       className="container mx-auto max-w-7xl space-y-8 p-4 sm:p-6"
       data-spekit={SPEKIT.studentQuizzesPage}
     >
+      <PendingSyncBadge />
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-800 p-6 text-white shadow-xl sm:p-8">
         <div className="relative z-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div className="space-y-1.5">

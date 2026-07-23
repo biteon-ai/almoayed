@@ -3,11 +3,12 @@ import {
   getQuizForStudent,
   getSubmissionResults,
 } from "@/actions/quiz";
-import { QuizRunner } from "@/components/quiz/QuizRunner";
+import { QuizRunnerContainer } from "@/components/quiz/QuizRunnerContainer";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { AppError, ErrorCode, toUserMessage } from "@/lib/app-errors";
+import { getActiveTeacherId, requireStudent } from "@/lib/auth";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
@@ -27,6 +28,9 @@ export async function generateMetadata({ params }: QuizPageProps) {
 
 export default async function QuizPage({ params }: QuizPageProps) {
   const { id } = await params;
+  const session = await requireStudent();
+  const teacherId =
+    session.currentTeacherId ?? (await getActiveTeacherId(session)) ?? "";
 
   let data;
   let accessError: string | null = null;
@@ -70,7 +74,8 @@ export default async function QuizPage({ params }: QuizPageProps) {
 
   return (
     <div data-spekit={SPEKIT.quizPage}>
-      <QuizRunner
+      <QuizRunnerContainer
+        teacherId={teacherId}
         quiz={quiz}
         questions={questions}
         initialResults={initialResults}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d9488" />
+    <title>غير متصل | المؤيد</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        font-family: "Tajawal", system-ui, sans-serif;
+        background: linear-gradient(to bottom, #f8fafc, #ffffff);
+        color: #0f172a;
+      }
+      .card {
+        max-width: 24rem;
+        width: 100%;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+        border-radius: 1.25rem;
+        padding: 2rem 1.5rem;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      }
+      .icon {
+        width: 3rem;
+        height: 3rem;
+        margin: 0 auto 1rem;
+        border-radius: 9999px;
+        background: #ccfbf1;
+        color: #0f766e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+      }
+      h1 {
+        margin: 0 0 0.75rem;
+        font-size: 1.25rem;
+        font-weight: 800;
+      }
+      p {
+        margin: 0 0 1.5rem;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: #475569;
+      }
+      button {
+        width: 100%;
+        height: 3rem;
+        border: none;
+        border-radius: 0.875rem;
+        background: #0d9488;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon" aria-hidden="true">📡</div>
+      <h1>ما في اتصال بالإنترنت</h1>
+      <p>
+        ما قدرنا نحمّل هالصفحة. تأكد من اتصالك وحاول مرة تانية. الاختبارات يلي
+        فتحتها سابقاً ممكن تظل متاحة من قائمة الاختبارات.
+      </p>
+      <button type="button" onclick="location.reload()">إعادة المحاولة</button>
+    </div>
+  </body>
+</html>

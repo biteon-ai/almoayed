@@ -9,6 +9,8 @@ export const ErrorCode = {
   PRO_REQUIRED: "PRO_REQUIRED",
   GROUP_REQUIRED: "GROUP_REQUIRED",
   QUIZ_EMPTY: "QUIZ_EMPTY",
+  QUIZ_INACTIVE: "QUIZ_INACTIVE",
+  QUIZ_CHANGED: "QUIZ_CHANGED",
   QUIZ_QUESTIONS_FETCH_FAILED: "QUIZ_QUESTIONS_FETCH_FAILED",
   QUIZ_SUBMIT_SAVE_FAILED: "QUIZ_SUBMIT_SAVE_FAILED",
   QUIZ_ANSWERS_SAVE_FAILED: "QUIZ_ANSWERS_SAVE_FAILED",
@@ -29,6 +31,9 @@ const UI_AR: Record<string, string> = {
   [ErrorCode.GROUP_REQUIRED]:
     "هذا الاختبار مخصص لمجموعة معينة وأنت مو ضمنها.",
   [ErrorCode.QUIZ_EMPTY]: "هذا الاختبار ما فيه أسئلة بعد. راجع الأستاذ.",
+  [ErrorCode.QUIZ_INACTIVE]: "هذا الاختبار لم يعد متاحاً. تواصل مع الأستاذ.",
+  [ErrorCode.QUIZ_CHANGED]:
+    "تعذرت مزامنة محاولتك لأن الاختبار تغيّر. افتح الاختبار من جديد وأعد المحاولة.",
   [ErrorCode.QUIZ_QUESTIONS_FETCH_FAILED]:
     "صار خطأ بجلب أسئلة الاختبار. جرّب مرة تانية.",
   [ErrorCode.QUIZ_SUBMIT_SAVE_FAILED]:
