@@ -13,6 +13,10 @@ import {
   StudentTeacherCodeCard,
 } from "@/components/settings/StudentProfileExtras";
 import { TeacherCodeSection } from "@/components/settings/TeacherCodeSection";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { cn } from "@/lib/utils";
+import { Trophy } from "lucide-react";
 
 interface SettingsPageProps {
   backHref: string;
@@ -31,6 +35,7 @@ const STUDENT_NAV: SettingsNavItem[] = [
 const TEACHER_NAV: SettingsNavItem[] = [
   { id: "profile", label: "معلومات الحساب" },
   { id: "teacher-code", label: "رمز الأستاذ" },
+  { id: "gamification", label: "المستويات" },
   { id: "sessions", label: "الجلسات النشطة" },
   { id: "logout", label: "تسجيل الخروج" },
 ];
@@ -73,9 +78,34 @@ export async function SettingsPage({
           </SettingsSection>
         </>
       ) : (
-        <SettingsSection id="teacher-code">
-          <TeacherCodeSection teacherCode={profile.teacherCode} />
-        </SettingsSection>
+        <>
+          <SettingsSection id="teacher-code">
+            <TeacherCodeSection teacherCode={profile.teacherCode} />
+          </SettingsSection>
+          <SettingsSection id="gamification">
+            <div className="space-y-3 rounded-2xl border bg-card p-4 shadow-xs">
+              <div className="flex items-start gap-3">
+                <Trophy className="mt-0.5 size-5 text-amber-500" />
+                <div className="space-y-1">
+                  <h2 className="text-base font-bold">إعداد المستويات</h2>
+                  <p className="text-sm text-muted-foreground">
+                    خصّص سلم المكافآت والأيقونات لطلابك حسب الاختبارات المكتملة
+                    والمعدل.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/teacher/settings/gamification"
+                className={cn(
+                  buttonVariants({ variant: "default" }),
+                  "h-11 w-full sm:w-auto"
+                )}
+              >
+                إعداد المستويات
+              </Link>
+            </div>
+          </SettingsSection>
+        </>
       )}
 
       <SettingsSection id="sessions">

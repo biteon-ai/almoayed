@@ -255,6 +255,65 @@ features:
       - Post-submit share link with score and quiz URL
     spekit: [quiz-results-share]
 
+  # ── Gamification ────────────────────────────────────────────────────────────
+  - id: GAMIF-001
+    name: Teacher-Driven Gamification & Ranking
+    status: implemented
+    persona: [TEACHER, STUDENT]
+    routes:
+      - /teacher/settings/gamification
+      - /dashboard
+      - /results
+    files:
+      - supabase/migrations/007_gamification_tiers.sql
+      - src/lib/teacher-gamification.ts
+      - src/actions/gamification.ts
+      - src/components/teacher/GamificationSettings.tsx
+      - src/app/teacher/(portal)/settings/gamification/page.tsx
+      - src/components/dashboard/LevelProgressCard.tsx
+      - src/components/dashboard/BadgeGallery.tsx
+      - src/components/dashboard/StudentDashboardView.tsx
+      - src/components/student/StudentResultsView.tsx
+      - tests/features/gamif-001-teacher-gamification.test.ts
+    acceptance:
+      - Teachers configure up to 20 ordered levels (name, min quizzes, min avg %, icon) without Pro gate
+      - Higher levels require greater-or-equal effort; inverted ladders rejected
+      - Student status derived live from distinct exam_submissions under active teacher (best score per quiz)
+      - Dashboard shows level progress (bottleneck bar) + badge gallery; hidden when teacher has zero tiers
+      - Teacher switcher refreshes gamification for currentTeacherId only
+      - Results page shows compact summary consistent with dashboard
+    spekit:
+      [
+        gamif-settings-page,
+        gamif-tier-list,
+        gamif-tier-add,
+        gamif-tier-form,
+        gamif-icon-select,
+        gamif-tiers-save,
+        gamif-load-presets,
+        gamification-header-actions,
+        gamification-empty-state,
+        gamification-preset-btn,
+        gamif-level-card,
+        gamif-badge-gallery,
+        gamif-results-summary,
+      ]
+
+  - id: GAMIF-002
+    name: Gamification Default Preset Loader
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/settings/gamification"]
+    files:
+      - src/lib/gamification-presets.ts
+      - src/components/teacher/GamificationSettings.tsx
+      - supabase/migrations/008_gamification_icon_presets.sql
+    acceptance:
+      - «تحميل الإعدادات الافتراضية» fills the form with an 11-level badge→star→cup→diamond/crown ladder
+      - Overwrite confirm when the form already has tiers; save still required to persist
+      - Default ladder passes effort validation and fits under the 20-tier max
+    spekit: [gamif-load-presets, gamification-preset-btn, gamification-empty-state]
+
   # ── Tier gating ─────────────────────────────────────────────────────────────
   - id: TIER-001
     name: Free vs Pro Quiz Gating
@@ -550,7 +609,7 @@ features:
       - src/lib/spekit-targets.ts
       - .speckit/spekit-targets.yaml
     acceptance:
-      - 58 data-spekit hooks across login, student, quiz, teacher flows
+      - data-spekit hooks across login, student, quiz, teacher, admin, and GAMIF-001 flows
       - Registry documents selector → feature mapping
 
 # ─────────────────────────────────────────────────────────────────────────────

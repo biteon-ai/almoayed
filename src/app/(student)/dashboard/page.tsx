@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getStudentDashboardData, getStudentProfile } from "@/actions/quiz";
+import { getStudentGamificationStatus } from "@/actions/gamification";
 import { requireStudent } from "@/lib/auth";
 import { APP_DESCRIPTION } from "@/lib/constants";
 import { computeStudentGamification } from "@/lib/student-gamification";
@@ -24,12 +25,14 @@ export default async function DashboardPage() {
     recentScores: dashboard.recentScores,
     completedQuizCount: dashboard.stats.completedQuizCount,
   });
+  const teacherGamification = await getStudentGamificationStatus();
 
   return (
     <StudentDashboardView
       studentName={session.fullName || profile.full_name || "بالطالب"}
       stats={dashboard.stats}
       gamification={gamification}
+      teacherGamification={teacherGamification}
       recentScores={dashboard.recentScores}
       weakPoints={dashboard.weakPoints}
       teachers={dashboard.teachers}

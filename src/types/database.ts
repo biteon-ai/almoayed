@@ -357,3 +357,42 @@ export interface ImportQuestionRow {
   explanation_text: string;
   category_tag: string;
 }
+
+/** [GAMIF-001/002] Teacher-configured level reward icons */
+export type GamificationIconType =
+  | "cup"
+  | "diamond"
+  | "star"
+  | "shield"
+  | "badge"
+  | "badge_bronze"
+  | "badge_silver"
+  | "badge_gold"
+  | "star_bronze"
+  | "star_silver"
+  | "star_gold"
+  | "cup_bronze"
+  | "cup_silver"
+  | "cup_gold"
+  | "crown";
+
+export interface GamificationTier {
+  id: string;
+  teacher_id: string;
+  level_number: number;
+  level_name: string;
+  min_completed_quizzes: number;
+  min_avg_score: number;
+  icon_type: GamificationIconType;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Payload row for saveGamificationTiers (order = array index → level_number) */
+export interface GamificationTierSaveInput {
+  id?: string;
+  levelName: string;
+  minCompletedQuizzes: number;
+  minAvgScore: number;
+  iconType: GamificationIconType;
+}
