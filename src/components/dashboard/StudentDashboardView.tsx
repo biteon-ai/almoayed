@@ -7,10 +7,13 @@ import type {
   StudentTeacherOption,
 } from "@/types/database";
 import type { StudentGamification } from "@/lib/student-gamification";
+import type { TeacherGamificationStatus } from "@/lib/teacher-gamification";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentDashboardActiveQuizSection } from "@/components/dashboard/StudentDashboardActiveQuizSection";
 import { StudentDashboardHero } from "@/components/dashboard/StudentDashboardHero";
 import { StudentDashboardStatsRow } from "@/components/dashboard/StudentDashboardStatsRow";
+import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
+import { BadgeGallery } from "@/components/dashboard/BadgeGallery";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { PendingSyncBadge } from "@/components/quiz/PendingSyncBadge";
 import { SPEKIT } from "@/lib/spekit-targets";
@@ -27,6 +30,7 @@ export interface StudentDashboardViewProps {
   studentName: string;
   stats: DashboardStats;
   gamification: StudentGamification;
+  teacherGamification: TeacherGamificationStatus | null;
   recentScores: RecentScoreRow[];
   weakPoints: CategoryPerformance[];
   teachers: StudentTeacherOption[];
@@ -56,6 +60,7 @@ export function StudentDashboardView({
   studentName,
   stats,
   gamification,
+  teacherGamification,
   recentScores,
   weakPoints,
   teachers,
@@ -79,6 +84,17 @@ export function StudentDashboardView({
       <StudentDashboardHero studentName={studentName} gamification={gamification} />
 
       <StudentDashboardStatsRow stats={stats} gamification={gamification} />
+
+      {teacherGamification ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <LevelProgressCard status={teacherGamification} />
+          </div>
+          <div className="lg:col-span-5">
+            <BadgeGallery status={teacherGamification} />
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="lg:col-span-7">

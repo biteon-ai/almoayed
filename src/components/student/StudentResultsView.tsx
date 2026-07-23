@@ -4,12 +4,14 @@ import type { ComponentType } from "react";
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { DashboardStats, RecentScoreRow } from "@/types/database";
+import type { TeacherGamificationStatus } from "@/lib/teacher-gamification";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
 import { usePagination } from "@/hooks/usePagination";
 import {
   QUIZ_CATEGORY_FILTERS,
@@ -39,6 +41,7 @@ interface StudentResultsViewProps {
   stats: DashboardStats;
   scores: RecentScoreRow[];
   totalQuizzes: number;
+  teacherGamification: TeacherGamificationStatus | null;
 }
 
 function formatSubmittedAt(iso: string): string {
@@ -56,6 +59,7 @@ export function StudentResultsView({
   stats,
   scores,
   totalQuizzes,
+  teacherGamification,
 }: StudentResultsViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
@@ -123,6 +127,14 @@ export function StudentResultsView({
           </div>
         </div>
       </section>
+
+      {teacherGamification ? (
+        <LevelProgressCard
+          status={teacherGamification}
+          compact
+          spekitId={SPEKIT.gamifResultsSummary}
+        />
+      ) : null}
 
       <div className="flex flex-col items-stretch justify-between gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="relative w-full sm:w-80">

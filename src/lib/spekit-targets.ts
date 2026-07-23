@@ -153,6 +153,21 @@ export const SPEKIT = {
   adminImpersonationBanner: "admin-impersonation-banner",
   adminImpersonationExit: "admin-impersonation-exit",
   teacherEmailLoginForm: "teacher-email-login-form",
+
+  // ── GAMIF-001 ────────────────────────────────────────────────
+  gamifSettingsPage: "gamif-settings-page",
+  gamifTierList: "gamif-tier-list",
+  gamifTierAdd: "gamif-tier-add",
+  gamifTierForm: "gamif-tier-form",
+  gamifIconSelect: "gamif-icon-select",
+  gamifTiersSave: "gamif-tiers-save",
+  gamifLoadPresets: "gamif-load-presets",
+  gamificationHeaderActions: "gamification-header-actions",
+  gamificationEmptyState: "gamification-empty-state",
+  gamificationPresetBtn: "gamification-preset-btn",
+  gamifLevelCard: "gamif-level-card",
+  gamifBadgeGallery: "gamif-badge-gallery",
+  gamifResultsSummary: "gamif-results-summary",
 } as const;
 
 export type SpekitTarget = (typeof SPEKIT)[keyof typeof SPEKIT];

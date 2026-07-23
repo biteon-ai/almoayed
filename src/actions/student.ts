@@ -71,6 +71,7 @@ export async function switchTeacher(teacherId: string): Promise<void> {
   await iron.save();
 
   revalidatePath("/dashboard");
+  revalidatePath("/results");
   revalidatePath("/quiz", "layout");
 }
 

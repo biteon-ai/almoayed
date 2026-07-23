@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/010-super-admin-dashboard/plan.md`
+**Active plan**: `specs/011-teacher-gamification/plan.md`
 
 Related artifacts:
-- Spec: `specs/010-super-admin-dashboard/spec.md`
-- Research: `specs/010-super-admin-dashboard/research.md`
-- Data model: `specs/010-super-admin-dashboard/data-model.md`
-- Contracts: `specs/010-super-admin-dashboard/contracts/`
-- Quickstart: `specs/010-super-admin-dashboard/quickstart.md`
+- Spec: `specs/011-teacher-gamification/spec.md`
+- Research: `specs/011-teacher-gamification/research.md`
+- Data model: `specs/011-teacher-gamification/data-model.md`
+- Contracts: `specs/011-teacher-gamification/contracts/`
+- Quickstart: `specs/011-teacher-gamification/quickstart.md`
 <!-- SPECKIT END -->

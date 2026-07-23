@@ -204,3 +204,19 @@ ADMIN-001:
   admin-impersonation-exit: "Exit impersonation control"
   admin-login-form: "Super Admin email login form"
   teacher-email-login-form: "Teacher email/password login form"
+
+# ── Teacher gamification ────────────────────────────────────────
+GAMIF-001:
+  gamif-settings-page: "Teacher gamification settings page root"
+  gamif-tier-list: "Ordered list of level tiers"
+  gamif-tier-add: "Add level tier button"
+  gamif-tier-form: "Level tier edit form fields"
+  gamif-icon-select: "Reward icon type select"
+  gamif-tiers-save: "Save gamification tiers button"
+  gamif-load-presets: "Load default gamification presets button (legacy id)"
+  gamification-header-actions: "Gamification settings header action toolbar"
+  gamification-empty-state: "Gamification settings empty state card"
+  gamification-preset-btn: "Apply default gamification preset button"
+  gamif-level-card: "Student level progress card"
+  gamif-badge-gallery: "Student unlocked/locked badge gallery"
+  gamif-results-summary: "Student results page level summary"

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getStudentProfile, getStudentResultsPageData } from "@/actions/quiz";
+import { getStudentGamificationStatus } from "@/actions/gamification";
 import { requireStudent } from "@/lib/auth";
 import { APP_DESCRIPTION } from "@/lib/constants";
 import { StudentResultsView } from "@/components/student/StudentResultsView";
@@ -17,13 +18,17 @@ export default async function StudentResultsPage() {
     redirect("/login");
   }
 
-  const data = await getStudentResultsPageData();
+  const [data, teacherGamification] = await Promise.all([
+    getStudentResultsPageData(),
+    getStudentGamificationStatus(),
+  ]);
 
   return (
     <StudentResultsView
       stats={data.stats}
       scores={data.scores}
       totalQuizzes={data.totalQuizzes}
+      teacherGamification={teacherGamification}
     />
   );
 }
