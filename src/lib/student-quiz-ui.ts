@@ -91,11 +91,11 @@ export function getScoreGrade(score: number): {
 export function scoreBadgeClassName(tone: ScoreGradeTone): string {
   switch (tone) {
     case "green":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300";
+      return "border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-teal-100/80 text-emerald-800 shadow-sm shadow-emerald-600/10 dark:border-emerald-800/50 dark:from-emerald-950/50 dark:to-teal-950/40 dark:text-emerald-200";
     case "amber":
-      return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300";
+      return "border-amber-200/80 bg-gradient-to-br from-amber-50 to-orange-100/70 text-amber-900 shadow-sm shadow-amber-600/10 dark:border-amber-800/50 dark:from-amber-950/50 dark:to-orange-950/40 dark:text-amber-200";
     case "red":
-      return "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300";
+      return "border-rose-200/80 bg-gradient-to-br from-rose-50 to-red-100/70 text-rose-800 shadow-sm shadow-rose-600/10 dark:border-rose-800/50 dark:from-rose-950/50 dark:to-red-950/40 dark:text-rose-200";
   }
 }
 

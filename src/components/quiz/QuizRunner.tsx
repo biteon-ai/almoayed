@@ -334,7 +334,7 @@ export function QuizRunner({
               <Link href="/dashboard" className="block">
                 <Button
                   variant="outline"
-                  className="h-12 w-full rounded-xl font-bold border-slate-200 hover:bg-slate-50"
+                  className="h-12 w-full rounded-2xl border-border/60 font-bold hover:bg-muted/60"
                 >
                   العودة للوحة التحكم
                 </Button>

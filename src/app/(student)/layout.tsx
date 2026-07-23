@@ -16,7 +16,7 @@ export default function StudentLayout({
       <OfflineSyncProvider>
         <div className="min-h-dvh bg-gradient-to-b from-slate-50/50 to-white">
           <StudentHeader slogan={APP_SLOGAN} />
-          <main className="pb-20 md:pb-0">{children}</main>
+          <main className="pb-28 md:pb-0">{children}</main>
           <StudentBottomNav />
         </div>
       </OfflineSyncProvider>

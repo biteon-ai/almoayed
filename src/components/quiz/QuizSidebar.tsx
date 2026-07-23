@@ -115,8 +115,8 @@ export function QuizSidebar({
 
       {/* Question navigation */}
       {questionCount > 0 && (
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 text-xs font-bold text-slate-600">
+        <div className="rounded-2xl border border-border/60 bg-white p-4 shadow-sm dark:bg-card">
+          <h2 className="mb-3 text-xs font-bold text-muted-foreground">
             التنقل بين الأسئلة
           </h2>
           <QuestionNavGrid
@@ -128,6 +128,22 @@ export function QuizSidebar({
             results={results}
             onNavigate={onNavigate}
           />
+          {isSubmitted ? (
+            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm bg-emerald-600" />
+                الحالي
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm bg-emerald-100 ring-1 ring-emerald-200" />
+                صحيح
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm bg-rose-100 ring-1 ring-rose-200" />
+                خطأ
+              </span>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -151,12 +167,14 @@ export function QuizSidebar({
       )}
 
       {isSubmitted && results && (
-        <div className="rounded-2xl border border-green-100 bg-green-50/60 p-5 text-center shadow-sm">
-          <p className="text-xs font-semibold text-green-800">نتيجتك النهائية</p>
-          <p className="mt-1 text-3xl font-black tabular-nums text-green-700">
+        <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-teal-50/80 p-5 text-center shadow-sm dark:border-emerald-800/50 dark:from-emerald-950/40 dark:to-teal-950/30">
+          <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">
+            نتيجتك النهائية
+          </p>
+          <p className="mt-1 text-3xl font-black tabular-nums text-emerald-700 dark:text-emerald-300">
             {results.score}%
           </p>
-          <p className="mt-1 text-xs text-green-700/80">
+          <p className="mt-1 text-xs text-emerald-700/80 dark:text-emerald-300/80">
             {results.correctCount} / {results.totalQuestions} إجابات صحيحة
           </p>
         </div>
