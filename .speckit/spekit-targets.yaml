@@ -205,6 +205,10 @@ ADMIN-001:
   admin-login-form: "Super Admin email login form"
   teacher-email-login-form: "Teacher email/password login form"
 
+# ── Navigation progress ─────────────────────────────────────────
+UI-006:
+  navbar-progress: "Header bottom-edge route progress line"
+
 # ── Teacher gamification ────────────────────────────────────────
 GAMIF-001:
   gamif-settings-page: "Teacher gamification settings page root"

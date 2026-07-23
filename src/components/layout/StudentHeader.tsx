@@ -14,6 +14,7 @@ import {
   studentNavLinkClass,
 } from "@/components/layout/StudentNavLink";
 import { StudentLogoutButton } from "@/components/layout/StudentLogoutButton";
+import { NavbarProgress } from "@/components/layout/NavbarProgress";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Settings } from "lucide-react";
 
@@ -53,6 +54,7 @@ export function StudentHeader({ slogan }: { slogan: string }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/90 backdrop-blur-md">
+      <NavbarProgress />
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:py-4">
         {/* RTL: brand + desktop nav (right) */}
         <div className="flex min-w-0 flex-1 items-center gap-6 md:gap-10">

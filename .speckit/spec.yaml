@@ -648,6 +648,24 @@ partial_features:
     status: partial
     notes: manifest.json icons array empty
 
+  - id: UI-006
+    name: Navbar Route Progress
+    status: done
+    notes: |
+      Instant emerald progress line on sticky header bottom edge.
+      Starts on internal link click; holds ~400ms after pathname/search change.
+      Pure Tailwind animate-pulse (no custom keyframes).
+    acceptance:
+      - Visible on student header when switching /dashboard /quizzes /results /settings
+      - Visible on teacher portal header tab switches
+      - No flash on initial page load
+    files:
+      - src/components/layout/NavbarProgress.tsx
+      - src/components/layout/StudentHeader.tsx
+      - src/app/teacher/(portal)/layout.tsx
+    spekit:
+      - navbar-progress
+
 # ─────────────────────────────────────────────────────────────────────────────
 demo_accounts:
   teacher:

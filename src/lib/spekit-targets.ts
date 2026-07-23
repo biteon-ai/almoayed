@@ -154,6 +154,9 @@ export const SPEKIT = {
   adminImpersonationExit: "admin-impersonation-exit",
   teacherEmailLoginForm: "teacher-email-login-form",
 
+  // ── UI-006 ───────────────────────────────────────────────────
+  navbarProgress: "navbar-progress",
+
   // ── GAMIF-001 ────────────────────────────────────────────────
   gamifSettingsPage: "gamif-settings-page",
   gamifTierList: "gamif-tier-list",

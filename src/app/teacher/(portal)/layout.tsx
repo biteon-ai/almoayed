@@ -3,6 +3,7 @@ import { getSession, requireTeacher } from "@/lib/auth";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { APP_SLOGAN } from "@/lib/constants";
 import { Logo } from "@/components/brand/Logo";
+import { NavbarProgress } from "@/components/layout/NavbarProgress";
 import { TeacherHeaderNav } from "@/components/layout/TeacherHeaderNav";
 import { TeacherPortalShell } from "@/components/layout/TeacherPortalShell";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export default async function TeacherLayout({
       ) : null}
       <div className="min-h-dvh bg-gradient-to-b from-brand-50/40 to-background">
         <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur-md">
+          <NavbarProgress />
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
               <Logo size="sm" />
