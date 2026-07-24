@@ -21,6 +21,8 @@ import {
   type AdminTeachersStatsSummary,
 } from "@/components/admin/AdminTeachersStats";
 import { TEACHER_FLASH_KEY } from "@/components/admin/TeacherFormView";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import type { PagedResult } from "@/lib/pagination-server";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 import {
@@ -71,6 +73,9 @@ export function AdminTeachersTable({ stats }: AdminTeachersTableProps) {
   const [teachers, setTeachers] = useState<AdminTeacherRow[]>([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -133,18 +138,28 @@ export function AdminTeachersTable({ stats }: AdminTeachersTableProps) {
       const params = new URLSearchParams();
       if (q.trim()) params.set("q", q.trim());
       if (status !== "all") params.set("status", status);
+      params.set("page", String(page));
       const res = await fetch(`/api/admin/teachers?${params.toString()}`);
-      const data = (await res.json()) as { teachers?: AdminTeacherRow[] };
-      setTeachers(data.teachers ?? []);
+      const data = (await res.json()) as PagedResult<AdminTeacherRow>;
+      setTeachers(data.items ?? []);
+      setTotal(data.total ?? 0);
+      setPageSize(data.pageSize ?? 20);
+      if (data.page) setPage(data.page);
     } finally {
       setLoading(false);
     }
+  }, [q, status, page]);
+
+  useEffect(() => {
+    setPage(1);
   }, [q, status]);
 
   useEffect(() => {
     const t = setTimeout(() => void loadTeachers(), 200);
     return () => clearTimeout(t);
   }, [loadTeachers]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
 
   async function toggleStatus(teacher: AdminTeacherRow) {
     const next = teacher.status === "active" ? "inactive" : "active";
@@ -191,9 +206,10 @@ export function AdminTeachersTable({ stats }: AdminTeachersTableProps) {
               <Filter className="pointer-events-none absolute start-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
               <Select
                 value={status}
-                onValueChange={(value) =>
-                  setStatus((value ?? "all") as typeof status)
-                }
+                onValueChange={(value) => {
+                  setStatus((value ?? "all") as typeof status);
+                  setPage(1);
+                }}
               >
                 <SelectTrigger
                   className="h-11 ps-10"
@@ -243,6 +259,7 @@ export function AdminTeachersTable({ stats }: AdminTeachersTableProps) {
             لا يوجد مدرسون يطابقون البحث
           </p>
         ) : (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-sm">
               <thead>
@@ -380,6 +397,22 @@ export function AdminTeachersTable({ stats }: AdminTeachersTableProps) {
               </tbody>
             </table>
           </div>
+          {total > 0 ? (
+            <div className="border-t px-4 py-3">
+              <PaginationControls
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                itemLabel="مدرس"
+                variant="compact"
+                showRangeSummary
+                showQuickJump
+              />
+            </div>
+          ) : null}
+          </>
         )}
       </div>
 

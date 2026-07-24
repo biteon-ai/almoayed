@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toggleQuizStatus, updateQuizFlags } from "@/actions/teacher";
 import type { TeacherQuiz } from "@/types/database";
+import type { PagedResult } from "@/lib/pagination-server";
 import { QuizListItem } from "@/components/teacher/QuizListItem";
 import { QuizMetricsKPIHeader } from "@/components/teacher/QuizMetricsKPIHeader";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -29,10 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePagination } from "@/hooks/usePagination";
-import {
-  QUIZ_PAGE_SIZE,
-} from "@/lib/paginate-students";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 import {
@@ -59,12 +56,14 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 interface QuizManagementProps {
-  quizzes: TeacherQuiz[];
+  quizzesPage: PagedResult<TeacherQuiz>;
 }
 
-export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
+export function QuizManagement({ quizzesPage }: QuizManagementProps) {
   const router = useRouter();
-  const [quizzes, setQuizzes] = useState(initial);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [quizzes, setQuizzes] = useState(quizzesPage.items);
   const [search, setSearch] = useState("");
   const [filterTier, setFilterTier] = useState<"all" | "free" | "pro">("all");
   const [filterStatus, setFilterStatus] = useState<
@@ -76,8 +75,21 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
-    setQuizzes(initial);
-  }, [initial]);
+    setQuizzes(quizzesPage.items);
+  }, [quizzesPage.items]);
+
+  const pushQuery = useCallback(
+    (patch: Record<string, string | undefined>) => {
+      const next = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(patch)) {
+        if (!value || value === "all") next.delete(key);
+        else next.set(key, value);
+      }
+      const qs = next.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
+    },
+    [pathname, router, searchParams]
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -101,14 +113,14 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
     });
   }, [quizzes, search, filterTier, filterStatus]);
 
-  const {
-    items,
-    page: safePage,
-    totalPages,
-    total,
-    setPage,
-    resetPage,
-  } = usePagination(filtered, QUIZ_PAGE_SIZE);
+  const safePage = quizzesPage.page;
+  const pageSize = quizzesPage.pageSize;
+  const total = quizzesPage.total;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
+
+  const setPage = (page: number) => {
+    pushQuery({ page: String(page) });
+  };
 
   const hasActiveFilters =
     search.trim().length > 0 ||
@@ -119,7 +131,7 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
     setSearch("");
     setFilterTier("all");
     setFilterStatus("all");
-    resetPage();
+    pushQuery({ page: undefined });
   };
 
   const patchQuiz = (id: string, patch: Partial<TeacherQuiz>) => {
@@ -139,7 +151,10 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
         </p>
       </div>
 
-      <QuizMetricsKPIHeader quizzes={quizzes} />
+      <QuizMetricsKPIHeader
+        quizzes={quizzes}
+        catalogTotal={quizzesPage.total}
+      />
 
       <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -149,7 +164,6 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                resetPage();
               }}
               placeholder="بحث باسم الاختبار..."
               className="h-10 rounded-lg border-input bg-background pe-3 ps-9 text-sm text-start"
@@ -179,7 +193,6 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
               onValueChange={(value) => {
                 if (!value || typeof value !== "string") return;
                 setFilterTier(value as "all" | "free" | "pro");
-                resetPage();
               }}
             >
               <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
@@ -205,7 +218,6 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
               onValueChange={(value) => {
                 if (!value || typeof value !== "string") return;
                 setFilterStatus(value as "all" | "active" | "inactive");
-                resetPage();
               }}
             >
               <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
@@ -253,7 +265,7 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
       )}
 
       <div className="space-y-3">
-        {items.map((quiz) => (
+        {filtered.map((quiz) => (
           <QuizListItem
             key={quiz.id}
             quiz={quiz}
@@ -288,38 +300,40 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
         {total === 0 && (
           <Card className="rounded-xl border bg-card">
             <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
-              {hasActiveFilters ? (
-                <SearchX className="size-10 text-muted-foreground" />
-              ) : (
-                <FileQuestion className="size-10 text-muted-foreground" />
-              )}
+              <FileQuestion className="size-10 text-muted-foreground" />
               <p className="text-sm font-medium text-foreground">
-                {hasActiveFilters
-                  ? "لا توجد اختبارات تطابق البحث"
-                  : "ما في اختبارات بعد. أنشئ أول اختبار!"}
+                ما في اختبارات بعد. أنشئ أول اختبار!
               </p>
-              {hasActiveFilters ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 gap-1.5"
-                  onClick={resetFilters}
-                >
-                  <RotateCcw className="size-3.5" />
-                  إعادة ضبط التصفية
-                </Button>
-              ) : (
-                <Link
-                  href="/teacher/quizzes/new"
-                  className={cn(
-                    buttonVariants({ variant: "brand" }),
-                    "h-10 gap-1.5"
-                  )}
-                >
-                  <Plus className="size-4" />
-                  اختبار جديد
-                </Link>
-              )}
+              <Link
+                href="/teacher/quizzes/new"
+                className={cn(
+                  buttonVariants({ variant: "brand" }),
+                  "h-10 gap-1.5"
+                )}
+              >
+                <Plus className="size-4" />
+                اختبار جديد
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {total > 0 && filtered.length === 0 && (
+          <Card className="rounded-xl border bg-card">
+            <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
+              <SearchX className="size-10 text-muted-foreground" />
+              <p className="text-sm font-medium text-foreground">
+                لا توجد اختبارات تطابق البحث
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 gap-1.5"
+                onClick={resetFilters}
+              >
+                <RotateCcw className="size-3.5" />
+                إعادة ضبط التصفية
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -330,7 +344,7 @@ export function QuizManagement({ quizzes: initial }: QuizManagementProps) {
           page={safePage}
           totalPages={totalPages}
           total={total}
-          pageSize={QUIZ_PAGE_SIZE}
+          pageSize={pageSize}
           onPageChange={setPage}
           itemLabel="اختبار"
           variant="full"

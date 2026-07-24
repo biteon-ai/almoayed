@@ -1,9 +1,11 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { DashboardStats, QuizCarouselItem } from "@/types/database";
+import type { PagedResult } from "@/lib/pagination-server";
 import { StudentQuizGridCard } from "@/components/student/StudentQuizGridCard";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +14,6 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { usePagination } from "@/hooks/usePagination";
 import {
   QUIZ_CATEGORY_FILTERS,
   STUDENT_EXAMS_PAGE_SIZE,
@@ -21,7 +22,6 @@ import {
   filterQuizzesBySearch,
   formatDurationAr,
 } from "@/lib/student-quiz-ui";
-import { splitQuizExamSections } from "@/lib/quiz-exam-list";
 import { PendingSyncBadge } from "@/components/quiz/PendingSyncBadge";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
@@ -39,40 +39,60 @@ import {
 
 interface StudentQuizzesViewProps {
   stats: DashboardStats;
-  quizzes: QuizCarouselItem[];
+  quizzesPage: PagedResult<QuizCarouselItem>;
+  continueQuiz: QuizCarouselItem | null;
 }
 
-export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) {
+export function StudentQuizzesView({
+  stats,
+  quizzesPage,
+  continueQuiz,
+}: StudentQuizzesViewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<QuizCategoryFilter>("الكل");
   const quizzesSectionRef = useRef<HTMLElement>(null);
 
-  const { continueQuiz, queueQuizzes } = useMemo(
-    () => splitQuizExamSections(quizzes),
-    [quizzes]
+  const pushQuery = useCallback(
+    (patch: Record<string, string | undefined>) => {
+      const next = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(patch)) {
+        if (!value) next.delete(key);
+        else next.set(key, value);
+      }
+      const qs = next.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
+    },
+    [pathname, router, searchParams]
   );
 
-  const filteredQuizzes = useMemo(() => {
-    const byCategory = filterQuizzesByCategory(queueQuizzes, selectedCategory);
+  const queueQuizzes = useMemo(() => {
+    const items = continueQuiz
+      ? quizzesPage.items.filter((quiz) => quiz.id !== continueQuiz.id)
+      : quizzesPage.items;
+    const byCategory = filterQuizzesByCategory(items, selectedCategory);
     return filterQuizzesBySearch(byCategory, searchQuery);
-  }, [queueQuizzes, selectedCategory, searchQuery]);
+  }, [quizzesPage.items, continueQuiz, selectedCategory, searchQuery]);
 
-  const {
-    items: paginatedQuizzes,
-    page,
-    totalPages,
-    total: filteredTotal,
-    setPage,
-    resetPage,
-  } = usePagination(filteredQuizzes, STUDENT_EXAMS_PAGE_SIZE);
+  const page = quizzesPage.page;
+  const pageSize = quizzesPage.pageSize;
+  const total = quizzesPage.total;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
+  const filteredTotal = queueQuizzes.length;
 
   const handlePageChange = (nextPage: number) => {
-    setPage(nextPage);
+    pushQuery({ page: String(nextPage) });
     quizzesSectionRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
+  };
+
+  const resetPage = () => {
+    pushQuery({ page: undefined });
   };
 
   const continueProgress = continueQuiz
@@ -103,7 +123,7 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
           <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-md sm:gap-3 sm:p-3.5">
             <QuickStat
               icon={BookOpen}
-              value={quizzes.length}
+              value={total}
               label="متاح"
             />
             <QuickStat
@@ -236,7 +256,7 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
           </span>
         </div>
 
-        {quizzes.length === 0 ? (
+        {total === 0 ? (
           <div
             className="flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 px-6 py-12 text-center"
             data-spekit={SPEKIT.studentQuizEmpty}
@@ -257,7 +277,7 @@ export function StudentQuizzesView({ stats, quizzes }: StudentQuizzesViewProps) 
         ) : (
           <>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedQuizzes.map((quiz) => (
+              {queueQuizzes.map((quiz) => (
                 <StudentQuizGridCard key={quiz.id} quiz={quiz} />
               ))}
             </div>

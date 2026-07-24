@@ -11,6 +11,14 @@ import {
   verifyPassword,
 } from "@/lib/admin/passwords";
 
+/** Includes password_hash — login / credential verify only. */
+const PROFILE_AUTH_COLUMNS =
+  "id, whatsapp_number, full_name, role, email, password_hash, is_subscribed, auth_method, teacher_account_status, max_quiz_limit, created_at, updated_at";
+
+/** Session bootstrap — never password_hash. */
+const PROFILE_SESSION_COLUMNS =
+  "id, whatsapp_number, full_name, role, email, is_subscribed, auth_method, teacher_account_status, max_quiz_limit, created_at, updated_at";
+
 export async function ensureSuperAdminProfile(
   email: string,
   password: string
@@ -25,7 +33,7 @@ export async function ensureSuperAdminProfile(
 
   const { data: existing } = await supabase
     .from("profiles")
-    .select("*")
+    .select(PROFILE_AUTH_COLUMNS)
     .eq("email", normalizedEmail)
     .eq("role", "SUPER_ADMIN")
     .maybeSingle<Profile>();
@@ -47,7 +55,7 @@ export async function ensureSuperAdminProfile(
         .from("profiles")
         .update({ password_hash: passwordHash, full_name: existing.full_name || "Super Admin" })
         .eq("id", existing.id)
-        .select("*")
+        .select(PROFILE_SESSION_COLUMNS)
         .single<Profile>();
       return updated ?? null;
     }
@@ -63,7 +71,7 @@ export async function ensureSuperAdminProfile(
         auth_method: "email",
         is_subscribed: true,
       })
-      .select("*")
+      .select(PROFILE_SESSION_COLUMNS)
       .single<Profile>();
 
     return created ?? null;
@@ -112,7 +120,7 @@ export async function loginTeacherWithEmail(
   const supabase = createAdminClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select(PROFILE_AUTH_COLUMNS)
     .eq("email", normalizedEmail)
     .eq("role", "TEACHER")
     .maybeSingle<Profile>();

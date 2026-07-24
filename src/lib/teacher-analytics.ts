@@ -5,7 +5,7 @@ import type {
   TeacherDashboardAnalytics,
 } from "@/types/database";
 
-/** Raw payload from `get_teacher_dashboard_analytics` RPC (PERF-002). */
+/** Raw payload from `get_teacher_dashboard_analytics` RPC (PERF-002 row dump — legacy fallback input). */
 export type TeacherDashboardRpcPayload = {
   studentLinks: Array<{ student_id: string; tier: StudentTier }>;
   quizzes: Quiz[];
@@ -22,7 +22,144 @@ export type TeacherDashboardRpcPayload = {
   pendingUpgrades: number;
 };
 
-/** Map RPC JSON → TeacherDashboardAnalytics via existing pure compute. */
+/** PERF-004 aggregate KPI payload (no full catalogs). */
+export type TeacherDashboardKpiPayload = {
+  studentCount?: number;
+  quizCount?: number;
+  pendingUpgrades?: number;
+  submissionCount?: number;
+  averageScore?: number;
+  passRate?: number;
+  perfectScoreStudentCount?: number;
+  completionRate?: number;
+  gradeDistribution?: Array<{
+    range: string;
+    label: string;
+    count: number;
+  }>;
+  weeklyActivity?: Array<{
+    day: string;
+    passed: number;
+    failed: number;
+  }>;
+  popularExams?: Array<{
+    rank: number;
+    title: string;
+    attempts: number;
+    completionRate: number;
+  }>;
+  topPerformer?: {
+    studentId: string;
+    name: string;
+    averageScore: number;
+  } | null;
+  examDifficulty?: {
+    hardest: { title: string; avgScore: number; passRate: number } | null;
+    easiest: { title: string; avgScore: number; passRate: number } | null;
+  };
+};
+
+const GRADE_FILLS: Record<string, string> = {
+  "0-49%": "#ef4444",
+  "50-64%": "#f59e0b",
+  "65-79%": "#10b981",
+  "80-89%": "#059669",
+  "90-100%": "#047857",
+};
+
+function averageScoreLabel(score: number): string {
+  if (score >= 90) return "ممتاز";
+  if (score >= 80) return "جيد جداً";
+  if (score >= 65) return "جيد";
+  if (score >= 50) return "مقبول";
+  return "يحتاج تحسين";
+}
+
+/** Detect aggregate KPI shape vs legacy row-dump RPC payload. */
+export function isTeacherDashboardKpiPayload(
+  payload: unknown
+): payload is TeacherDashboardKpiPayload {
+  if (!payload || typeof payload !== "object") return false;
+  const p = payload as Record<string, unknown>;
+  if (Array.isArray(p.studentLinks) || Array.isArray(p.submissions)) return false;
+  return (
+    typeof p.studentCount === "number" ||
+    Array.isArray(p.gradeDistribution) ||
+    Array.isArray(p.popularExams)
+  );
+}
+
+/** Map PERF-004 KPI JSON → TeacherDashboardAnalytics (first-paint safe defaults). */
+export function mapTeacherDashboardKpiPayload(
+  payload: TeacherDashboardKpiPayload
+): TeacherDashboardAnalytics {
+  const studentCount = Number(payload.studentCount) || 0;
+  const quizCount = Number(payload.quizCount) || 0;
+  const pendingUpgrades = Number(payload.pendingUpgrades) || 0;
+  const submissionCount = Number(payload.submissionCount) || 0;
+  const averageScore = Number(payload.averageScore) || 0;
+  const passRate = Number(payload.passRate) || 0;
+  const perfectScoreStudentCount =
+    Number(payload.perfectScoreStudentCount) || 0;
+  const completionRate = Number(payload.completionRate) || 0;
+  const popularExams = (payload.popularExams ?? []).slice(0, 10).map((exam, i) => ({
+    rank: exam.rank ?? i + 1,
+    title: exam.title ?? "",
+    attempts: Number(exam.attempts) || 0,
+    completionRate: Number(exam.completionRate) || 0,
+  }));
+
+  const gradeDistribution = (payload.gradeDistribution ?? []).map((row) => ({
+    range: row.range,
+    label: row.label,
+    count: Number(row.count) || 0,
+    fill: GRADE_FILLS[row.range] ?? "#10b981",
+  }));
+
+  const weeklyActivity = (payload.weeklyActivity ?? []).map((row) => ({
+    day: row.day,
+    passed: Number(row.passed) || 0,
+    failed: Number(row.failed) || 0,
+  }));
+
+  const totalAttempts = studentCount * quizCount;
+
+  return {
+    studentCount,
+    quizCount,
+    pendingUpgrades,
+    kpis: {
+      completionRate,
+      completedAttempts: submissionCount,
+      totalAttempts,
+      completionTrendPct: 0,
+      passRate,
+      perfectScoreStudentPct:
+        studentCount > 0
+          ? Math.round((perfectScoreStudentCount / studentCount) * 100)
+          : 0,
+      perfectScoreStudentCount,
+      averageScore,
+      averageScoreLabel: averageScoreLabel(averageScore),
+      topPerformer: payload.topPerformer
+        ? {
+            studentId: payload.topPerformer.studentId,
+            name: payload.topPerformer.name,
+            averageScore: payload.topPerformer.averageScore,
+          }
+        : null,
+    },
+    gradeDistribution,
+    weeklyActivity,
+    examDifficulty: {
+      hardest: payload.examDifficulty?.hardest ?? null,
+      easiest: payload.examDifficulty?.easiest ?? null,
+    },
+    popularExams,
+  };
+}
+
+/** Map legacy RPC payload → TeacherDashboardAnalytics via existing pure compute. */
 export function mapTeacherDashboardRpcPayload(
   payload: TeacherDashboardRpcPayload
 ): TeacherDashboardAnalytics {
@@ -82,14 +219,6 @@ type ProfileRow = {
   id: string;
   full_name: string;
 };
-
-function averageScoreLabel(score: number): string {
-  if (score >= 90) return "ممتاز";
-  if (score >= 80) return "جيد جداً";
-  if (score >= 65) return "جيد";
-  if (score >= 50) return "مقبول";
-  return "يحتاج تحسين";
-}
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date);

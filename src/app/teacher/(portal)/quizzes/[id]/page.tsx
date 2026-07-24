@@ -1,4 +1,4 @@
-import { getQuizQuestions, getTeacherQuizzes } from "@/actions/teacher";
+import { getQuizQuestions, getTeacherQuizById } from "@/actions/teacher";
 import { QuizQuestionsDashboard } from "@/components/teacher/QuizQuestionsDashboard";
 import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
 import { SPEKIT } from "@/lib/spekit-targets";
@@ -13,8 +13,7 @@ interface PageProps {
 
 export default async function EditQuizPage({ params }: PageProps) {
   const { id } = await params;
-  const quizzes = await getTeacherQuizzes();
-  const quiz = quizzes.find((q) => q.id === id);
+  const quiz = await getTeacherQuizById(id);
   if (!quiz) notFound();
 
   const questions = await getQuizQuestions(id);

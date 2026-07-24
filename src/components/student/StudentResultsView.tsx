@@ -1,10 +1,12 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { DashboardStats, RecentScoreRow } from "@/types/database";
 import type { TeacherGamificationStatus } from "@/lib/teacher-gamification";
+import type { PagedResult } from "@/lib/pagination-server";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +14,6 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
-import { usePagination } from "@/hooks/usePagination";
 import {
   QUIZ_CATEGORY_FILTERS,
   STUDENT_RESULTS_PAGE_SIZE,
@@ -40,7 +41,7 @@ import {
 
 interface StudentResultsViewProps {
   stats: DashboardStats;
-  scores: RecentScoreRow[];
+  scoresPage: PagedResult<RecentScoreRow>;
   totalQuizzes: number;
   teacherGamification: TeacherGamificationStatus | null;
 }
@@ -64,35 +65,55 @@ function formatSubmittedTime(iso: string): string {
 
 export function StudentResultsView({
   stats,
-  scores,
+  scoresPage,
   totalQuizzes,
   teacherGamification,
 }: StudentResultsViewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<QuizCategoryFilter>("الكل");
   const resultsSectionRef = useRef<HTMLElement>(null);
 
-  const filteredScores = useMemo(() => {
-    const byCategory = filterQuizzesByCategory(scores, selectedCategory);
-    return filterQuizzesBySearch(byCategory, searchQuery);
-  }, [scores, selectedCategory, searchQuery]);
+  const pushQuery = useCallback(
+    (patch: Record<string, string | undefined>) => {
+      const next = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(patch)) {
+        if (!value) next.delete(key);
+        else next.set(key, value);
+      }
+      const qs = next.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
+    },
+    [pathname, router, searchParams]
+  );
 
-  const {
-    items: paginatedScores,
-    page,
-    totalPages,
-    total: filteredTotal,
-    setPage,
-    resetPage,
-  } = usePagination(filteredScores, STUDENT_RESULTS_PAGE_SIZE);
+  const filteredScores = useMemo(() => {
+    const byCategory = filterQuizzesByCategory(
+      scoresPage.items,
+      selectedCategory
+    );
+    return filterQuizzesBySearch(byCategory, searchQuery);
+  }, [scoresPage.items, selectedCategory, searchQuery]);
+
+  const page = scoresPage.page;
+  const pageSize = scoresPage.pageSize;
+  const total = scoresPage.total;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
+  const filteredTotal = filteredScores.length;
 
   const handlePageChange = (nextPage: number) => {
-    setPage(nextPage);
+    pushQuery({ page: String(nextPage) });
     resultsSectionRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
+  };
+
+  const resetPage = () => {
+    pushQuery({ page: undefined });
   };
 
   return (
@@ -181,7 +202,7 @@ export function StudentResultsView({
         </div>
       </div>
 
-      {scores.length === 0 ? (
+      {total === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/20 px-6 py-16 text-center">
           <BarChart3 className="mb-4 size-10 text-muted-foreground" />
           <p className="text-sm font-semibold">ما في نتائج بعد</p>
@@ -219,7 +240,7 @@ export function StudentResultsView({
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {paginatedScores.map((row) => (
+            {filteredScores.map((row) => (
               <ResultCard key={row.submissionId} row={row} />
             ))}
           </div>
