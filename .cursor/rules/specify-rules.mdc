@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/012-student-profile-onboarding/plan.md`
+**Active plan**: `specs/014-app-performance/plan.md`
 
 Related artifacts:
-- Spec: `specs/012-student-profile-onboarding/spec.md`
-- Research: `specs/012-student-profile-onboarding/research.md`
-- Data model: `specs/012-student-profile-onboarding/data-model.md`
-- Contracts: `specs/012-student-profile-onboarding/contracts/`
-- Quickstart: `specs/012-student-profile-onboarding/quickstart.md`
+- Spec: `specs/014-app-performance/spec.md`
+- Research: `specs/014-app-performance/research.md`
+- Data model: `specs/014-app-performance/data-model.md`
+- Contracts: `specs/014-app-performance/contracts/`
+- Quickstart: `specs/014-app-performance/quickstart.md`
 <!-- SPECKIT END -->

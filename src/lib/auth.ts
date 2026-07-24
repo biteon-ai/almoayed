@@ -5,12 +5,14 @@ import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
 import { DEMO_STUDENT, DEMO_TEACHER } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isDeviceSessionValid } from "@/lib/device-session";
+import { requestCache } from "@/lib/request-cache";
 import { sessionOptions, type SessionData } from "@/lib/session";
 
-export async function getSession(): Promise<SessionData> {
+/** [PERF-001] Request-scoped session decrypt — one iron-session read per RSC tree. */
+export const getSession = requestCache(async (): Promise<SessionData> => {
   const cookieStore = await cookies();
   return getIronSession<SessionData>(cookieStore, sessionOptions);
-}
+});
 
 function isDemoBypassIdentity(whatsappNumber: string | undefined): boolean {
   if (!whatsappNumber || !isAuthDemoBypassEnabled()) return false;
@@ -43,7 +45,12 @@ export async function validateDeviceSession(
   return isDeviceSessionValid(session.sessionToken, data?.last_session_id);
 }
 
-async function enforceValidSession(session: SessionData): Promise<SessionData> {
+/**
+ * [PERF-001] One login + AUTH-003 device-lock check per request.
+ * Layout + page + nested Server Actions share this memoized result.
+ */
+const getValidatedSession = requestCache(async (): Promise<SessionData> => {
+  const session = await getSession();
   if (!session.isLoggedIn || !session.profileId) {
     redirect("/login");
   }
@@ -55,14 +62,14 @@ async function enforceValidSession(session: SessionData): Promise<SessionData> {
   }
 
   return session;
-}
+});
 
 export async function requireAuthenticated(): Promise<SessionData> {
-  return enforceValidSession(await getSession());
+  return getValidatedSession();
 }
 
 export async function requireStudent(): Promise<SessionData> {
-  const session = await enforceValidSession(await getSession());
+  const session = await getValidatedSession();
   if (session.role !== "STUDENT") {
     redirect("/teacher/dashboard");
   }
@@ -70,7 +77,7 @@ export async function requireStudent(): Promise<SessionData> {
 }
 
 export async function requireTeacher(): Promise<SessionData> {
-  const session = await enforceValidSession(await getSession());
+  const session = await getValidatedSession();
   if (session.role !== "TEACHER") {
     if (session.role === "SUPER_ADMIN") {
       redirect("/admin/dashboard");
@@ -81,7 +88,7 @@ export async function requireTeacher(): Promise<SessionData> {
 }
 
 export async function requireSuperAdmin(): Promise<SessionData> {
-  const session = await enforceValidSession(await getSession());
+  const session = await getValidatedSession();
   if (session.role !== "SUPER_ADMIN" || session.impersonation) {
     redirect("/admin/login");
   }

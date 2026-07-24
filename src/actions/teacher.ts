@@ -30,8 +30,15 @@ import {
   isValidWhatsAppE164,
   sanitizeWhatsAppForDb,
 } from "@/lib/constants";
-import { computeTeacherDashboardAnalytics } from "@/lib/teacher-analytics";
+import { computeTeacherDashboardAnalytics, mapTeacherDashboardRpcPayload } from "@/lib/teacher-analytics";
+import type { TeacherDashboardRpcPayload } from "@/lib/teacher-analytics";
 import { computeTeacherStudentAnalytics } from "@/lib/student-analytics";
+import {
+  CATEGORY_LIST_SELECT,
+  QUIZ_LIST_SELECT,
+  TEACHER_GROUP_LIST_SELECT,
+  TOPIC_LIST_SELECT,
+} from "@/lib/perf-selects";
 
 function teacherId(session: { profileId: string }) {
   return session.profileId;
@@ -81,13 +88,29 @@ export async function getTeacherDashboardAnalytics(): Promise<TeacherDashboardAn
   const supabase = createAdminClient();
   const tid = teacherId(session);
 
+  const { data: rpcData, error: rpcError } = await supabase.rpc(
+    "get_teacher_dashboard_analytics",
+    { p_teacher_id: tid }
+  );
+
+  if (!rpcError && rpcData) {
+    return mapTeacherDashboardRpcPayload(
+      rpcData as TeacherDashboardRpcPayload
+    );
+  }
+
+  if (rpcError) {
+    console.error("[PERF-002] get_teacher_dashboard_analytics RPC", rpcError);
+  }
+
+  // Fallback: lean multi-query path if RPC unavailable
   const [studentsRes, quizzesRes, pendingRes, groupsRes] = await Promise.all([
     supabase
       .from("student_teachers")
       .select("student_id, tier")
       .eq("teacher_id", tid)
       .eq("status", "active"),
-    supabase.from("quizzes").select("*").eq("created_by", tid),
+    supabase.from("quizzes").select(QUIZ_LIST_SELECT).eq("created_by", tid),
     supabase
       .from("student_teachers")
       .select("id", { count: "exact", head: true })
@@ -144,18 +167,13 @@ export async function getTeacherDashboardAnalytics(): Promise<TeacherDashboardAn
     profiles = data ?? [];
   }
 
-  const { count: studentCount } = await supabase
-    .from("student_teachers")
-    .select("id", { count: "exact", head: true })
-    .eq("teacher_id", tid);
-
   return computeTeacherDashboardAnalytics({
     studentLinks,
     quizzes,
     submissions,
     profiles,
     groupIdsByStudent,
-    studentCount: studentCount ?? 0,
+    studentCount: studentLinks.length,
     quizCount: quizzes.length,
     pendingUpgrades: pendingRes.count ?? 0,
   });
@@ -283,7 +301,7 @@ export async function getTeacherStudentDetail(
       .from("teacher_groups")
       .select("id, group_name")
       .eq("teacher_id", tid),
-    supabase.from("quizzes").select("*").eq("created_by", tid),
+    supabase.from("quizzes").select(QUIZ_LIST_SELECT).eq("created_by", tid),
   ]);
 
   const groupIds = (groups ?? []).map((group) => group.id as string);
@@ -465,7 +483,7 @@ export async function getTeacherGroups(): Promise<TeacherGroup[]> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("teacher_groups")
-    .select("*")
+    .select(TEACHER_GROUP_LIST_SELECT)
     .eq("teacher_id", session.profileId)
     .order("created_at", { ascending: false });
   return (data as TeacherGroup[]) ?? [];
@@ -899,7 +917,7 @@ export async function getTeacherCategories(): Promise<Category[]> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("categories")
-    .select("*")
+    .select(CATEGORY_LIST_SELECT)
     .or(`teacher_id.eq.${session.profileId},is_global.eq.true`)
     .order("sort_order");
   return (data as Category[]) ?? [];
@@ -922,7 +940,7 @@ export async function getTopicsByCategory(categoryId: string): Promise<Topic[]> 
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("topics")
-    .select("*")
+    .select(TOPIC_LIST_SELECT)
     .eq("category_id", categoryId)
     .order("sort_order");
   return (data as Topic[]) ?? [];

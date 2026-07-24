@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Award,
@@ -13,18 +14,6 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -33,6 +22,36 @@ import { StatCard } from "@/components/teacher/StatCard";
 import { cn } from "@/lib/utils";
 import { SPEKIT } from "@/lib/spekit-targets";
 import type { TeacherDashboardAnalytics } from "@/types/database";
+
+const TeacherGradeDistributionChart = dynamic(
+  () =>
+    import("@/components/teacher/TeacherDashboardCharts").then(
+      (m) => m.TeacherGradeDistributionChart
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[250px] items-center justify-center text-sm text-muted-foreground">
+        جاري تحميل الرسم البياني…
+      </div>
+    ),
+  }
+);
+
+const TeacherWeeklyActivityChart = dynamic(
+  () =>
+    import("@/components/teacher/TeacherDashboardCharts").then(
+      (m) => m.TeacherWeeklyActivityChart
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[250px] items-center justify-center text-sm text-muted-foreground">
+        جاري تحميل الرسم البياني…
+      </div>
+    ),
+  }
+);
 
 interface TeacherDashboardAnalyticsProps {
   teacherName: string;
@@ -93,29 +112,6 @@ function TrendBadge({ value }: { value: number }) {
       {positive ? "+" : ""}
       {value}% هذا الأسبوع
     </span>
-  );
-}
-
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ value?: number; name?: string; color?: string }>;
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-
-  return (
-    <div className="rounded-xl border bg-background px-3 py-2 text-xs shadow-md">
-      <p className="mb-1 font-semibold">{label}</p>
-      {payload.map((entry) => (
-        <p key={entry.name} style={{ color: entry.color }}>
-          {entry.name}: {entry.value}
-        </p>
-      ))}
-    </div>
   );
 }
 
@@ -299,29 +295,9 @@ export function TeacherDashboardAnalytics({
             <BarChart3 className="size-5 text-muted-foreground" aria-hidden />
           </div>
           <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.gradeDistribution}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="range"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                  {analytics.gradeDistribution.map((entry) => (
-                    <Cell key={entry.range} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <TeacherGradeDistributionChart
+              gradeDistribution={analytics.gradeDistribution}
+            />
           </div>
         </Card>
 
@@ -399,40 +375,9 @@ export function TeacherDashboardAnalytics({
             <CheckCircle2 className="size-5 text-muted-foreground" aria-hidden />
           </div>
           <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={analytics.weeklyActivity}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="day"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip content={<ChartTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="passed"
-                  name="محاولات ناجحة"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="failed"
-                  name="محاولات غير مكتملة / رسوب"
-                  stroke="#f97316"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <TeacherWeeklyActivityChart
+              weeklyActivity={analytics.weeklyActivity}
+            />
           </div>
         </Card>
 

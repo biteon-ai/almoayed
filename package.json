@@ -16,7 +16,11 @@
     "pretest:e2e": "playwright install chromium",
     "test:ci": "node scripts/run-quality-gates.mjs && npm run test:e2e",
     "verify:migrations": "node scripts/verify-migrations.mjs",
-    "generate:brand": "node scripts/generate-brand-assets.mjs"
+    "generate:brand": "node scripts/generate-brand-assets.mjs",
+    "test:stress": "node scripts/perf-test/run-stress.mjs",
+    "test:perf": "node scripts/perf-test/run-all.mjs",
+    "test:perf:db": "node scripts/perf-test/run-db-profile.mjs",
+    "test:perf:lighthouse": "node scripts/perf-test/run-lighthouse.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

@@ -9,6 +9,9 @@ import {
   validateGamificationLadder,
   type TeacherGamificationStatus,
 } from "@/lib/teacher-gamification";
+import {
+  GAMIFICATION_TIER_SELECT,
+} from "@/lib/perf-selects";
 import type {
   ActionResult,
   GamificationTier,
@@ -21,7 +24,7 @@ export async function getGamificationTiers(): Promise<GamificationTier[]> {
 
   const { data, error } = await supabase
     .from("gamification_tiers")
-    .select("*")
+    .select(GAMIFICATION_TIER_SELECT)
     .eq("teacher_id", session.profileId)
     .order("level_number", { ascending: true });
 
@@ -105,7 +108,7 @@ export async function getStudentGamificationStatus(): Promise<TeacherGamificatio
 
   const { data: tierRows, error: tierError } = await supabase
     .from("gamification_tiers")
-    .select("*")
+    .select(GAMIFICATION_TIER_SELECT)
     .eq("teacher_id", teacherId)
     .order("level_number", { ascending: true });
 
