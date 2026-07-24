@@ -105,6 +105,9 @@ export async function getQuizForStudent(quizId: string): Promise<{
     .eq("is_active", true)
     .single<Quiz>();
 
+  // Soft-deleted quizzes remain loadable for mid-exam finish (TEACH-011);
+  // student catalogs filter deleted_at separately.
+
   if (!quiz) {
     return { quiz: null, questions: [], existingSubmissionId: null };
   }
@@ -406,6 +409,7 @@ async function fetchStudentQuizBundle(
     .select(`${QUIZ_LIST_SELECT}, questions(count)`)
     .eq("created_by", ctx.teacherId)
     .eq("is_active", true)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (options?.quizLimit) {
@@ -610,6 +614,7 @@ export async function getAvailableQuizzes(): Promise<QuizListItem[]> {
     .select(`${QUIZ_LIST_SELECT}, questions(count)`)
     .eq("created_by", ctx.teacherId)
     .eq("is_active", true)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (!data?.length) return [];

@@ -116,6 +116,8 @@ export interface Quiz {
   is_active: boolean;
   is_free: boolean;
   is_archived: boolean;
+  /** Soft-delete / Trash marker — null = active list; set = in Trash (TEACH-011) */
+  deleted_at: string | null;
   quiz_type: QuizType;
   target_group_id: string | null;
   created_at: string;
@@ -152,6 +154,41 @@ export interface AdminTeacherRow {
   quizCount: number;
   maxQuizLimit: number | null;
   createdAt: string;
+}
+
+/** [MT-003] Student row for Super Admin platform directory */
+export interface AdminStudentRow {
+  id: string;
+  fullName: string;
+  phoneNumber: string | null;
+  whatsappNumber: string | null;
+  teacherLinkCount: number;
+  createdAt: string;
+}
+
+/** [MT-003] Teacher link summary on admin student profile */
+export interface AdminStudentTeacherLink {
+  linkId: string;
+  teacherId: string;
+  teacherName: string;
+  status: StudentTeacherStatus;
+  tier: StudentTier;
+  linkedAt: string;
+}
+
+/** [MT-003] Full student profile for Super Admin detail page */
+export interface AdminStudentDetail extends AdminStudentRow {
+  email: string | null;
+  schoolName: string;
+  birthDate: string | null;
+  educationStage: EducationStage | null;
+  province: string | null;
+  city: string | null;
+  address: string;
+  onboardingCompleted: boolean;
+  profileCompleted: boolean;
+  submissionCount: number;
+  teacherLinks: AdminStudentTeacherLink[];
 }
 
 export interface TeacherQuiz extends Quiz {

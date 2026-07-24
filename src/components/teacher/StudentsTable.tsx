@@ -424,9 +424,10 @@ export function StudentsTable({
                         disabled={pending}
                         onClick={() => onDelete(student)}
                         className="cursor-pointer text-xs"
+                        {...spekit(SPEKIT.unlinkStudentAction)}
                       >
                         <Trash2 className="size-3.5" />
-                        حذف الطالب
+                        إزالة من قائمتك
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

@@ -26,21 +26,21 @@ export function DeleteStudentConfirmDialog({
 }: DeleteStudentConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent dir="rtl">
         <AlertDialogHeader>
-          <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+          <AlertDialogTitle>تأكيد الإزالة من قائمتك</AlertDialogTitle>
           <AlertDialogDescription>
-            هل أنت أؤكد حذف هذا الطالب من قائمتك؟ ({studentName}) لن يُحذف حسابه
-            بالكامل، فقط الربط معك.
+            سيتم إزالة الطالب ({studentName}) من قائمة طلابك فقط، ولن يتم حذف
+            حسابه أو سجل أداءه.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogCancel className="h-11">إلغاء</AlertDialogCancel>
           <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="h-11 bg-destructive text-destructive-foreground hover:bg-destructive/90"
             onClick={onConfirm}
           >
-            حذف / إلغاء الربط
+            إزالة من قائمتك
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

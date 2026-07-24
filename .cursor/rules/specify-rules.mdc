@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/015-db-scale-hardening/plan.md`
+**Active plan**: `specs/017-student-unlink-purge/plan.md`
 
 Related artifacts:
-- Spec: `specs/015-db-scale-hardening/spec.md`
-- Research: `specs/015-db-scale-hardening/research.md`
-- Data model: `specs/015-db-scale-hardening/data-model.md`
-- Contracts: `specs/015-db-scale-hardening/contracts/`
-- Quickstart: `specs/015-db-scale-hardening/quickstart.md`
+- Spec: `specs/017-student-unlink-purge/spec.md`
+- Research: `specs/017-student-unlink-purge/research.md`
+- Data model: `specs/017-student-unlink-purge/data-model.md`
+- Contracts: `specs/017-student-unlink-purge/contracts/`
+- Quickstart: `specs/017-student-unlink-purge/quickstart.md`
 <!-- SPECKIT END -->

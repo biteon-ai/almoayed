@@ -580,7 +580,7 @@ export function StudentManagement({
               prev.filter((s) => s.linkId !== target.linkId)
             );
             closeModal();
-            showToast("تم حذف الطالب من قائمتك.");
+            showToast("تمت الإزالة من قائمتك.");
           });
         }}
       />

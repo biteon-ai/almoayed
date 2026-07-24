@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getStudentProfile, getStudentResultsPageData } from "@/actions/quiz";
 import { getStudentGamificationStatus } from "@/actions/gamification";
@@ -31,11 +32,19 @@ export default async function StudentResultsPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <StudentResultsView
-      stats={data.stats}
-      scoresPage={data.scores}
-      totalQuizzes={data.totalQuizzes}
-      teacherGamification={teacherGamification}
-    />
+    <Suspense
+      fallback={
+        <div className="container mx-auto max-w-7xl p-4 text-sm text-muted-foreground">
+          جاري تحميل النتائج...
+        </div>
+      }
+    >
+      <StudentResultsView
+        stats={data.stats}
+        scoresPage={data.scores}
+        totalQuizzes={data.totalQuizzes}
+        teacherGamification={teacherGamification}
+      />
+    </Suspense>
   );
 }

@@ -76,6 +76,7 @@ function quiz(overrides: Partial<QuizCarouselItem> & Pick<QuizCarouselItem, "id"
     is_active: true,
     is_free: true,
     is_archived: false,
+    deleted_at: null,
     quiz_type: "regular",
     target_group_id: null,
     created_at: "2026-01-01T00:00:00Z",

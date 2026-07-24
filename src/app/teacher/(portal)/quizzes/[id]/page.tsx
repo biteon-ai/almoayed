@@ -1,5 +1,6 @@
 import { getQuizQuestions, getTeacherQuizById } from "@/actions/teacher";
 import { QuizQuestionsDashboard } from "@/components/teacher/QuizQuestionsDashboard";
+import { QuizTrashBanner } from "@/components/teacher/QuizTrashBanner";
 import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { notFound } from "next/navigation";
@@ -26,6 +27,10 @@ export default async function EditQuizPage({ params }: PageProps) {
       <Suspense fallback={null}>
         <EditQuizImportToast />
       </Suspense>
+
+      {quiz.deleted_at ? (
+        <QuizTrashBanner quizId={quiz.id} quizTitle={quiz.title} />
+      ) : null}
 
       <Suspense
         fallback={

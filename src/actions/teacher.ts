@@ -154,7 +154,8 @@ async function leanTeacherDashboardKpiFallback(
       .from("quizzes")
       .select("id, title, is_active")
       .eq("created_by", tid)
-      .eq("is_archived", false),
+      .eq("is_archived", false)
+      .is("deleted_at", null),
     supabase
       .from("student_teachers")
       .select("id", { count: "exact", head: true })
@@ -396,7 +397,11 @@ export async function getTeacherStudentDetail(
       .from("teacher_groups")
       .select("id, group_name")
       .eq("teacher_id", tid),
-    supabase.from("quizzes").select(QUIZ_LIST_SELECT).eq("created_by", tid),
+    supabase
+      .from("quizzes")
+      .select(QUIZ_LIST_SELECT)
+      .eq("created_by", tid)
+      .is("deleted_at", null),
   ]);
 
   const groupIds = (groups ?? []).map((group) => group.id as string);
@@ -1000,7 +1005,7 @@ export async function deleteStudentLink(linkId: string): Promise<ActionResult> {
     .eq("teacher_id", tid);
 
   if (error) {
-    return { ok: false, error: "فشل حذف الطالب من القائمة." };
+    return { ok: false, error: "فشل إزالة الطالب من قائمتك." };
   }
 
   revalidatePath("/teacher/students");
@@ -1052,30 +1057,50 @@ export async function createTopic(categoryId: string, name: string) {
   revalidatePath("/teacher/quizzes");
 }
 
+export type QuizListView = "active" | "trash";
+
 export async function getTeacherQuizzes(
-  pageInput?: PageInput
+  pageInput?: PageInput,
+  opts?: { view?: QuizListView }
 ): Promise<PagedResult<TeacherQuiz>> {
   const session = await requireTeacher();
   const supabase = createAdminClient();
   const pageSize = pageInput?.pageSize ?? QUIZ_PAGE_SIZE;
   const requestedPage = pageInput?.page ?? 1;
+  const view: QuizListView = opts?.view === "trash" ? "trash" : "active";
 
-  const { count } = await supabase
+  let countQuery = supabase
     .from("quizzes")
     .select("id", { count: "exact", head: true })
     .eq("created_by", session.profileId);
+
+  countQuery =
+    view === "trash"
+      ? countQuery.not("deleted_at", "is", null)
+      : countQuery.is("deleted_at", null);
+
+  const { count } = await countQuery;
 
   const total = count ?? 0;
   const page = clampPage(requestedPage, pageSize, total);
   const { from, to } = rangeFromPage(page, pageSize);
 
-  const { data } = await supabase
+  let dataQuery = supabase
     .from("quizzes")
     .select(`${QUIZ_LIST_SELECT}, questions(count)`)
-    .eq("created_by", session.profileId)
-    .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .eq("created_by", session.profileId);
+
+  dataQuery =
+    view === "trash"
+      ? dataQuery
+          .not("deleted_at", "is", null)
+          .order("deleted_at", { ascending: false })
+      : dataQuery
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false });
+
+  const { data } = await dataQuery.range(from, to);
 
   const items = (data ?? []).map((row) => {
     const { questions, ...quiz } = row as Quiz & {
@@ -1110,6 +1135,121 @@ export async function getTeacherQuizById(
     ...(quiz as Quiz),
     question_count: questions?.[0]?.count ?? 0,
   };
+}
+
+export type QuizTrashActionResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export async function softDeleteQuiz(
+  quizId: string
+): Promise<QuizTrashActionResult> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+
+  const { data: quiz } = await supabase
+    .from("quizzes")
+    .select("id, deleted_at")
+    .eq("id", quizId)
+    .eq("created_by", session.profileId)
+    .maybeSingle();
+
+  if (!quiz) {
+    return { ok: false, error: "الاختبار غير موجود أو ليس ضمن حسابك." };
+  }
+  if (quiz.deleted_at) {
+    return { ok: false, error: "هذا الاختبار موجود مسبقاً في سلة المهملات." };
+  }
+
+  const { error } = await supabase
+    .from("quizzes")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", quizId)
+    .eq("created_by", session.profileId)
+    .is("deleted_at", null);
+
+  if (error) {
+    return { ok: false, error: "فشل نقل الاختبار إلى سلة المهملات." };
+  }
+
+  revalidatePath("/teacher/quizzes");
+  revalidatePath(`/teacher/quizzes/${quizId}`);
+  return { ok: true };
+}
+
+export async function restoreQuiz(
+  quizId: string
+): Promise<QuizTrashActionResult> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+
+  const { data: quiz } = await supabase
+    .from("quizzes")
+    .select("id, deleted_at")
+    .eq("id", quizId)
+    .eq("created_by", session.profileId)
+    .maybeSingle();
+
+  if (!quiz) {
+    return { ok: false, error: "الاختبار غير موجود أو ليس ضمن حسابك." };
+  }
+  if (!quiz.deleted_at) {
+    return { ok: false, error: "هذا الاختبار ليس في سلة المهملات." };
+  }
+
+  const { error } = await supabase
+    .from("quizzes")
+    .update({ deleted_at: null })
+    .eq("id", quizId)
+    .eq("created_by", session.profileId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    return { ok: false, error: "فشل استعادة الاختبار." };
+  }
+
+  revalidatePath("/teacher/quizzes");
+  revalidatePath(`/teacher/quizzes/${quizId}`);
+  return { ok: true };
+}
+
+export async function permanentlyDeleteQuiz(
+  quizId: string
+): Promise<QuizTrashActionResult> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+
+  const { data: quiz } = await supabase
+    .from("quizzes")
+    .select("id, deleted_at")
+    .eq("id", quizId)
+    .eq("created_by", session.profileId)
+    .maybeSingle();
+
+  if (!quiz) {
+    return { ok: false, error: "الاختبار غير موجود أو ليس ضمن حسابك." };
+  }
+  if (!quiz.deleted_at) {
+    return {
+      ok: false,
+      error: "يجب نقل الاختبار إلى سلة المهملات قبل الحذف النهائي.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("quizzes")
+    .delete()
+    .eq("id", quizId)
+    .eq("created_by", session.profileId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    return { ok: false, error: "فشل الحذف النهائي للاختبار." };
+  }
+
+  revalidatePath("/teacher/quizzes");
+  revalidatePath(`/teacher/quizzes/${quizId}`);
+  return { ok: true };
 }
 
 export async function createQuiz(formData: FormData) {
