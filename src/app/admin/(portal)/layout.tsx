@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { logout } from "@/actions/auth";
 import { requireSuperAdmin } from "@/lib/auth";
 import { APP_SLOGAN } from "@/lib/constants";
 import { SPEKIT, spekitAttr } from "@/lib/spekit-targets";
 import { Logo } from "@/components/brand/Logo";
-import { Button } from "@/components/ui/button";
-import { LayoutDashboard, LogOut, Users } from "lucide-react";
+import { LogoutActionButton } from "@/components/layout/LogoutActionButton";
+import { LayoutDashboard, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default async function AdminLayout({
@@ -50,11 +49,7 @@ export default async function AdminLayout({
               <Users className="size-4" />
               إدارة المدرسين
             </Link>
-            <form action={logout}>
-              <Button type="submit" variant="ghost" size="icon" aria-label="خروج">
-                <LogOut className="size-5" />
-              </Button>
-            </form>
+            <LogoutActionButton aria-label="خروج" />
           </nav>
         </div>
       </header>

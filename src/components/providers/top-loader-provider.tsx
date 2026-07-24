@@ -4,6 +4,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useState,
 } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
@@ -12,8 +13,15 @@ import {
   stopProgress,
   useRouter as useProgressRouter,
 } from "next-nprogress-bar";
+import {
+  TopNavLoaderSpekitBridge,
+  startTopNavLoader,
+  stopTopNavLoader,
+  pulseTopNavLoaderTowardPeak,
+  completeTopNavLoader,
+} from "@/components/ui/top-loader";
 
-const FINISH_DELAY_MS = 320;
+const FINISH_DELAY_MS = 380;
 
 function isInternalNavigationAnchor(anchor: HTMLAnchorElement): boolean {
   if (anchor.target === "_blank") return false;
@@ -46,13 +54,14 @@ function isInternalNavigationAnchor(anchor: HTMLAnchorElement): boolean {
 /** Starts the bar synchronously before App Router mutates history. */
 function NavigationStartListener() {
   useEffect(() => {
-    const begin = () => startProgress();
+    const begin = () => startTopNavLoader();
 
     const handleDocumentClick = (event: MouseEvent) => {
       if (event.defaultPrevented) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
       }
+      if (event.button !== 0) return;
 
       let element = event.target as Element | null;
       while (element && element.tagName !== "A") {
@@ -66,7 +75,9 @@ function NavigationStartListener() {
     };
 
     const currentPushState = window.history.pushState.bind(window.history);
-    const currentReplaceState = window.history.replaceState.bind(window.history);
+    const currentReplaceState = window.history.replaceState.bind(
+      window.history
+    );
 
     window.history.pushState = (...args) => {
       begin();
@@ -99,14 +110,14 @@ function RouteFinishListener() {
 
   useEffect(() => {
     const finishTimer = window.setTimeout(() => {
-      stopProgress(true);
+      stopTopNavLoader(true);
     }, FINISH_DELAY_MS);
 
     return () => window.clearTimeout(finishTimer);
   }, [pathname, searchParams]);
 
   useEffect(() => {
-    const finish = () => stopProgress(true);
+    const finish = () => stopTopNavLoader(true);
     window.addEventListener("hashchange", finish);
     return () => window.removeEventListener("hashchange", finish);
   }, []);
@@ -114,7 +125,48 @@ function RouteFinishListener() {
   return null;
 }
 
-/** App-wide top loading bar (RTL emerald theme) via next-nprogress-bar. */
+/**
+ * Client-only NProgress mount — avoids SSR/client HTML mismatch from injected <style>
+ * or dynamic #nprogress nodes (FIX-UI-001). Styles live in globals.css.
+ */
+function ClientTopProgressBar() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+    <>
+      <ProgressBar
+        height="3px"
+        color="#10b981"
+        shallowRouting
+        startPosition={0}
+        stopDelay={FINISH_DELAY_MS}
+        delay={0}
+        disableStyle
+        options={{
+          showSpinner: false,
+          trickle: true,
+          trickleSpeed: 180,
+          minimum: 0.08,
+          easing: "ease",
+          speed: 320,
+        }}
+      />
+      <TopNavLoaderSpekitBridge />
+    </>
+  );
+}
+
+/**
+ * [UI-006] App-wide top loading bar — smooth 0% → trickle → 100% via nprogress-v2.
+ * Emerald theme, RTL-aligned growth, Spekit `top-nav-loader`.
+ * [FIX-UI-001] No inline CSS injection; ProgressBar mounts after hydration.
+ */
 export function TopLoaderProvider({
   children,
 }: {
@@ -123,19 +175,7 @@ export function TopLoaderProvider({
   return (
     <>
       {children}
-      <ProgressBar
-        height="4px"
-        color="#10b981"
-        shallowRouting
-        stopDelay={FINISH_DELAY_MS}
-        startPosition={0.12}
-        options={{
-          showSpinner: false,
-          trickleSpeed: 120,
-          minimum: 0.12,
-          speed: 280,
-        }}
-      />
+      <ClientTopProgressBar />
       <Suspense fallback={null}>
         <NavigationStartListener />
         <RouteFinishListener />
@@ -149,27 +189,37 @@ export { useProgressRouter };
 
 /** Manual start/stop controls for heavy client fetches or async actions. */
 export function useLoadingBar() {
-  const startLoading = useCallback(() => startProgress(), []);
-  const stopLoading = useCallback(() => stopProgress(true), []);
+  const startLoading = useCallback(() => startTopNavLoader(), []);
+  const stopLoading = useCallback(() => stopTopNavLoader(true), []);
 
   return { startLoading, stopLoading };
 }
 
-/** Syncs the top loader with a boolean (e.g. `useTransition` pending). */
+/** Syncs the top loader with a boolean (e.g. `useTransition` pending / login busy). */
 export function useLoadingBarSync(active: boolean) {
   useEffect(() => {
-    if (!active) return;
-    startProgress();
-    return () => stopProgress(true);
+    if (!active) {
+      completeTopNavLoader();
+      return;
+    }
+    startTopNavLoader();
+    const id = window.setInterval(() => pulseTopNavLoaderTowardPeak(0.9), 160);
+    return () => {
+      window.clearInterval(id);
+      // Do not force-complete here when transitioning active→active remounts;
+      // inactive branch handles done().
+    };
   }, [active]);
 }
 
 /** Wraps an async function so the top loader runs until it settles. */
 export async function withLoadingBar<T>(fn: () => Promise<T>): Promise<T> {
-  startProgress();
+  startTopNavLoader();
   try {
     return await fn();
   } finally {
-    stopProgress(true);
+    stopTopNavLoader(true);
   }
 }
+
+export { startProgress, stopProgress, startTopNavLoader, stopTopNavLoader, completeTopNavLoader };

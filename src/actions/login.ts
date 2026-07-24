@@ -17,36 +17,9 @@ import {
   DEMO_TEACHER,
   normalizeWhatsAppNumber,
 } from "@/lib/constants";
+import { resolveDemoLoginIdentity } from "@/lib/demo-accounts";
 import type { Profile } from "@/types/database";
 import type { LoginState } from "@/types/auth";
-
-async function resolveStudentTeacherId(
-  supabase: NonNullable<ReturnType<typeof getAuthSupabaseClient>>,
-  studentId: string,
-  fallbackTeacherId: string | null
-): Promise<{ teacherId: string | null; error: LoginState | null }> {
-  const { data: activeLink, error: linkFetchError } = await supabase
-    .from("student_teachers")
-    .select("teacher_id, status")
-    .eq("student_id", studentId)
-    .eq("status", "active")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (linkFetchError) {
-    logAuthFailure("SUPABASE_STUDENT_LINK_FETCH_FAILED", linkFetchError);
-    return {
-      teacherId: null,
-      error: authError(AuthErrorCode.SUPABASE_CONNECTION_ERROR),
-    };
-  }
-
-  return {
-    teacherId: activeLink?.teacher_id ?? fallbackTeacherId,
-    error: null,
-  };
-}
 
 /** AUTH-002: create profile + teacher link; does NOT mint a session. */
 export async function registerStudent(
@@ -229,16 +202,16 @@ export async function linkTeacherCodeAction(
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, whatsapp_number, full_name, role")
       .eq("id", pending.profileId)
-      .maybeSingle<Profile>();
+      .maybeSingle();
 
     if (profileError || !profile) {
       logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", profileError);
       return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
     }
 
-    const sessionResult = await establishSession(profile, teacher.id);
+    const sessionResult = await establishSession(profile, teacher.id, supabase);
     if ("status" in sessionResult && sessionResult.status === "error") {
       return sessionResult;
     }
@@ -250,7 +223,7 @@ export async function linkTeacherCodeAction(
   }
 }
 
-/** Local/demo session mint for seeded identities only (FR-012). */
+/** Local/demo session mint for seeded identities only (FR-012 / FIX-AUTH-001). */
 export async function loginDemoAccount(
   _prev: LoginState | null,
   formData: FormData
@@ -278,29 +251,14 @@ export async function loginDemoAccount(
       return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
     }
 
-    const { data: profile, error: fetchError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("whatsapp_number", whatsappNumber)
-      .maybeSingle<Profile>();
+    const resolved = await resolveDemoLoginIdentity(supabase, whatsappNumber);
+    if (!resolved.ok) return resolved.error;
 
-    if (fetchError) {
-      logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", fetchError);
-      return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
-    }
-
-    if (!profile) {
-      return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
-    }
-
-    let teacherId: string | null = null;
-    if (profile.role === "STUDENT") {
-      const resolved = await resolveStudentTeacherId(supabase, profile.id, null);
-      if (resolved.error) return resolved.error;
-      teacherId = resolved.teacherId;
-    }
-
-    const sessionResult = await establishSession(profile, teacherId);
+    const sessionResult = await establishSession(
+      resolved.profile,
+      resolved.teacherId,
+      supabase
+    );
     if ("status" in sessionResult && sessionResult.status === "error") {
       return sessionResult;
     }

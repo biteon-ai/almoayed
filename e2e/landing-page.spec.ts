@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { loginAsDemoStudent } from "./helpers/demo-login";
 
 const FEATURE = "[LAND-001]";
 
@@ -44,10 +45,7 @@ test.describe(`${FEATURE} Marketing landing (logged in)`, () => {
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"
     );
 
-    await page.goto("/login");
-    await page.getByRole("tab", { name: "حساب تجريبي" }).click();
-    await page.locator('[data-spekit="login-demo-student"]').click();
-    await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+    await loginAsDemoStudent(page);
 
     await page.goto("/");
     await expect(page).toHaveURL(/\/dashboard/);

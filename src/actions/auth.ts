@@ -12,10 +12,7 @@ import {
   isAdminWhatsAppAllowed,
   verifyAdminFallbackSecret,
 } from "@/lib/admin-fallback";
-import {
-  establishSession,
-  getAuthSupabaseClient,
-} from "@/lib/auth-session";
+import { establishSession, getAuthSupabaseClient } from "@/lib/auth-session";
 import { normalizeWhatsAppNumber } from "@/lib/constants";
 import {
   defaultSession,
@@ -23,8 +20,13 @@ import {
   type SessionData,
 } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Profile } from "@/types/database";
 import type { LoginState } from "@/types/auth";
+
+/**
+ * FIX-AUTH-001: demo one-click login lives in `loginDemoAccount` (`src/actions/login.ts`)
+ * and uses `resolveDemoLoginIdentity` + service-role admin client to upsert seed profiles.
+ * UI-006: client logout forms call `startTopNavLoader()` before invoking this Server Action.
+ */
 
 export async function logout(): Promise<void> {
   const cookieStore = await cookies();
@@ -88,17 +90,17 @@ async function loginAdminFallbackImpl(formData: FormData): Promise<LoginState> {
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, whatsapp_number, full_name, role")
     .eq("whatsapp_number", whatsappNumber)
     .eq("role", "TEACHER")
-    .maybeSingle<Profile>();
+    .maybeSingle();
 
   if (error || !profile) {
     logAuthFailure("ADMIN_FALLBACK_PROFILE_MISS", error);
     return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
   }
 
-  const sessionResult = await establishSession(profile, null);
+  const sessionResult = await establishSession(profile, null, supabase);
   if ("status" in sessionResult && sessionResult.status === "error") {
     return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
   }

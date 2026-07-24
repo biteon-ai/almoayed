@@ -11,7 +11,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile } from "@/types/database";
 import type { LoginState } from "@/types/auth";
 
-export function getAuthSupabaseClient() {
+/** Minimal profile fields required to mint a session (AUTH-003 / AUTH-006). */
+export type SessionProfile = Pick<
+  Profile,
+  "id" | "whatsapp_number" | "full_name" | "role"
+>;
+
+export type AuthSupabaseClient = ReturnType<typeof createAdminClient>;
+
+export function getAuthSupabaseClient(): AuthSupabaseClient | null {
   try {
     return createAdminClient();
   } catch (error) {
@@ -23,12 +31,14 @@ export function getAuthSupabaseClient() {
 /**
  * Mint iron-session and update profiles.last_session_id (AUTH-003).
  * Shared by OTP callback, admin fallback, and demo bypass.
+ * Pass an existing `supabase` client to avoid a second admin-client init (AUTH-006).
  */
 export async function establishSession(
-  profile: Profile,
-  teacherId: string | null
+  profile: SessionProfile,
+  teacherId: string | null,
+  supabaseClient?: AuthSupabaseClient | null
 ): Promise<LoginState | { role: "TEACHER" | "STUDENT" | "SUPER_ADMIN" }> {
-  const supabase = getAuthSupabaseClient();
+  const supabase = supabaseClient ?? getAuthSupabaseClient();
   if (!supabase) {
     return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
   }
@@ -76,7 +86,7 @@ export async function establishSession(
  * Does NOT set isLoggedIn or last_session_id.
  */
 export async function savePendingTeacherLinkSession(
-  profile: Profile
+  profile: SessionProfile
 ): Promise<{ ok: true } | LoginState> {
   try {
     const cookieStore = await cookies();

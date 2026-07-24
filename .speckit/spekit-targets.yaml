@@ -46,7 +46,6 @@ AUTH-001:
   login-name-field: "Student name field (optional)"
   login-submit: "Primary login button"
   login-otp-cta: "Existing-user BiteonSwitch WhatsApp OTP CTA"
-  login-loading: "Full-screen login / redirect loading overlay"
   login-demo-student: "Demo student login button"
   login-demo-teacher: "Demo teacher login button"
   login-verification-panel: "Pending verification WhatsApp panel"
@@ -57,6 +56,10 @@ AUTH-002:
 
 AUTH-005:
   admin-login-form: "Admin emergency fallback login form"
+
+AUTH-006:
+  login-loading: "Full-screen login / redirect loading overlay + top progress cue"
+  active-login-loader: "Active trickle progress bar during login Server Actions"
 
 # ── Multi-tenant ────────────────────────────────────────────────
 MT-002:
@@ -213,7 +216,8 @@ ADMIN-001:
 
 # ── Navigation progress ─────────────────────────────────────────
 UI-006:
-  navbar-progress: "Header bottom-edge route progress line"
+  navbar-progress: "Header bottom-edge route progress line (incremental)"
+  top-nav-loader: "Global NProgress top-edge loader (#nprogress)"
 
 # ── Student results cards ───────────────────────────────────────
 UI-007:

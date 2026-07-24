@@ -15,7 +15,8 @@ export const SPEKIT = {
   loginDemoStudent: "login-demo-student",
   loginDemoTeacher: "login-demo-teacher",
   loginVerificationPanel: "login-verification-panel",
-  loginLoading: "login-loading-overlay",
+  loginLoading: "login-loading",
+  activeLoginLoader: "active-login-loader",
   adminLoginForm: "admin-login-form",
 
   // ── MT-001 / MT-002 ──────────────────────────────────────────
@@ -165,6 +166,7 @@ export const SPEKIT = {
 
   // ── UI-006 ───────────────────────────────────────────────────
   navbarProgress: "navbar-progress",
+  topNavLoader: "top-nav-loader",
 
   // ── GAMIF-001 ────────────────────────────────────────────────
   gamifSettingsPage: "gamif-settings-page",

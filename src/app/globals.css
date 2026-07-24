@@ -176,18 +176,38 @@
   animation: fadeIn 0.35s ease-out forwards;
 }
 
-/* Global route progress bar — above sticky headers & safe-area shell */
+/* [UI-006 / FIX-UI-001 / FIX-UI-003] Single top progress bar — always left-anchored.
+   Do NOT flip to `right: 0` in RTL: NProgress uses translate3d from the left;
+   right-anchoring leaves a stuck green segment on the top-right edge. */
 #nprogress {
   pointer-events: none;
 }
 
 #nprogress .bar {
+  background: #10b981 !important;
+  position: fixed !important;
   z-index: 99999 !important;
-  box-shadow: 0 0 10px rgb(16 185 129 / 0.45);
+  top: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  width: 100% !important;
+  height: 3px !important;
+  box-shadow: 0 0 8px rgb(16 185 129 / 0.35);
+  transition:
+    transform 0.2s ease,
+    opacity 0.25s ease !important;
 }
 
+/* Peg glow looks like a stuck right-edge block — disable it. */
 #nprogress .peg {
-  box-shadow:
-    0 0 12px rgb(16 185 129 / 0.75),
-    0 0 6px rgb(16 185 129 / 0.55);
+  display: none !important;
+}
+
+#nprogress .spinner {
+  display: none !important;
+}
+
+/* While ActiveLoginLoaderBar is visible, hide NProgress to avoid a second bar. */
+html.login-progress-active #nprogress {
+  display: none !important;
 }

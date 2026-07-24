@@ -48,3 +48,10 @@ describe(`${FEATURE_LOCK} Device concurrency lock`, () => {
     expect(isDeviceSessionValid("token", undefined)).toBe(true);
   });
 });
+
+describe(`[FIX-AUTH-001] Demo WhatsApp constants for device-lock bypass`, () => {
+  it("keeps seeded demo numbers stable for AUTH_DEMO_BYPASS skip path", () => {
+    expect(DEMO_STUDENT.whatsapp_number).toBe("963987654321");
+    expect(DEMO_TEACHER.whatsapp_number).toBe("963912345678");
+  });
+});

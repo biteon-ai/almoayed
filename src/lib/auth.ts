@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { getIronSession } from "iron-session";
 import { redirect } from "next/navigation";
+import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
+import { DEMO_STUDENT, DEMO_TEACHER } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isDeviceSessionValid } from "@/lib/device-session";
 import { sessionOptions, type SessionData } from "@/lib/session";
@@ -10,12 +12,25 @@ export async function getSession(): Promise<SessionData> {
   return getIronSession<SessionData>(cookieStore, sessionOptions);
 }
 
+function isDemoBypassIdentity(whatsappNumber: string | undefined): boolean {
+  if (!whatsappNumber || !isAuthDemoBypassEnabled()) return false;
+  return (
+    whatsappNumber === DEMO_STUDENT.whatsapp_number ||
+    whatsappNumber === DEMO_TEACHER.whatsapp_number
+  );
+}
+
 /** Invalidate session if another device logged in (device lock). */
 export async function validateDeviceSession(
   session: SessionData
 ): Promise<boolean> {
   if (!session.isLoggedIn || !session.profileId) {
     return false;
+  }
+
+  // FIX-AUTH-001 / e2e: demo identities are shared; skip AUTH-003 when bypass is on.
+  if (isDemoBypassIdentity(session.whatsappNumber)) {
+    return true;
   }
 
   const supabase = createAdminClient();

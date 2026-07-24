@@ -94,6 +94,51 @@ features:
       - Generic Arabic denial; works when BiteonSwitch is unavailable; enforces AUTH-003
     spekit: [admin-login-form]
 
+  - id: AUTH-006
+    name: Login Loading Feedback & Auth Path Optimization
+    status: implemented
+    persona: [STUDENT, TEACHER, PUBLIC]
+    routes: ["/login", "/admin/emergency"]
+    files:
+      - src/app/login/login-form.tsx
+      - src/components/login/LoginLoadingOverlay.tsx
+      - src/app/admin/(auth)/login/admin-login-form.tsx
+      - src/actions/login.ts
+      - src/actions/auth.ts
+      - src/lib/auth-session.ts
+      - src/lib/spekit-targets.ts
+    acceptance:
+      - All login CTAs (OTP, register, teacher-link, demo, emergency) disable immediately on click to prevent double submit
+      - Active submit/demo button shows inline Shadcn Loader2 spinner + Arabic pending label
+      - Top-edge nprogress (useLoadingBarSync) + LoginLoadingOverlay with data-spekit=login-loading while Server Action runs
+      - Demo login resolves via service-role admin client; auto-upserts seed profiles when missing (FIX-AUTH-001)
+      - Emergency fallback uses narrow profile select + reused client; loading overlay + progress bar
+      - Loading copy and overlay remain dir=rtl
+    spekit: [login-loading, login-submit, login-otp-cta, login-demo-student, login-demo-teacher, admin-login-form]
+
+  - id: FIX-AUTH-001
+    name: Demo Login Profile Fetch Fix & Auto-Upsert
+    status: implemented
+    persona: [DEVELOPER, ADMIN]
+    routes: ["/login"]
+    files:
+      - src/lib/demo-accounts.ts
+      - src/lib/supabase/admin.ts
+      - src/actions/login.ts
+      - src/actions/auth.ts
+      - src/app/login/login-form.tsx
+      - tests/features/fix-auth-001-demo-login.test.ts
+    acceptance:
+      - Demo login uses Supabase Admin (service_role) client; never ambiguous profiles→student_teachers embed
+      - Missing demo profiles (963912345678 / 963987654321) are auto-upserted with seed UUIDs + active student_teachers link
+      - Supabase fetch/upsert errors and aborted timeouts map to LoginState errors (no unhandled throws)
+      - Admin client fetch timeout 8s to avoid hung demo login
+      - Demo buttons show instant spinner + disabled state via useTransition (AUTH-006)
+      - Success redirects to /dashboard (student) or /teacher/dashboard (teacher) with iron-session
+      - When AUTH_DEMO_BYPASS is on, AUTH-003 device lock is skipped for demo WhatsApps (parallel e2e / multi-tab)
+      - RTL error alerts unchanged
+    spekit: [login-demo-student, login-demo-teacher, login-loading]
+
   - id: ADMIN-001
     name: Super Admin Dashboard
     status: implemented
@@ -681,19 +726,86 @@ partial_features:
     name: Navbar Route Progress
     status: done
     notes: |
-      Instant emerald progress line on sticky header bottom edge.
-      Starts on internal link click; holds ~400ms after pathname/search change.
-      Pure Tailwind animate-pulse (no custom keyframes).
+      Global NProgress top bar (smooth 0% → trickle → 100%) + header-edge incremental bar.
+      Starts on internal link click, login/demo submit, and logout; finishes on route paint or auth error.
+      RTL page chrome preserved; progress fill geometry stays left-anchored (FIX-UI-003 — no right-edge stub).
+      Styles live in globals.css; ProgressBar mounts client-only (FIX-UI-001 — no SSR <style> injection).
     acceptance:
-      - Visible on student header when switching /dashboard /quizzes /results /settings
-      - Visible on teacher portal header tab switches
+      - Top bar starts near 0%, trickles while waiting, completes smoothly at route load
+      - Login / demo / OTP submit starts the bar immediately; stops on auth error
+      - Logout starts the bar before session invalidate + redirect to /login
+      - Single left-anchored top bar (no RTL right:0 flip, no peg glow stub)
+      - No stuck infinite loader after finish or error
+      - data-spekit=top-nav-loader on #nprogress; navbar-progress on header line
+      - Visible on student header and teacher portal tab switches
       - No flash on initial page load
+      - No React hydration mismatch from NProgress style injection
     files:
+      - src/components/ui/top-loader.tsx
+      - src/components/providers/top-loader-provider.tsx
+      - src/app/globals.css
       - src/components/layout/NavbarProgress.tsx
+      - src/components/layout/LogoutActionButton.tsx
+      - src/components/settings/LogoutConfirmButton.tsx
+      - src/app/login/login-form.tsx
       - src/components/layout/StudentHeader.tsx
       - src/app/teacher/(portal)/layout.tsx
     spekit:
+      - top-nav-loader
       - navbar-progress
+
+  - id: FIX-UI-001
+    name: Top Loader Hydration Mismatch Fix
+    status: implemented
+    persona: [DEVELOPER]
+    routes: ["/", "/login", "/dashboard"]
+    files:
+      - src/app/globals.css
+      - src/components/ui/top-loader.tsx
+      - src/components/providers/top-loader-provider.tsx
+    acceptance:
+      - No inline <style> string / ProgressBar style prop injected during SSR
+      - NProgress #nprogress / .bar / .peg / RTL rules live in app/globals.css
+      - ProgressBar uses disableStyle and mounts only after client hydration (mounted gate)
+      - UI-006 start/stop / Spekit / RTL behavior preserved
+      - /login, /dashboard, and other routes hydrate without React hydration mismatch from the top loader
+    spekit: [top-nav-loader]
+
+  - id: FIX-UI-002
+    name: Active Progress Bar During Login Server Action
+    status: implemented
+    persona: [STUDENT, TEACHER, PUBLIC]
+    routes: ["/login"]
+    files:
+      - src/components/ui/top-loader.tsx
+      - src/components/providers/top-loader-provider.tsx
+      - src/app/login/login-form.tsx
+      - src/lib/spekit-targets.ts
+    acceptance:
+      - Demo/login click starts NProgress immediately and trickles toward ~90% while Server Action pending
+      - ActiveLoginLoaderBar renders a visible RTL top bar with data-spekit=active-login-loader
+      - On auth error, loader completes/resets (not stuck); on success stays active until redirect unload
+      - useLoadingBarSync pulses NProgress while isBusy
+      - Does not break UI-006 route progress or FIX-UI-001 hydration fix
+    spekit: [active-login-loader, top-nav-loader, login-loading]
+
+  - id: FIX-UI-003
+    name: Remove Duplicate Right-Edge Progress Stub
+    status: implemented
+    persona: [DEVELOPER]
+    routes: ["/login", "/dashboard"]
+    files:
+      - src/app/globals.css
+      - src/components/ui/top-loader.tsx
+      - src/components/login/LoginLoadingOverlay.tsx
+      - src/components/layout/NavbarProgress.tsx
+    acceptance:
+      - #nprogress .bar stays left:0 / top:0 / width:100% (no html[dir=rtl] right:0 override)
+      - #nprogress .peg hidden (no glow block on the right edge)
+      - Only one top bar during login (ActiveLoginLoaderBar); #nprogress hidden via html.login-progress-active
+      - Overlay no longer draws a second top-edge green strip
+      - Progress fill uses LTR geometry so width% grows smoothly without a leftover right segment
+    spekit: [active-login-loader, top-nav-loader]
 
   - id: UI-007
     name: Quiz Results Card Redesign

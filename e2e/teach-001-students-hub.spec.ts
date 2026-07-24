@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { loginAsDemoTeacher } from "./helpers/demo-login";
 
 const FEATURE = "[TEACH-001]";
 
@@ -27,10 +28,7 @@ test.describe(`${FEATURE} Students hub (authed)`, () => {
       "Needs live Supabase for demo teacher session"
     );
 
-    await page.goto("/login");
-    await page.getByRole("tab", { name: "حساب تجريبي" }).click();
-    await page.locator('[data-spekit="login-demo-teacher"]').click();
-    await page.waitForURL(/\/teacher/, { timeout: 15_000 });
+    await loginAsDemoTeacher(page);
 
     await page.goto("/teacher/students");
     await expect(

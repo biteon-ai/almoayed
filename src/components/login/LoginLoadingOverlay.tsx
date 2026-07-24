@@ -11,6 +11,7 @@ interface LoginLoadingOverlayProps {
   subMessage?: string;
 }
 
+/** AUTH-006 — full-screen RTL loading state (progress lives in ActiveLoginLoaderBar / NProgress). */
 export function LoginLoadingOverlay({
   show,
   message,
@@ -24,6 +25,7 @@ export function LoginLoadingOverlay({
       role="status"
       aria-live="polite"
       aria-busy="true"
+      dir="rtl"
       data-spekit={SPEKIT.loginLoading}
     >
       <div className="mx-6 flex max-w-xs flex-col items-center text-center animate-fade-in">

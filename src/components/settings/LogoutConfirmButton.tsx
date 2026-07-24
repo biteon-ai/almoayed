@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { logout } from "@/actions/auth";
+import { startTopNavLoader } from "@/components/ui/top-loader";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -21,7 +22,14 @@ export function LogoutConfirmButton() {
 
   return (
     <div className="pt-1">
-      <form ref={formRef} action={logout} className="hidden" />
+      <form
+        ref={formRef}
+        action={logout}
+        className="hidden"
+        onSubmit={() => {
+          startTopNavLoader();
+        }}
+      />
 
       <Button
         type="button"
@@ -45,7 +53,10 @@ export function LogoutConfirmButton() {
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
-              onClick={() => formRef.current?.requestSubmit()}
+              onClick={() => {
+                startTopNavLoader();
+                formRef.current?.requestSubmit();
+              }}
             >
               نعم، خروج
             </AlertDialogAction>

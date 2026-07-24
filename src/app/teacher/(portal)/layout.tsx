@@ -1,13 +1,11 @@
-import { logout } from "@/actions/auth";
 import { getSession, requireTeacher } from "@/lib/auth";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { APP_SLOGAN } from "@/lib/constants";
 import { Logo } from "@/components/brand/Logo";
+import { LogoutActionButton } from "@/components/layout/LogoutActionButton";
 import { NavbarProgress } from "@/components/layout/NavbarProgress";
 import { TeacherHeaderNav } from "@/components/layout/TeacherHeaderNav";
 import { TeacherPortalShell } from "@/components/layout/TeacherPortalShell";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
 
 export default async function TeacherLayout({
   children,
@@ -34,11 +32,7 @@ export default async function TeacherLayout({
               </div>
             </div>
             <TeacherHeaderNav variant="desktop" />
-            <form action={logout}>
-              <Button type="submit" variant="ghost" size="icon" aria-label="خروج">
-                <LogOut className="size-5" />
-              </Button>
-            </form>
+            <LogoutActionButton aria-label="خروج" />
           </div>
           <TeacherHeaderNav variant="mobile" />
         </header>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import {
@@ -18,6 +18,11 @@ import {
 import { DEMO_STUDENT, DEMO_TEACHER, APP_FOOTER_COPYRIGHT } from "@/lib/constants";
 import { AuthField, AuthInputShell } from "@/components/login/AuthField";
 import { LoginLoadingOverlay } from "@/components/login/LoginLoadingOverlay";
+import { useLoadingBarSync } from "@/components/providers/top-loader-provider";
+import {
+  ActiveLoginLoaderBar,
+  startTopNavLoader,
+} from "@/components/ui/top-loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -66,31 +71,36 @@ function SubmitButton({
   variant = "brand",
   spekitId,
   icon: Icon,
+  forceDisabled = false,
 }: {
   label: string;
   pendingLabel: string;
   variant?: "brand" | "whatsapp" | "secondary";
   spekitId?: string;
   icon: React.ElementType;
+  /** AUTH-006: disable when any other login action is in flight. */
+  forceDisabled?: boolean;
 }) {
   const { pending } = useFormStatus();
+  const disabled = pending || forceDisabled;
   return (
     <Button
       type="submit"
       variant={variant}
       size="default"
       className={touchBtnClass}
-      disabled={pending}
+      disabled={disabled}
+      aria-busy={pending}
       data-spekit={spekitId}
     >
       {pending ? (
         <>
-          <Loader2 className="size-4 animate-spin" />
+          <Loader2 className="size-4 animate-spin" aria-hidden />
           {pendingLabel}
         </>
       ) : (
         <>
-          <Icon className="size-4" />
+          <Icon className="size-4" aria-hidden />
           {label}
         </>
       )}
@@ -153,6 +163,8 @@ function DemoQuickLoginButton({
   accent,
   onClick,
   spekitId,
+  disabled = false,
+  pending = false,
 }: {
   title: string;
   subtitle: string;
@@ -160,6 +172,8 @@ function DemoQuickLoginButton({
   accent: "student" | "teacher";
   onClick: () => void;
   spekitId?: string;
+  disabled?: boolean;
+  pending?: boolean;
 }) {
   const styles =
     accent === "student"
@@ -177,9 +191,12 @@ function DemoQuickLoginButton({
       type="button"
       data-spekit={spekitId}
       onClick={onClick}
+      disabled={disabled}
+      aria-busy={pending}
       className={cn(
         "group flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-start transition-all duration-300",
-        styles.card
+        styles.card,
+        disabled && "pointer-events-none opacity-60"
       )}
     >
       <div
@@ -188,15 +205,25 @@ function DemoQuickLoginButton({
           styles.icon
         )}
       >
-        <Icon className="h-6 w-6" />
+        {pending ? (
+          <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
+        ) : (
+          <Icon className="h-6 w-6" aria-hidden />
+        )}
       </div>
       <div className="min-w-0 flex-1 space-y-0.5">
-        <p className="font-bold text-foreground">{title}</p>
+        <p className="font-bold text-foreground">
+          {pending ? "جاري الدخول..." : title}
+        </p>
         <p className="text-xs leading-relaxed text-muted-foreground">
-          {subtitle}
+          {pending ? "لحظات ويكتمل التحقق من الحساب التجريبي" : subtitle}
         </p>
       </div>
-      <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-x-0.5" />
+      {pending ? (
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" aria-hidden />
+      ) : (
+        <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-x-0.5" aria-hidden />
+      )}
     </button>
   );
 }
@@ -232,6 +259,9 @@ export function LoginForm({
   const [linkCode, setLinkCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [overlay, setOverlay] = useState(false);
+  const [demoPending, setDemoPending] = useState<"student" | "teacher" | null>(
+    null
+  );
   const [banner, setBanner] = useState<string | null>(
     needsTeacherLink || needsTeacherQuery
       ? "تم التحقق من واتساب. أدخل رمز الأستاذ لإكمال الدخول."
@@ -240,7 +270,10 @@ export function LoginForm({
   const [hydrated, setHydrated] = useState(false);
   const [, startTransition] = useTransition();
 
-  const demoFormRef = useRef<HTMLFormElement>(null);
+  const isBusy = busy || overlay || demoPending !== null;
+
+  // Keep global NProgress ticking; ActiveLoginLoaderBar provides visible trickle + Spekit.
+  useLoadingBarSync(isBusy);
 
   const [registerState, registerAction] = useFormState(
     registerStudentAndRequestOTP,
@@ -285,11 +318,13 @@ export function LoginForm({
       setTab("login");
       setBusy(false);
       setOverlay(false);
+      setDemoPending(null);
       return;
     }
     if (registerState?.status === "error") {
       setBusy(false);
       setOverlay(false);
+      setDemoPending(null);
     }
   }, [registerState]);
 
@@ -312,8 +347,17 @@ export function LoginForm({
     if (demoState?.status === "error" || linkState?.status === "error") {
       setBusy(false);
       setOverlay(false);
+      setDemoPending(null);
     }
   }, [demoState, linkState]);
+
+  useEffect(() => {
+    if (otpState?.status === "error") {
+      setBusy(false);
+      setOverlay(false);
+      setDemoPending(null);
+    }
+  }, [otpState]);
 
   const errorMessage =
     (registerState?.status === "error" &&
@@ -323,11 +367,31 @@ export function LoginForm({
     (linkState?.status === "error" && loginMessageForCode(linkState.code)) ||
     queryError;
 
-  const submitDemo = (number: string, name: string) => {
+  const markPending = (pending: boolean) => {
+    setBusy(pending);
+    if (pending) {
+      setOverlay(true);
+      startTopNavLoader();
+    }
+  };
+
+  const submitDemo = (
+    number: string,
+    name: string,
+    which: "student" | "teacher"
+  ) => {
+    if (isBusy) return;
+    startTopNavLoader();
+    setDemoPending(which);
+    setBusy(true);
+    setOverlay(true);
     setWhatsapp(number);
     setFullName(name);
+    const fd = new FormData();
+    fd.set("whatsapp_number", number);
+    fd.set("full_name", name);
     startTransition(() => {
-      requestAnimationFrame(() => demoFormRef.current?.requestSubmit());
+      demoAction(fd);
     });
   };
 
@@ -335,9 +399,16 @@ export function LoginForm({
 
   return (
     <>
+      <ActiveLoginLoaderBar active={isBusy} />
       <LoginLoadingOverlay
         show={overlay}
-        message="جاري المتابعة…"
+        message={
+          demoPending
+            ? "جاري الدخول التجريبي…"
+            : busy
+              ? "جاري التحقق…"
+              : "جاري المتابعة…"
+        }
         subMessage="لحظة من فضلك…"
       />
 
@@ -346,6 +417,7 @@ export function LoginForm({
           "flex flex-1 items-center justify-center px-4 py-6 sm:px-6 sm:py-8",
           overlay && "pointer-events-none opacity-40"
         )}
+        aria-busy={isBusy}
       >
           <div
             className="w-full max-w-md space-y-6"
@@ -366,7 +438,7 @@ export function LoginForm({
               <div className="h-1 bg-gradient-to-l from-emerald-400 via-emerald-600 to-teal-700" />
 
               <div className="space-y-5 p-5 sm:p-6">
-                {(banner || errorMessage) && !busy ? (
+                {(banner || errorMessage) && !isBusy ? (
                   <div
                     role="alert"
                     className={cn(
@@ -394,8 +466,16 @@ export function LoginForm({
                     </p>
                   </div>
                 ) : showLinkPanel ? (
-                  <form action={linkAction} className={fieldGap}>
-                    <PendingWatcher onPendingChange={setBusy} />
+                  <form
+                    action={linkAction}
+                    className={fieldGap}
+                    onSubmit={() => {
+                      startTopNavLoader();
+                      setBusy(true);
+                      setOverlay(true);
+                    }}
+                  >
+                    <PendingWatcher onPendingChange={markPending} />
                     <p className="text-sm leading-relaxed text-muted-foreground">
                       رقم واتساب موثّق
                       {pendingWhatsapp ? (
@@ -426,6 +506,7 @@ export function LoginForm({
                           className={cn(inputClass, "ps-10 font-mono tracking-wide")}
                           dir="ltr"
                           required
+                          disabled={isBusy}
                         />
                       </div>
                     </AuthField>
@@ -434,12 +515,14 @@ export function LoginForm({
                       pendingLabel="جاري الربط..."
                       icon={KeyRound}
                       spekitId={SPEKIT.loginSubmit}
+                      forceDisabled={isBusy}
                     />
                   </form>
                 ) : (
                   <Tabs
                     value={tab}
                     onValueChange={(v) => {
+                      if (isBusy) return;
                       if (v) {
                         setTab(v);
                         setBanner(null);
@@ -450,17 +533,30 @@ export function LoginForm({
                     <TabsList
                       className={cn(
                         "grid h-auto w-full gap-1 rounded-xl border border-border/60 bg-muted/50 p-1 shadow-none",
-                        demoEnabled ? "grid-cols-3" : "grid-cols-2"
+                        demoEnabled ? "grid-cols-3" : "grid-cols-2",
+                        isBusy && "pointer-events-none opacity-70"
                       )}
                     >
-                      <TabsTrigger value="login" className={tabTriggerClass}>
+                      <TabsTrigger
+                        value="login"
+                        className={tabTriggerClass}
+                        disabled={isBusy}
+                      >
                         تسجيل الدخول
                       </TabsTrigger>
-                      <TabsTrigger value="register" className={tabTriggerClass}>
+                      <TabsTrigger
+                        value="register"
+                        className={tabTriggerClass}
+                        disabled={isBusy}
+                      >
                         حساب جديد
                       </TabsTrigger>
                       {demoEnabled ? (
-                        <TabsTrigger value="demo" className={tabTriggerClass}>
+                        <TabsTrigger
+                          value="demo"
+                          className={tabTriggerClass}
+                          disabled={isBusy}
+                        >
                           حساب تجريبي
                         </TabsTrigger>
                       ) : null}
@@ -470,13 +566,16 @@ export function LoginForm({
                       value="login"
                       className="mt-0 data-[hidden]:hidden"
                     >
-                      <form action={otpAction} className={fieldGap}>
-                        <PendingWatcher
-                          onPendingChange={(p) => {
-                            setBusy(p);
-                            if (p) setOverlay(true);
-                          }}
-                        />
+                      <form
+                        action={otpAction}
+                        className={fieldGap}
+                        onSubmit={() => {
+                          startTopNavLoader();
+                          setBusy(true);
+                          setOverlay(true);
+                        }}
+                      >
+                        <PendingWatcher onPendingChange={markPending} />
                         <p className="text-sm leading-relaxed text-muted-foreground">
                           أدخل رقم واتسابك المسجّل — سنحوّلك لخدمة التحقق ثم
                           نفتح جلستك.
@@ -493,6 +592,7 @@ export function LoginForm({
                           variant="whatsapp"
                           icon={LogIn}
                           spekitId={SPEKIT.loginOtpCta}
+                          forceDisabled={isBusy}
                         />
                       </form>
                     </TabsContent>
@@ -501,13 +601,16 @@ export function LoginForm({
                       value="register"
                       className="mt-0 data-[hidden]:hidden"
                     >
-                      <form action={registerAction} className={fieldGap}>
-                        <PendingWatcher
-                          onPendingChange={(p) => {
-                            setBusy(p);
-                            if (p) setOverlay(true);
-                          }}
-                        />
+                      <form
+                        action={registerAction}
+                        className={fieldGap}
+                        onSubmit={() => {
+                          startTopNavLoader();
+                          setBusy(true);
+                          setOverlay(true);
+                        }}
+                      >
+                        <PendingWatcher onPendingChange={markPending} />
                         <AuthField
                           id="full_name"
                           label="اسمك"
@@ -524,6 +627,7 @@ export function LoginForm({
                               onChange={(e) => setFullName(e.target.value)}
                               className={cn(inputClass, "ps-10")}
                               required
+                              disabled={isBusy}
                             />
                           </div>
                         </AuthField>
@@ -553,6 +657,7 @@ export function LoginForm({
                               )}
                               dir="ltr"
                               required
+                              disabled={isBusy}
                             />
                           </div>
                         </AuthField>
@@ -561,6 +666,7 @@ export function LoginForm({
                           pendingLabel="جاري التسجيل..."
                           icon={User}
                           spekitId={SPEKIT.loginSubmit}
+                          forceDisabled={isBusy}
                         />
                       </form>
                     </TabsContent>
@@ -570,18 +676,6 @@ export function LoginForm({
                         value="demo"
                         className="mt-0 data-[hidden]:hidden"
                       >
-                        <form
-                          ref={demoFormRef}
-                          action={demoAction}
-                          className="hidden"
-                        >
-                          <input
-                            type="hidden"
-                            name="whatsapp_number"
-                            value={whatsapp}
-                          />
-                          <input type="hidden" name="full_name" value={fullName} />
-                        </form>
                         <div className={fieldGap}>
                           <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                             <FlaskConical className="size-4 shrink-0 text-emerald-600" />
@@ -593,10 +687,13 @@ export function LoginForm({
                             icon={GraduationCap}
                             accent="student"
                             spekitId={SPEKIT.loginDemoStudent}
+                            disabled={isBusy}
+                            pending={demoPending === "student"}
                             onClick={() =>
                               submitDemo(
                                 DEMO_STUDENT.whatsapp_number,
-                                DEMO_STUDENT.full_name
+                                DEMO_STUDENT.full_name,
+                                "student"
                               )
                             }
                           />
@@ -606,10 +703,13 @@ export function LoginForm({
                             icon={School}
                             accent="teacher"
                             spekitId={SPEKIT.loginDemoTeacher}
+                            disabled={isBusy}
+                            pending={demoPending === "teacher"}
                             onClick={() =>
                               submitDemo(
                                 DEMO_TEACHER.whatsapp_number,
-                                DEMO_TEACHER.full_name
+                                DEMO_TEACHER.full_name,
+                                "teacher"
                               )
                             }
                           />
