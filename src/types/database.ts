@@ -120,6 +120,10 @@ export interface Quiz {
   deleted_at: string | null;
   quiz_type: QuizType;
   target_group_id: string | null;
+  /** QUIZ-004 — teacher-enabled countdown */
+  is_timed: boolean;
+  /** QUIZ-004 — whole minutes 1–180 when timed; null when untimed */
+  duration_minutes: number | null;
   created_at: string;
   updated_at: string;
 }

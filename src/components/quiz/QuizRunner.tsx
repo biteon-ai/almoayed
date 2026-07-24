@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { submitQuiz } from "@/actions/quiz";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
+import { QuizTimerBadge } from "@/components/quiz/QuizTimerBadge";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
 import { QuizSidebar } from "@/components/quiz/QuizSidebar";
@@ -31,13 +32,22 @@ import {
   getPendingForQuiz,
 } from "@/lib/offline/pending-queue";
 import { flushPendingSubmissions } from "@/lib/offline/sync-processor";
+import {
+  padAnswersForQuestions,
+  remainingSecondsFromEndsAt,
+  type TimedQuizSessionView,
+} from "@/lib/quiz-timer";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
+
+const TIME_EXPIRED_NOTICE =
+  "انتهى الوقت المحدد للاختبار! جاري تسليم إجاباتك تلقائياً...";
 
 interface QuizRunnerProps {
   quiz: Quiz;
   questions: ExamQuestion[];
   initialResults?: QuizSubmitResult | null;
   teacherId: string;
+  timer?: TimedQuizSessionView | null;
 }
 
 export function QuizRunner({
@@ -45,6 +55,7 @@ export function QuizRunner({
   questions,
   initialResults,
   teacherId,
+  timer = null,
 }: QuizRunnerProps) {
   const online = useOnlineStatus();
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -54,8 +65,26 @@ export function QuizRunner({
   const [pendingSync, setPendingSync] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [timeExpiredNotice, setTimeExpiredNotice] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(() =>
+    timer ? remainingSecondsFromEndsAt(timer.endsAt) : 0
+  );
+  const [draftReady, setDraftReady] = useState(false);
   const [isPending, startTransition] = useTransition();
   useStudentLoadingBarSync(isPending);
+
+  const autoSubmitStarted = useRef(false);
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
+
+  useEffect(() => {
+    if (!timer) return;
+    setRemainingSeconds(remainingSecondsFromEndsAt(timer.endsAt));
+    const id = window.setInterval(() => {
+      setRemainingSeconds(remainingSecondsFromEndsAt(timer.endsAt));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [timer]);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,6 +108,8 @@ export function QuizRunner({
         setPendingSync(true);
         setAnswers(pending.answers);
       }
+
+      setDraftReady(true);
     }
 
     void restoreState();
@@ -90,10 +121,12 @@ export function QuizRunner({
 
   useEffect(() => {
     if (results || pendingSync) return;
+    if (!draftReady) return;
     saveInProgressDebounced(quiz.id, { answers, activeIndex });
-  }, [answers, activeIndex, quiz.id, results, pendingSync]);
+  }, [answers, activeIndex, quiz.id, results, pendingSync, draftReady]);
 
   const isSubmitted = results !== null;
+  const timeLocked = Boolean(timer) && remainingSeconds <= 0 && !isSubmitted;
   const answeredCount = Object.keys(answers).length;
   const progress = questions.length
     ? (answeredCount / questions.length) * 100
@@ -106,28 +139,39 @@ export function QuizRunner({
   );
 
   const handleAnswer = (questionId: string, value: string) => {
-    if (isSubmitted || pendingSync) return;
+    if (isSubmitted || pendingSync || timeLocked) return;
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const handleSubmit = () => {
+  const submitAttempt = (opts: { forceTimedExpiry: boolean }) => {
     if (questions.length === 0) {
       setError(uiMessage(ErrorCode.QUIZ_EMPTY));
       return;
     }
-    if (answeredCount < questions.length) {
+
+    const payload = opts.forceTimedExpiry
+      ? padAnswersForQuestions(questionIds, answersRef.current)
+      : answersRef.current;
+
+    if (!opts.forceTimedExpiry && Object.keys(payload).length < questions.length) {
       setError("يرجى الإجابة على جميع الأسئلة قبل تسليم الاختبار.");
       return;
     }
+
     setError(null);
+    if (opts.forceTimedExpiry) {
+      setTimeExpiredNotice(true);
+      setAnswers(payload);
+    }
 
     startTransition(async () => {
       if (!online) {
         await enqueuePendingSubmission({
           quizId: quiz.id,
           teacherId,
-          answers,
+          answers: payload,
           questionIds,
+          sessionExpiredAtSubmit: opts.forceTimedExpiry,
         });
         setPendingSync(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -135,21 +179,48 @@ export function QuizRunner({
       }
 
       try {
-        const result = await submitQuiz(quiz.id, answers);
+        const result = await submitQuiz(quiz.id, payload);
         setResults(result);
         setPendingSync(false);
+        setTimeExpiredNotice(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (e) {
         setError(toUserMessage(e, "صار خطأ أثناء تسليم الإجابات."));
+        autoSubmitStarted.current = false;
       }
     });
+  };
+
+  useEffect(() => {
+    if (!timer || isSubmitted || pendingSync || !draftReady) return;
+    if (remainingSeconds > 0) return;
+    if (autoSubmitStarted.current) return;
+    if (questions.length === 0) return;
+
+    autoSubmitStarted.current = true;
+    submitAttempt({ forceTimedExpiry: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on expiry after draft restore
+  }, [
+    timer,
+    remainingSeconds,
+    isSubmitted,
+    pendingSync,
+    questions.length,
+    draftReady,
+  ]);
+
+  const handleSubmit = () => {
+    submitAttempt({ forceTimedExpiry: false });
   };
 
   const handleRetrySync = () => {
     startTransition(async () => {
       try {
         await flushPendingSubmissions();
-        const result = await submitQuiz(quiz.id, answers);
+        const result = await submitQuiz(
+          quiz.id,
+          padAnswersForQuestions(questionIds, answersRef.current)
+        );
         setResults(result);
         setPendingSync(false);
       } catch (e) {
@@ -172,7 +243,20 @@ export function QuizRunner({
       className="mx-auto max-w-7xl px-4 py-6 pb-36 md:py-8 md:pb-24"
       {...spekit(SPEKIT.quizPage)}
     >
+      {timer && !isSubmitted ? (
+        <QuizTimerBadge remainingSeconds={remainingSeconds} />
+      ) : null}
+
       {!online && !isSubmitted && !pendingSync && <OfflineStatusBanner />}
+
+      {timeExpiredNotice && !isSubmitted ? (
+        <div
+          role="status"
+          className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm font-extrabold text-rose-800"
+        >
+          {TIME_EXPIRED_NOTICE}
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
         <main
@@ -244,7 +328,7 @@ export function QuizRunner({
                           : answers[activeQuestion.id]
                       }
                       onChange={(v) => handleAnswer(activeQuestion.id, v)}
-                      disabled={isSubmitted}
+                      disabled={isSubmitted || timeLocked}
                       showResult={isSubmitted}
                       correctAnswer={activeResult?.correctAnswer}
                       categoryTag={activeResult?.categoryTag}
@@ -350,7 +434,7 @@ export function QuizRunner({
           questionIds={questionIds}
           answeredCount={answeredCount}
           progress={progress}
-          isSubmitted={isSubmitted || pendingSync}
+          isSubmitted={isSubmitted || pendingSync || timeLocked}
           activeIndex={activeIndex}
           answers={answers}
           results={results}
@@ -358,7 +442,7 @@ export function QuizRunner({
         />
       </div>
 
-      {!isSubmitted && !pendingSync && questions.length > 0 && (
+      {!isSubmitted && !pendingSync && !timeLocked && questions.length > 0 && (
         <div className="fixed inset-x-0 bottom-16 z-40 border-t border-slate-100 bg-white/90 p-4 shadow-lg backdrop-blur-md safe-bottom md:bottom-0 md:z-30">
           <div className="mx-auto max-w-3xl space-y-3">
             {error && (
@@ -393,6 +477,18 @@ export function QuizRunner({
           </div>
         </div>
       )}
+
+      {error && (timeLocked || timeExpiredNotice) && !isSubmitted ? (
+        <div
+          role="alert"
+          className="fixed inset-x-0 bottom-16 z-40 mx-auto max-w-3xl px-4 md:bottom-4"
+        >
+          <div className="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-xs text-red-700 shadow-lg">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <span className="font-bold">{error}</span>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

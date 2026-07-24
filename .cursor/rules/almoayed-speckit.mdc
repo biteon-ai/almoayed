@@ -17,6 +17,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **MT-001/002/003** — Multi-tenant `student_teachers`, teacher switcher, teacher unlink vs admin hard delete
 - **QUIZ-001** — Gatekeeper: no answers/explanations until submit
 - **QUIZ-002/003** — Weak points + WhatsApp share
+- **QUIZ-004** — Timed quiz countdown (teacher duration 1–180; attempt snapshot; auto-submit)
 - **GAMIF-001** — Teacher level tiers + student progress/badges (active teacher)
 - **GAMIF-004** — Rewards hall horizontal carousel + expand grid
 - **GAMIF-002** — Default gamification preset loader on teacher settings
@@ -27,6 +28,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **UI-001/002** — RTL mobile shell, StatusBadge
 - **UI-006** — Header + global top nav progress (`NavbarProgress`, NProgress `top-nav-loader`)
 - **UI-007** — Results card score badge + action layout
+- **UI-009** — Quiz timer settings card (presets, status badge, Switch, HubToast save)
 - **ENABLE-001** — `data-spekit` hooks via `src/lib/spekit-targets.ts`
 
 ## Code rules

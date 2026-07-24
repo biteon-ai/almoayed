@@ -367,6 +367,35 @@ features:
       - Post-submit share link with score and quiz URL
     spekit: [quiz-results-share]
 
+  - id: QUIZ-004
+    name: Quiz Countdown Timer
+    status: implemented
+    persona: [TEACHER, STUDENT]
+    routes:
+      - /teacher/quizzes
+      - /teacher/quizzes/new
+      - /teacher/quizzes/[id]
+      - /quiz/[id]
+    files:
+      - supabase/migrations/013_quiz_timer.sql
+      - src/lib/quiz-timer.ts
+      - src/actions/teacher.ts
+      - src/actions/quiz.ts
+      - src/components/teacher/QuizCreateForm.tsx
+      - src/components/teacher/quiz-timer.tsx
+      - src/components/teacher/QuizTimerSettings.tsx
+      - src/components/quiz/QuizTimerBadge.tsx
+      - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuizRunnerContainer.tsx
+      - tests/features/quiz-004-countdown-timer.test.ts
+    acceptance:
+      - Teacher enables تفعيل التوقيت with duration 1–180 minutes on create/edit
+      - Timed attempt snapshots duration at first open; teacher edits do not change in-progress sessions
+      - Student sticky MM:SS badge (minutes may be ≥ 60); warning style at ≤ 2 minutes
+      - At 00:00 or late reopen: lock answers, Arabic notice, auto-submit with padded blanks; server allows post-deadline submit
+      - Untimed quizzes show no timer badge; QUIZ-001 gatekeeper selects unchanged
+    spekit: [quiz-timer, quiz-timer-settings, quiz-timer-card]
+
   # ── Gamification ────────────────────────────────────────────────────────────
   - id: GAMIF-001
     name: Teacher-Driven Gamification & Ranking
@@ -895,6 +924,24 @@ partial_features:
       - src/app/(student)/results/[submissionId]/page.tsx
     spekit:
       - results-card
+
+  - id: UI-009
+    name: Quiz Timer Settings Card Overhaul
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/quizzes/[id]"]
+    extends: [QUIZ-004, TEACH-003]
+    files:
+      - src/components/teacher/quiz-timer.tsx
+      - src/components/ui/switch.tsx
+      - src/app/teacher/(portal)/quizzes/[id]/page.tsx
+    acceptance:
+      - Card header with Clock icon, status badge (مفعّل / غير مفعّل), and helper subtitle
+      - Switch toggle row; duration controls collapse smoothly when off
+      - Quick preset chips 15/30/45/60/90 دقيقة fill custom input; external دقيقة suffix (no overlap)
+      - حفظ التوقيت disabled until dirty; loading spinner + HubToast on save
+      - RTL Tajawal layout; data-spekit=quiz-timer-card
+    spekit: [quiz-timer-card]
 
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel

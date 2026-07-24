@@ -1279,6 +1279,9 @@ export async function createQuiz(formData: FormData) {
   const title = (formData.get("title") as string)?.trim();
   if (!title) throw new Error("عنوان الاختبار مطلوب.");
 
+  const { parseTimerFormFields } = await import("@/lib/quiz-timer");
+  const timerFields = parseTimerFormFields(formData);
+
   const { data, error } = await supabase
     .from("quizzes")
     .insert({
@@ -1290,6 +1293,8 @@ export async function createQuiz(formData: FormData) {
       is_free: formData.get("is_free") !== "off",
       quiz_type: (formData.get("quiz_type") as string) || "regular",
       target_group_id: (formData.get("target_group_id") as string) || null,
+      is_timed: timerFields.is_timed,
+      duration_minutes: timerFields.duration_minutes,
     })
     .select()
     .single();
@@ -1301,7 +1306,13 @@ export async function createQuiz(formData: FormData) {
 
 export async function updateQuizFlags(
   quizId: string,
-  flags: { is_active?: boolean; is_free?: boolean; quiz_type?: string }
+  flags: {
+    is_active?: boolean;
+    is_free?: boolean;
+    quiz_type?: string;
+    is_timed?: boolean;
+    duration_minutes?: number | null;
+  }
 ) {
   const session = await requireTeacher();
   const supabase = createAdminClient();
@@ -1318,6 +1329,20 @@ export async function updateQuizFlags(
     }
   }
 
+  if (flags.is_timed !== undefined || flags.duration_minutes !== undefined) {
+    const { validateDurationMinutes } = await import("@/lib/quiz-timer");
+    const isTimed = flags.is_timed ?? false;
+    if (!isTimed) {
+      flags.is_timed = false;
+      flags.duration_minutes = null;
+    } else {
+      const validated = validateDurationMinutes(flags.duration_minutes);
+      if (!validated.ok) throw new Error(validated.error);
+      flags.duration_minutes = validated.value;
+      flags.is_timed = true;
+    }
+  }
+
   const { error } = await supabase
     .from("quizzes")
     .update(flags)
@@ -1325,6 +1350,25 @@ export async function updateQuizFlags(
     .eq("created_by", session.profileId);
   if (error) throw new Error("فشل تحديث الاختبار.");
   revalidatePath("/teacher/quizzes");
+  revalidatePath(`/teacher/quizzes/${quizId}`);
+}
+
+export async function updateQuizTimerSettings(
+  quizId: string,
+  input: { isTimed: boolean; durationMinutes: number | null }
+): Promise<ActionResult> {
+  try {
+    await updateQuizFlags(quizId, {
+      is_timed: input.isTimed,
+      duration_minutes: input.isTimed ? input.durationMinutes : null,
+    });
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "فشل تحديث إعدادات التوقيت.",
+    };
+  }
 }
 
 /** Toggle quiz active/hidden with ActionResult for UI confirmation flows. */

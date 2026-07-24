@@ -34,6 +34,13 @@ import {
   QUIZ_LIST_SELECT,
   SUBMISSION_RESULT_SELECT,
 } from "@/lib/perf-selects";
+import {
+  computeRemainingSeconds,
+  padAnswersForQuestions,
+  toTimedQuizSessionView,
+  type TimedQuizSessionView,
+  validateDurationMinutes,
+} from "@/lib/quiz-timer";
 import { getStudentTeachers } from "@/actions/student";
 import type {
   CategoryPerformance,
@@ -84,10 +91,107 @@ async function getStudentContext(session: Awaited<ReturnType<typeof requireStude
   };
 }
 
+export async function ensureTimedQuizSession(
+  quizId: string
+): Promise<TimedQuizSessionView | null> {
+  const session = await requireStudent();
+  const supabase = createAdminClient();
+  const ctx = await getStudentContext(session);
+
+  if (!ctx.teacherId) {
+    throw appError(ErrorCode.SUBSCRIPTION_REQUIRED);
+  }
+
+  const { data: quiz } = await supabase
+    .from("quizzes")
+    .select(QUIZ_LIST_SELECT)
+    .eq("id", quizId)
+    .eq("created_by", ctx.teacherId)
+    .eq("is_active", true)
+    .maybeSingle<Quiz>();
+
+  if (!quiz) return null;
+
+  if (ctx.tier === "free" && !quiz.is_free) {
+    throw appError(ErrorCode.PRO_REQUIRED);
+  }
+
+  if (quiz.quiz_type === "session_group" && quiz.target_group_id) {
+    if (!ctx.groupIds.includes(quiz.target_group_id)) {
+      throw appError(ErrorCode.GROUP_REQUIRED);
+    }
+  }
+
+  const { data: existingSubmission } = await supabase
+    .from("exam_submissions")
+    .select("id")
+    .eq("student_id", session.profileId)
+    .eq("quiz_id", quizId)
+    .maybeSingle();
+
+  if (existingSubmission) return null;
+
+  const { data: existingSession } = await supabase
+    .from("quiz_timed_sessions")
+    .select("started_at, duration_minutes")
+    .eq("student_id", session.profileId)
+    .eq("quiz_id", quizId)
+    .maybeSingle();
+
+  if (existingSession) {
+    return toTimedQuizSessionView(
+      existingSession.started_at as string,
+      existingSession.duration_minutes as number
+    );
+  }
+
+  if (!quiz.is_timed) return null;
+
+  const validated = validateDurationMinutes(quiz.duration_minutes);
+  if (!validated.ok) return null;
+
+  const { data: inserted, error: insertError } = await supabase
+    .from("quiz_timed_sessions")
+    .insert({
+      student_id: session.profileId,
+      quiz_id: quizId,
+      duration_minutes: validated.value,
+    })
+    .select("started_at, duration_minutes")
+    .single();
+
+  if (insertError) {
+    const { data: raced } = await supabase
+      .from("quiz_timed_sessions")
+      .select("started_at, duration_minutes")
+      .eq("student_id", session.profileId)
+      .eq("quiz_id", quizId)
+      .maybeSingle();
+
+    if (raced) {
+      return toTimedQuizSessionView(
+        raced.started_at as string,
+        raced.duration_minutes as number
+      );
+    }
+
+    logRequestError("QUIZ_TIMED_SESSION_CREATE_FAILED", insertError);
+    return null;
+  }
+
+  if (!inserted) return null;
+
+  return toTimedQuizSessionView(
+    inserted.started_at as string,
+    inserted.duration_minutes as number
+  );
+}
+
 export async function getQuizForStudent(quizId: string): Promise<{
   quiz: Quiz | null;
   questions: ExamQuestion[];
   existingSubmissionId: string | null;
+  timer: TimedQuizSessionView | null;
 }> {
   const session = await requireStudent();
   const supabase = createAdminClient();
@@ -109,7 +213,12 @@ export async function getQuizForStudent(quizId: string): Promise<{
   // student catalogs filter deleted_at separately.
 
   if (!quiz) {
-    return { quiz: null, questions: [], existingSubmissionId: null };
+    return {
+      quiz: null,
+      questions: [],
+      existingSubmissionId: null,
+      timer: null,
+    };
   }
 
   if (ctx.tier === "free" && !quiz.is_free) {
@@ -135,10 +244,16 @@ export async function getQuizForStudent(quizId: string): Promise<{
     .eq("quiz_id", quizId)
     .maybeSingle();
 
+  const timer =
+    !existing && quiz.is_timed
+      ? await ensureTimedQuizSession(quizId)
+      : null;
+
   return {
     quiz,
     questions: (questions ?? []) as ExamQuestion[],
     existingSubmissionId: existing?.id ?? null,
+    timer,
   };
 }
 
@@ -251,12 +366,36 @@ export async function submitQuiz(
     throw appError(ErrorCode.QUIZ_EMPTY);
   }
 
-  const liveQuestionIds = new Set(liveQuestions.map((q) => q.id as string));
+  const { data: timedSession } = await supabase
+    .from("quiz_timed_sessions")
+    .select("started_at, duration_minutes")
+    .eq("student_id", session.profileId)
+    .eq("quiz_id", quizId)
+    .maybeSingle();
+
+  // Deadline from DB session only — never reject submit solely for being past deadline.
+  const pastDeadline = timedSession
+    ? computeRemainingSeconds(
+        timedSession.started_at as string,
+        timedSession.duration_minutes as number
+      ) <= 0
+    : false;
+
+  const liveQuestionIds = liveQuestions.map((q) => q.id as string);
+  const liveQuestionIdSet = new Set(liveQuestionIds);
   const answerQuestionIds = Object.keys(answers);
 
+  if (answerQuestionIds.some((id) => !liveQuestionIdSet.has(id))) {
+    throw appError(ErrorCode.QUIZ_CHANGED);
+  }
+
+  const effectiveAnswers = pastDeadline
+    ? padAnswersForQuestions(liveQuestionIds, answers)
+    : answers;
+
   if (
-    answerQuestionIds.some((id) => !liveQuestionIds.has(id)) ||
-    answerQuestionIds.length !== liveQuestions.length
+    Object.keys(effectiveAnswers).length !== liveQuestions.length ||
+    liveQuestionIds.some((id) => effectiveAnswers[id] === undefined)
   ) {
     throw appError(ErrorCode.QUIZ_CHANGED);
   }
@@ -279,7 +418,7 @@ export async function submitQuiz(
   }
 
   const graded = questions.map((q) => {
-    const studentAnswer = answers[q.id] ?? "";
+    const studentAnswer = effectiveAnswers[q.id] ?? "";
     const isCorrect = studentAnswer === q.correct_answer;
     return { ...q, studentAnswer, isCorrect };
   });
