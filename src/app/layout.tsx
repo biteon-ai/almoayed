@@ -7,7 +7,8 @@ import "./globals.css";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
-  weight: ["400", "500", "700", "800"],
+  // PERF-003: drop unused 500 — medium synthesizes; keep 800 for font-extrabold / font-black
+  weight: ["400", "700", "800"],
   variable: "--font-arabic",
   display: "swap",
 });

@@ -848,6 +848,98 @@ partial_features:
       - gamif-rewards-expand
       - gamif-rewards-track
 
+  # ── Performance ─────────────────────────────────────────────────────────────
+  - id: PERF-001
+    name: App Hub Latency & Lean Fetches
+    status: implemented
+    persona: [SUPER_ADMIN, DEVELOPER]
+    routes: ["/dashboard", "/teacher/dashboard", "/quizzes", "/results"]
+    files:
+      - src/lib/auth.ts
+      - src/lib/perf-selects.ts
+      - src/middleware.ts
+      - src/actions/quiz.ts
+      - src/actions/teacher.ts
+      - src/actions/gamification.ts
+      - src/app/(student)/dashboard/page.tsx
+    acceptance:
+      - requireStudent/requireTeacher + AUTH-003 device lock are request-scoped via React cache()
+      - Middleware stays iron-session decrypt only (no Supabase)
+      - Student/teacher list and dashboard paths use explicit column selects (no select *)
+      - Student dashboard parallelizes dashboard + gamification fetches
+      - QUIZ-001 exam select lists unchanged (gatekeeper intact)
+      - MT-002 currentTeacherId scoping preserved; teacher switch revalidatePath clears hubs
+    spekit: []
+
+  - id: PERF-002
+    name: Multi-Tenant DB Indexes & Teacher Dashboard RPC
+    status: implemented
+    persona: [DEVELOPER, TEACHER]
+    routes: ["/teacher/dashboard"]
+    files:
+      - supabase/migrations/010_perf_indexes_and_teacher_dashboard_rpc.sql
+      - src/lib/teacher-analytics.ts
+      - src/actions/teacher.ts
+      - src/actions/student.ts
+    acceptance:
+      - Composite indexes on student_teachers (teacher_id,status), (student_id,status) and quizzes (created_by,is_active|is_archived)
+      - get_teacher_dashboard_analytics(p_teacher_id) returns lean JSON scoped to teacher
+      - getTeacherDashboardAnalytics prefers RPC with lean multi-query fallback
+      - mapTeacherDashboardRpcPayload feeds existing computeTeacherDashboardAnalytics (UI parity)
+      - Server Actions remain the only privileged write path
+    spekit: [teacher-analytics-kpis, teacher-stats-grid]
+
+  - id: PERF-003
+    name: Mobile First Paint — Fonts, Charts, Assets
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    routes: ["/", "/dashboard", "/teacher/dashboard"]
+    files:
+      - src/app/layout.tsx
+      - src/components/teacher/TeacherDashboardAnalytics.tsx
+      - src/components/teacher/TeacherDashboardCharts.tsx
+      - src/components/teacher/StudentDetailDashboard.tsx
+      - src/components/teacher/StudentDetailScoreChart.tsx
+      - public/icon-512.png
+      - public/icon-192.png
+      - public/apple-touch-icon.png
+    acceptance:
+      - Tajawal via next/font with arabic subset and display swap; weights trimmed to 400/700/800
+      - Recharts loaded via next/dynamic (ssr false) with Arabic loading placeholder
+      - Spekit hooks remain on always-mounted chart card wrappers
+      - PWA icon PNGs re-encoded optimized (smaller transfer)
+      - Touch targets and RTL Tajawal rendering preserved
+    spekit:
+      - teacher-grade-distribution-chart
+      - teacher-weekly-activity-chart
+      - student-detail-score-chart
+
+  - id: PERF-TEST-001
+    name: Stress Testing & Performance Measurement Suite
+    status: implemented
+    persona: [DEVELOPER, ADMIN]
+    routes: ["/api/perf/probe", "/login", "/dashboard"]
+    files:
+      - src/app/api/perf/probe/route.ts
+      - scripts/perf-test/run-stress.mjs
+      - scripts/perf-test/run-db-profile.mjs
+      - scripts/perf-test/run-lighthouse.mjs
+      - scripts/perf-test/run-all.mjs
+      - scripts/perf-test/scenarios.json
+      - scripts/perf-test/README.md
+      - tests/stress/k6-critical-paths.js
+      - tests/stress/perf-test-contract.test.ts
+      - package.json
+    acceptance:
+      - k6 script stresses gated probe scenarios (login-demo, dashboard, quiz-fetch, submit-dry, teacher-rpc) at 20/50/100 VUs via PERF_VUS
+      - Thresholds assert p95 duration <500ms and auth_failure_rate == 0
+      - DB profiler logs RPC + student_teachers/quizzes join timings to markdown
+      - Lighthouse CLI script reports FCP, LCP, INP|TBT, CLS for /login and /dashboard
+      - npm run test:stress and npm run test:perf write markdown summaries under scripts/perf-test/out/
+      - Probe never returns quiz answers/explanations (QUIZ-001); teacher scoping uses active student_teachers link (MT-002)
+      - Probe requires PERF_TEST_SECRET; no iron-session minting that bypasses real auth validation
+    spekit: []
+
 # ─────────────────────────────────────────────────────────────────────────────
 demo_accounts:
   teacher:

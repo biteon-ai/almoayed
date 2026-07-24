@@ -5,6 +5,46 @@ import type {
   TeacherDashboardAnalytics,
 } from "@/types/database";
 
+/** Raw payload from `get_teacher_dashboard_analytics` RPC (PERF-002). */
+export type TeacherDashboardRpcPayload = {
+  studentLinks: Array<{ student_id: string; tier: StudentTier }>;
+  quizzes: Quiz[];
+  submissions: Array<{
+    student_id: string;
+    quiz_id: string;
+    score: number;
+    submitted_at: string;
+  }>;
+  profiles: Array<{ id: string; full_name: string }>;
+  groupMembers: Array<{ student_id: string; group_id: string }>;
+  studentCount: number;
+  quizCount: number;
+  pendingUpgrades: number;
+};
+
+/** Map RPC JSON → TeacherDashboardAnalytics via existing pure compute. */
+export function mapTeacherDashboardRpcPayload(
+  payload: TeacherDashboardRpcPayload
+): TeacherDashboardAnalytics {
+  const groupIdsByStudent = new Map<string, string[]>();
+  for (const member of payload.groupMembers ?? []) {
+    const list = groupIdsByStudent.get(member.student_id) ?? [];
+    list.push(member.group_id);
+    groupIdsByStudent.set(member.student_id, list);
+  }
+
+  return computeTeacherDashboardAnalytics({
+    studentLinks: payload.studentLinks ?? [],
+    quizzes: (payload.quizzes ?? []) as Quiz[],
+    submissions: payload.submissions ?? [],
+    profiles: payload.profiles ?? [],
+    groupIdsByStudent,
+    studentCount: Number(payload.studentCount) || 0,
+    quizCount: Number(payload.quizCount) || 0,
+    pendingUpgrades: Number(payload.pendingUpgrades) || 0,
+  });
+}
+
 const PASS_THRESHOLD = 60;
 const PERFECT_SCORE = 100;
 

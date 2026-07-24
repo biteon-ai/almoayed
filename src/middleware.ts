@@ -38,6 +38,8 @@ export async function middleware(request: NextRequest) {
   const isTeacherRoute =
     matchesPrefix(pathname, teacherPaths) && !isTeacherLogin;
 
+  // PERF-001: Session cookie decrypt only — never add Supabase/DB here.
+  // Device lock (AUTH-003) runs once per RSC request via cached require* in lib/auth.ts.
   if (isAdminProtected || isSettingsRoute || isStudentRoute || isTeacherRoute) {
     const response = NextResponse.next();
     const session = await getIronSession<SessionData>(

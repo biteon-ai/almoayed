@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -10,15 +11,6 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +24,21 @@ import {
   EDUCATION_STAGE_LABELS,
   REFERRAL_SOURCE_LABELS,
 } from "@/lib/student-profile";
+
+const StudentDetailScoreChart = dynamic(
+  () =>
+    import("@/components/teacher/StudentDetailScoreChart").then(
+      (m) => m.StudentDetailScoreChart
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[250px] items-center justify-center text-sm text-muted-foreground">
+        جاري تحميل الرسم البياني…
+      </div>
+    ),
+  }
+);
 
 interface StudentDetailDashboardProps {
   detail: TeacherStudentDetail;
@@ -61,29 +68,6 @@ function studentInitials(name: string): string {
   return `${parts[0]!.slice(0, 1)}${parts[1]!.slice(0, 1)}`;
 }
 
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ value?: number; name?: string; color?: string }>;
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-
-  return (
-    <div className="rounded-xl border bg-background px-3 py-2 text-xs shadow-md">
-      <p className="mb-1 font-semibold">{label}</p>
-      {payload.map((entry) => (
-        <p key={entry.name} style={{ color: entry.color }}>
-          {entry.name}: {entry.value}%
-        </p>
-      ))}
-    </div>
-  );
-}
-
 export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) {
   const { student, analytics, demographics } = detail;
   const { kpis } = analytics;
@@ -91,7 +75,6 @@ export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) 
   const scoreChartData = analytics.scoreHistory.map((point, index) => ({
     label: `#${index + 1}`,
     score: point.score,
-    quizTitle: point.quizTitle,
   }));
 
   return (
@@ -327,38 +310,7 @@ export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) 
             </p>
           </CardHeader>
           <div className="h-[250px] w-full">
-            {scoreChartData.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={scoreChartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="label"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Line
-                    type="monotone"
-                    dataKey="score"
-                    name="العلامة"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                لا توجد محاولات بعد
-              </div>
-            )}
+            <StudentDetailScoreChart data={scoreChartData} />
           </div>
         </Card>
 

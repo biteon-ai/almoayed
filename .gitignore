@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# PERF-TEST-001 generated reports (keep README)
+scripts/perf-test/out/*
+!scripts/perf-test/out/README.md

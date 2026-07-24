@@ -13,19 +13,22 @@ export const metadata = {
 
 export default async function DashboardPage() {
   const session = await requireStudent();
-
   const profile = await getStudentProfile();
   if (!profile?.is_subscribed) {
     redirect("/login");
   }
 
-  const dashboard = await getStudentDashboardData();
+  // PERF-001: parallel independent reads; requireStudent is request-cached (AUTH-003 once).
+  const [dashboard, teacherGamification] = await Promise.all([
+    getStudentDashboardData(),
+    getStudentGamificationStatus(),
+  ]);
+
   const gamification = computeStudentGamification({
     quizzes: dashboard.quizzes,
     recentScores: dashboard.recentScores,
     completedQuizCount: dashboard.stats.completedQuizCount,
   });
-  const teacherGamification = await getStudentGamificationStatus();
 
   return (
     <StudentDashboardView

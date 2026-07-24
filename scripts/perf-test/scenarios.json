@@ -1,0 +1,20 @@
+{
+  "featureId": "PERF-TEST-001",
+  "probePath": "/api/perf/probe",
+  "scenarios": [
+    "health",
+    "login-demo",
+    "dashboard",
+    "quiz-fetch",
+    "teacher-rpc",
+    "submit-dry"
+  ],
+  "thresholds": {
+    "http_req_duration_p95_ms": 500,
+    "ttfb_p95_ms": 400,
+    "http_req_failed_rate_max": 0.05,
+    "auth_failure_rate_max": 0
+  },
+  "vusPresets": [20, 50, 100],
+  "lighthouseRoutes": ["/login", "/dashboard"]
+}

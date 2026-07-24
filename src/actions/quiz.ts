@@ -17,6 +17,10 @@ import {
 } from "@/lib/dashboard-stats";
 import { estimateQuizDurationMinutes } from "@/lib/student-quiz-ui";
 import { aggregateCategoryPerformance } from "@/lib/weak-points";
+import {
+  QUIZ_LIST_SELECT,
+  SUBMISSION_RESULT_SELECT,
+} from "@/lib/perf-selects";
 import { getStudentTeachers } from "@/actions/student";
 import type {
   CategoryPerformance,
@@ -82,7 +86,7 @@ export async function getQuizForStudent(quizId: string): Promise<{
 
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("*")
+    .select(QUIZ_LIST_SELECT)
     .eq("id", quizId)
     .eq("created_by", ctx.teacherId)
     .eq("is_active", true)
@@ -130,7 +134,7 @@ export async function getSubmissionResults(
 
   const { data: submission } = await supabase
     .from("exam_submissions")
-    .select("*")
+    .select(SUBMISSION_RESULT_SELECT)
     .eq("id", submissionId)
     .eq("student_id", session.profileId)
     .single();
@@ -381,7 +385,7 @@ async function fetchStudentQuizBundle(
 
   const { data: quizRows } = await supabase
     .from("quizzes")
-    .select("*")
+    .select(QUIZ_LIST_SELECT)
     .eq("created_by", ctx.teacherId)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
@@ -558,7 +562,7 @@ export async function getAvailableQuizzes(): Promise<QuizListItem[]> {
 
   const { data } = await supabase
     .from("quizzes")
-    .select("*")
+    .select(QUIZ_LIST_SELECT)
     .eq("created_by", ctx.teacherId)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
