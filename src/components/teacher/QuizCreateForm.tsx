@@ -40,6 +40,8 @@ export function QuizCreateForm({
   const [quizType, setQuizType] = useState<string>("regular");
   const [targetGroupId, setTargetGroupId] = useState<string>("");
   const [isFree, setIsFree] = useState(true);
+  const [isTimed, setIsTimed] = useState(false);
+  const [durationMinutes, setDurationMinutes] = useState("30");
 
   const categoryLabel =
     categoryId === ""
@@ -183,6 +185,52 @@ export function QuizCreateForm({
           >
             مجاني (متاح لطلاب Free)
           </Label>
+        </div>
+
+        <div
+          className="space-y-3 border-t border-border/50 pt-3"
+          {...spekit(SPEKIT.quizTimerSettings)}
+        >
+          <div className="flex items-center gap-2.5 py-1">
+            <Checkbox
+              id="is_timed"
+              checked={isTimed}
+              onCheckedChange={(checked) => setIsTimed(checked === true)}
+            />
+            <input
+              type="hidden"
+              name="is_timed"
+              value={isTimed ? "on" : "off"}
+            />
+            <Label
+              htmlFor="is_timed"
+              className="cursor-pointer text-sm font-normal text-foreground"
+            >
+              تفعيل التوقيت
+            </Label>
+          </div>
+          {isTimed ? (
+            <div className="space-y-2">
+              <Label htmlFor="duration_minutes" className="text-sm">
+                مدة الاختبار بالدقائق
+              </Label>
+              <Input
+                id="duration_minutes"
+                name="duration_minutes"
+                type="number"
+                min={1}
+                max={180}
+                required
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(e.target.value)}
+                className={fieldInputClass}
+                dir="ltr"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                بين 1 و 180 دقيقة. يبدأ العد عند فتح الطالب للاختبار.
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
 

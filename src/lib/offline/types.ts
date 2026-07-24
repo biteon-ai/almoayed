@@ -15,6 +15,13 @@ export type QuizPackageRecord = {
   questionIds: string[];
   cachedAt: string;
   openedAt: string;
+  /** QUIZ-004 — snapshot for offline countdown (endsAt absolute) */
+  timer?: {
+    startedAt: string;
+    durationMinutes: number;
+    endsAt: string;
+    remainingSeconds: number;
+  } | null;
 };
 
 export type InProgressRecord = {

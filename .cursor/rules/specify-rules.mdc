@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/017-student-unlink-purge/plan.md`
+**Active plan**: `specs/018-quiz-countdown-timer/plan.md`
 
 Related artifacts:
-- Spec: `specs/017-student-unlink-purge/spec.md`
-- Research: `specs/017-student-unlink-purge/research.md`
-- Data model: `specs/017-student-unlink-purge/data-model.md`
-- Contracts: `specs/017-student-unlink-purge/contracts/`
-- Quickstart: `specs/017-student-unlink-purge/quickstart.md`
+- Spec: `specs/018-quiz-countdown-timer/spec.md`
+- Research: `specs/018-quiz-countdown-timer/research.md`
+- Data model: `specs/018-quiz-countdown-timer/data-model.md`
+- Contracts: `specs/018-quiz-countdown-timer/contracts/`
+- Quickstart: `specs/018-quiz-countdown-timer/quickstart.md`
 <!-- SPECKIT END -->

@@ -67,7 +67,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
     );
   }
 
-  const { quiz, questions, existingSubmissionId } = data!;
+  const { quiz, questions, existingSubmissionId, timer } = data!;
 
   if (!quiz) {
     notFound();
@@ -99,6 +99,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
         quiz={quiz}
         questions={questions}
         initialResults={initialResults}
+        timer={existingSubmissionId ? null : timer}
       />
     </div>
   );

@@ -13,6 +13,8 @@ export function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
     deleted_at: null,
     quiz_type: "regular",
     target_group_id: null,
+    is_timed: false,
+    duration_minutes: null,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,

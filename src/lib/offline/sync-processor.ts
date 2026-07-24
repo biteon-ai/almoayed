@@ -43,7 +43,13 @@ async function flushPendingSubmissionsInternal(): Promise<FlushResult> {
     await updatePendingStatus(item.id, "syncing");
 
     try {
-      await submitQuiz(item.quizId, item.answers);
+      const answers =
+        item.sessionExpiredAtSubmit
+          ? Object.fromEntries(
+              item.questionIds.map((id) => [id, item.answers[id] ?? ""])
+            )
+          : item.answers;
+      await submitQuiz(item.quizId, answers);
       await removePendingSubmission(item.id);
       result.synced += 1;
     } catch (error) {

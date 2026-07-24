@@ -8,6 +8,7 @@ import { QuizRunner } from "@/components/quiz/QuizRunner";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { useOnlineStatus } from "@/lib/offline/connectivity";
 import { getQuizPackage, saveQuizPackage } from "@/lib/offline/quiz-cache";
+import type { TimedQuizSessionView } from "@/lib/quiz-timer";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 
 interface QuizRunnerContainerProps {
@@ -15,6 +16,7 @@ interface QuizRunnerContainerProps {
   quiz: Quiz;
   questions: ExamQuestion[];
   initialResults?: QuizSubmitResult | null;
+  timer?: TimedQuizSessionView | null;
 }
 
 export function QuizRunnerContainer({
@@ -22,6 +24,7 @@ export function QuizRunnerContainer({
   quiz,
   questions,
   initialResults,
+  timer = null,
 }: QuizRunnerContainerProps) {
   const params = useParams();
   const quizId = (params.id as string) ?? quiz.id;
@@ -29,6 +32,9 @@ export function QuizRunnerContainer({
   const [loadedQuiz, setLoadedQuiz] = useState(quiz);
   const [loadedQuestions, setLoadedQuestions] = useState(questions);
   const [loadedResults, setLoadedResults] = useState(initialResults ?? null);
+  const [loadedTimer, setLoadedTimer] = useState<TimedQuizSessionView | null>(
+    timer
+  );
   const [unavailable, setUnavailable] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -38,12 +44,13 @@ export function QuizRunnerContainer({
     async function hydrate() {
       if (quiz && questions.length > 0) {
         if (online) {
-          await saveQuizPackage({ quiz, questions, teacherId });
+          await saveQuizPackage({ quiz, questions, teacherId, timer });
         }
         if (!cancelled) {
           setLoadedQuiz(quiz);
           setLoadedQuestions(questions);
           setLoadedResults(initialResults ?? null);
+          setLoadedTimer(timer);
           setUnavailable(false);
           setHydrated(true);
         }
@@ -58,6 +65,7 @@ export function QuizRunnerContainer({
           setLoadedQuiz(pkg.quiz);
           setLoadedQuestions(pkg.questions);
           setLoadedResults(null);
+          setLoadedTimer(pkg.timer ?? null);
           setUnavailable(false);
         } else {
           setUnavailable(true);
@@ -76,7 +84,7 @@ export function QuizRunnerContainer({
     return () => {
       cancelled = true;
     };
-  }, [quiz, questions, initialResults, online, quizId, teacherId]);
+  }, [quiz, questions, initialResults, online, quizId, teacherId, timer]);
 
   if (!hydrated) {
     return (
@@ -107,6 +115,7 @@ export function QuizRunnerContainer({
       questions={loadedQuestions}
       initialResults={loadedResults}
       teacherId={teacherId}
+      timer={loadedResults ? null : loadedTimer}
     />
   );
 }

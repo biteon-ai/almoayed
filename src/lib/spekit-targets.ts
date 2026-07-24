@@ -38,6 +38,9 @@ export const SPEKIT = {
   // ── QUIZ-001 ─────────────────────────────────────────────────
   quizPage: "quiz-page",
   quizGatekeeper: "quiz-gatekeeper",
+  quizTimer: "quiz-timer",
+  quizTimerSettings: "quiz-timer-settings",
+  quizTimerCard: "quiz-timer-card",
   quizProgress: "quiz-progress",
   quizEmptyState: "quiz-empty-state",
   quizQuestionList: "quiz-question-list",

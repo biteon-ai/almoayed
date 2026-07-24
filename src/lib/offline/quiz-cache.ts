@@ -47,6 +47,7 @@ export async function saveQuizPackage(input: {
   quiz: Quiz;
   questions: ExamQuestion[];
   teacherId: string;
+  timer?: QuizPackageRecord["timer"];
 }): Promise<void> {
   assertGatekeeperCompliance(input.questions);
 
@@ -59,6 +60,7 @@ export async function saveQuizPackage(input: {
     questionIds: input.questions.map((q) => q.id),
     cachedAt: now,
     openedAt: now,
+    timer: input.timer ?? null,
   };
 
   await idbPut(OFFLINE_STORES.quizPackages, record);
