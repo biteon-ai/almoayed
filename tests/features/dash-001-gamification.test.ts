@@ -7,7 +7,8 @@ import {
   computeStudyStreak,
   countSubmissionsInLastDays,
 } from "@/lib/student-gamification";
-import type { QuizCarouselItem, RecentScoreRow } from "@/types/database";
+import type { RecentScoreRow } from "@/types/database";
+import { createQuizCarouselItem } from "../helpers/quiz-factory";
 
 const FEATURE = "[DASH-001]";
 
@@ -83,29 +84,7 @@ describe(`${FEATURE} gamification aggregates`, () => {
   });
 
   it("bundles continue quiz and progress from dashboard quizzes", () => {
-    const quiz = (overrides: Partial<QuizCarouselItem> & Pick<QuizCarouselItem, "id">): QuizCarouselItem => ({
-      title: "اختبار",
-      created_by: "t1",
-      category_id: null,
-      topic_id: null,
-      is_active: true,
-      is_free: true,
-      is_archived: false,
-      deleted_at: null,
-      quiz_type: "regular",
-      target_group_id: null,
-      created_at: "2026-01-01T00:00:00Z",
-      updated_at: "2026-01-01T00:00:00Z",
-      isAccessible: true,
-      isLocked: false,
-      questionCount: 10,
-      hasSubmission: false,
-      lastActivityAt: null,
-      categoryName: "عام",
-      lastScore: null,
-      estimatedMinutes: 6,
-      ...overrides,
-    });
+    const quiz = createQuizCarouselItem;
 
     const result = computeStudentGamification({
       quizzes: [

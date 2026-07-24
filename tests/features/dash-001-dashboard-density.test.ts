@@ -16,7 +16,7 @@ import {
   sliceVisibleQueue,
   splitQuizExamSections,
 } from "@/lib/quiz-exam-list";
-import type { QuizCarouselItem } from "@/types/database";
+import { createQuizCarouselItem } from "../helpers/quiz-factory";
 
 const FEATURE = "[DASH-001]";
 
@@ -67,30 +67,10 @@ describe(`${FEATURE} filterScoresByTeacherQuizIds`, () => {
   });
 });
 
-function quiz(overrides: Partial<QuizCarouselItem> & Pick<QuizCarouselItem, "id">): QuizCarouselItem {
-  return {
-    title: "اختبار",
-    created_by: "t1",
-    category_id: null,
-    topic_id: null,
-    is_active: true,
-    is_free: true,
-    is_archived: false,
-    deleted_at: null,
-    quiz_type: "regular",
-    target_group_id: null,
-    created_at: "2026-01-01T00:00:00Z",
-    updated_at: "2026-01-01T00:00:00Z",
-    isAccessible: true,
-    isLocked: false,
-    questionCount: 3,
-    hasSubmission: false,
-    lastActivityAt: null,
-    categoryName: "عام",
-    lastScore: null,
-    estimatedMinutes: 6,
-    ...overrides,
-  };
+function quiz(
+  overrides: Parameters<typeof createQuizCarouselItem>[0]
+): ReturnType<typeof createQuizCarouselItem> {
+  return createQuizCarouselItem(overrides);
 }
 
 describe(`${FEATURE} quiz exam list sections`, () => {

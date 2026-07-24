@@ -6,7 +6,7 @@ import {
 } from "@/lib/perf-selects";
 import { EXAM_QUESTION_SELECT_FIELDS } from "@/lib/quiz-gatekeeper";
 import { mapTeacherDashboardRpcPayload } from "@/lib/teacher-analytics";
-import type { Quiz } from "@/types/database";
+import { createQuiz } from "../helpers/quiz-factory";
 
 describe("[PERF-001] lean select invariants", () => {
   it("quiz list select never requests wildcard or gatekeeper-forbidden answer fields", () => {
@@ -23,21 +23,7 @@ describe("[PERF-001] lean select invariants", () => {
 });
 
 describe("[PERF-002] teacher dashboard RPC mapper", () => {
-  const quiz: Quiz = {
-    id: "q1",
-    title: "اختبار تجريبي",
-    created_by: "t1",
-    category_id: null,
-    topic_id: null,
-    is_active: true,
-    is_free: true,
-    is_archived: false,
-    deleted_at: null,
-    quiz_type: "regular",
-    target_group_id: null,
-    created_at: "2026-01-01T00:00:00Z",
-    updated_at: "2026-01-01T00:00:00Z",
-  };
+  const quiz = createQuiz({ id: "q1", title: "اختبار تجريبي", created_by: "t1" });
 
   it("maps RPC payload into TeacherDashboardAnalytics without cross-tenant fields", () => {
     const analytics = mapTeacherDashboardRpcPayload({

@@ -1,4 +1,4 @@
-import type { ExamQuestion, Question, Quiz } from "@/types/database";
+import type { ExamQuestion, Question, Quiz, QuizCarouselItem } from "@/types/database";
 
 export function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
   return {
@@ -17,6 +17,23 @@ export function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
     duration_minutes: null,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createQuizCarouselItem(
+  overrides: Partial<QuizCarouselItem> & Pick<QuizCarouselItem, "id">
+): QuizCarouselItem {
+  return {
+    ...createQuiz({ id: overrides.id, title: overrides.title ?? "اختبار" }),
+    isAccessible: true,
+    isLocked: false,
+    questionCount: 3,
+    hasSubmission: false,
+    lastActivityAt: null,
+    categoryName: "عام",
+    lastScore: null,
+    estimatedMinutes: 6,
     ...overrides,
   };
 }
