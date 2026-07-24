@@ -1,7 +1,7 @@
 {
   "name": "المؤيد",
   "short_name": "المؤيد",
-  "description": "حل بيدك ما حدا بفيدك",
+  "description": "حلّ بإيدك، ما حدا بيفيدك.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -4,7 +4,7 @@
 product:
   name: المؤيد
   name_en: Al-Moayed
-  slogan: حل بيدك ما حدا بفيدك
+  slogan: حلّ بإيدك، ما حدا بيفيدك.
   locale: ar-SY
   direction: rtl
   stack: Next.js 14 · Supabase · iron-session · Tailwind · Shadcn

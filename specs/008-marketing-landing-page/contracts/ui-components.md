@@ -19,7 +19,7 @@ return <LandingPageView />;
 **Metadata**:
 ```typescript
 export const metadata = {
-  title: "المؤيد — حل بيدك ما حدا بفيدك",
+  title: "المؤيد — حلّ بإيدك، ما حدا بيفيدك.",
   description: APP_SLOGAN,
 };
 ```

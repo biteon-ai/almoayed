@@ -1,6 +1,6 @@
 # Al-Moayed (المؤيد) — Project Constitution
 
-**Slogan:** حل بيدك ما حدا بفيدك  
+**Slogan:** حلّ بإيدك، ما حدا بيفيدك.  
 **Product:** Mobile-first, RTL Arabic PWA for all educational levels and subjects (students + teachers)
 
 ## Non-negotiable principles

@@ -1,6 +1,6 @@
 # Al-Moayed (المؤيد) — Project Constitution
 
-**Slogan:** حل بيدك ما حدا بفيدك  
+**Slogan:** حلّ بإيدك، ما حدا بيفيدك.  
 **Product:** Mobile-first, RTL Arabic PWA for Syrian Baccalaureate math (students + teachers)
 
 > Canonical copy: `.speckit/constitution.md` — keep both in sync when amending.
