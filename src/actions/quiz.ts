@@ -15,7 +15,20 @@ import {
   computeDashboardStats,
   filterScoresByTeacherQuizIds,
 } from "@/lib/dashboard-stats";
-import { estimateQuizDurationMinutes } from "@/lib/student-quiz-ui";
+import {
+  estimateQuizDurationMinutes,
+  STUDENT_EXAMS_PAGE_SIZE,
+  STUDENT_RESULTS_PAGE_SIZE,
+} from "@/lib/student-quiz-ui";
+import {
+  clampPage,
+  rangeFromPage,
+  toPagedResult,
+  STUDENT_HOME_QUIZ_WINDOW,
+  type PageInput,
+  type PagedResult,
+} from "@/lib/pagination-server";
+import { pickContinueQuiz } from "@/lib/quiz-exam-list";
 import { aggregateCategoryPerformance } from "@/lib/weak-points";
 import {
   QUIZ_LIST_SELECT,
@@ -356,9 +369,14 @@ type StudentQuizBundle = {
   teachers: Awaited<ReturnType<typeof getStudentTeachers>>;
 };
 
+type QuizRowWithQuestionCount = Quiz & {
+  questions: { count: number }[];
+};
+
 async function fetchStudentQuizBundle(
   session: Awaited<ReturnType<typeof requireStudent>>,
-  ctx: Awaited<ReturnType<typeof getStudentContext>>
+  ctx: Awaited<ReturnType<typeof getStudentContext>>,
+  options?: { quizLimit?: number }
 ): Promise<StudentQuizBundle> {
   const [weakPoints, teachers] = await Promise.all([
     getWeakPoints(),
@@ -383,12 +401,18 @@ async function fetchStudentQuizBundle(
 
   const supabase = createAdminClient();
 
-  const { data: quizRows } = await supabase
+  let quizQuery = supabase
     .from("quizzes")
-    .select(QUIZ_LIST_SELECT)
+    .select(`${QUIZ_LIST_SELECT}, questions(count)`)
     .eq("created_by", ctx.teacherId)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
+
+  if (options?.quizLimit) {
+    quizQuery = quizQuery.limit(options.quizLimit);
+  }
+
+  const { data: quizRows } = await quizQuery;
 
   if (!quizRows?.length) {
     return {
@@ -400,21 +424,25 @@ async function fetchStudentQuizBundle(
     };
   }
 
-  const quizIds = (quizRows as Quiz[]).map((q) => q.id);
+  const typedQuizRows = quizRows as QuizRowWithQuestionCount[];
+  const quizIds = typedQuizRows.map((q) => q.id);
   const categoryIds = Array.from(
     new Set(
-      (quizRows as Quiz[])
+      typedQuizRows
         .map((quiz) => quiz.category_id)
         .filter((id): id is string => Boolean(id))
     )
   );
 
-  const [
-    { data: questionRows },
-    { data: submissionRows },
-    { data: categoryRows },
-  ] = await Promise.all([
-    supabase.from("questions").select("quiz_id").in("quiz_id", quizIds),
+  const questionCountByQuiz = new Map<string, number>();
+  for (const row of typedQuizRows) {
+    const count = row.questions?.[0]?.count ?? 0;
+    if (count > 0) {
+      questionCountByQuiz.set(row.id, count);
+    }
+  }
+
+  const [{ data: submissionRows }, { data: categoryRows }] = await Promise.all([
     supabase
       .from("exam_submissions")
       .select("id, score, submitted_at, quiz_id")
@@ -430,25 +458,20 @@ async function fetchStudentQuizBundle(
     (categoryRows ?? []).map((row) => [row.id as string, row.name as string])
   );
 
-  const questionCountByQuiz = new Map<string, number>();
-  for (const row of questionRows ?? []) {
-    const id = row.quiz_id as string;
-    questionCountByQuiz.set(id, (questionCountByQuiz.get(id) ?? 0) + 1);
-  }
-
   const quizzesWithQuestions = new Set(questionCountByQuiz.keys());
   const submissionByQuiz = new Map(
     (submissionRows ?? []).map((row) => [row.quiz_id as string, row])
   );
 
-  const quizzes: QuizCarouselItem[] = (quizRows as Quiz[])
+  const quizzes: QuizCarouselItem[] = typedQuizRows
     .filter((quiz) => quizzesWithQuestions.has(quiz.id))
-    .map((quiz) => {
+    .map((row) => {
+      const { questions, ...quiz } = row;
+      const questionCount = questions?.[0]?.count ?? 0;
       const listItem = computeQuizListItem(quiz, {
         tier: ctx.tier,
         groupIds: ctx.groupIds,
       });
-      const questionCount = questionCountByQuiz.get(quiz.id) ?? 0;
       const submission = submissionByQuiz.get(quiz.id);
 
       return {
@@ -512,7 +535,9 @@ async function fetchStudentQuizBundle(
 export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   const session = await requireStudent();
   const ctx = await getStudentContext(session);
-  const bundle = await fetchStudentQuizBundle(session, ctx);
+  const bundle = await fetchStudentQuizBundle(session, ctx, {
+    quizLimit: STUDENT_HOME_QUIZ_WINDOW,
+  });
 
   return {
     stats: bundle.stats,
@@ -523,32 +548,52 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   };
 }
 
-export async function getStudentQuizzesPageData(): Promise<{
+export async function getStudentQuizzesPageData(
+  pageInput?: PageInput
+): Promise<{
   stats: StudentDashboardData["stats"];
-  quizzes: QuizCarouselItem[];
+  quizzes: PagedResult<QuizCarouselItem>;
+  continueQuiz: QuizCarouselItem | null;
 }> {
   const session = await requireStudent();
   const ctx = await getStudentContext(session);
   const bundle = await fetchStudentQuizBundle(session, ctx);
 
+  const pageSize = pageInput?.pageSize ?? STUDENT_EXAMS_PAGE_SIZE;
+  const requestedPage = pageInput?.page ?? 1;
+  const total = bundle.quizzes.length;
+  const page = clampPage(requestedPage, pageSize, total);
+  const { from, to } = rangeFromPage(page, pageSize);
+  const items = bundle.quizzes.slice(from, to + 1);
+
   return {
     stats: bundle.stats,
-    quizzes: bundle.quizzes,
+    quizzes: toPagedResult(items, total, page, pageSize),
+    continueQuiz: pickContinueQuiz(bundle.quizzes),
   };
 }
 
-export async function getStudentResultsPageData(): Promise<{
+export async function getStudentResultsPageData(
+  pageInput?: PageInput
+): Promise<{
   stats: StudentDashboardData["stats"];
-  scores: RecentScoreRow[];
+  scores: PagedResult<RecentScoreRow>;
   totalQuizzes: number;
 }> {
   const session = await requireStudent();
   const ctx = await getStudentContext(session);
   const bundle = await fetchStudentQuizBundle(session, ctx);
 
+  const pageSize = pageInput?.pageSize ?? STUDENT_RESULTS_PAGE_SIZE;
+  const requestedPage = pageInput?.page ?? 1;
+  const total = bundle.allScores.length;
+  const page = clampPage(requestedPage, pageSize, total);
+  const { from, to } = rangeFromPage(page, pageSize);
+  const items = bundle.allScores.slice(from, to + 1);
+
   return {
     stats: bundle.stats,
-    scores: bundle.allScores,
+    scores: toPagedResult(items, total, page, pageSize),
     totalQuizzes: bundle.quizzes.length,
   };
 }
@@ -562,27 +607,17 @@ export async function getAvailableQuizzes(): Promise<QuizListItem[]> {
 
   const { data } = await supabase
     .from("quizzes")
-    .select(QUIZ_LIST_SELECT)
+    .select(`${QUIZ_LIST_SELECT}, questions(count)`)
     .eq("created_by", ctx.teacherId)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
   if (!data?.length) return [];
 
-  const quizIds = data.map((q) => q.id);
-  const { data: questionRows } = await supabase
-    .from("questions")
-    .select("quiz_id")
-    .in("quiz_id", quizIds);
-
-  const quizzesWithQuestions = new Set(
-    questionRows?.map((row) => row.quiz_id as string) ?? []
-  );
-
-  return (data as Quiz[])
-    .filter((quiz) => quizzesWithQuestions.has(quiz.id))
-    .map((quiz) =>
-      computeQuizListItem(quiz, {
+  return (data as QuizRowWithQuestionCount[])
+    .filter((row) => (row.questions?.[0]?.count ?? 0) > 0)
+    .map((row) =>
+      computeQuizListItem(row as Quiz, {
         tier: ctx.tier,
         groupIds: ctx.groupIds,
       })

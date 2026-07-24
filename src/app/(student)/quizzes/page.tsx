@@ -9,7 +9,11 @@ export const metadata = {
   description: APP_DESCRIPTION,
 };
 
-export default async function StudentQuizzesPage() {
+interface PageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function StudentQuizzesPage({ searchParams }: PageProps) {
   await requireStudent();
 
   const profile = await getStudentProfile();
@@ -17,7 +21,15 @@ export default async function StudentQuizzesPage() {
     redirect("/login");
   }
 
-  const data = await getStudentQuizzesPageData();
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const data = await getStudentQuizzesPageData({ page });
 
-  return <StudentQuizzesView stats={data.stats} quizzes={data.quizzes} />;
+  return (
+    <StudentQuizzesView
+      stats={data.stats}
+      quizzesPage={data.quizzes}
+      continueQuiz={data.continueQuiz}
+    />
+  );
 }

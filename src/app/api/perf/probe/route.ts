@@ -147,13 +147,16 @@ export async function POST(request: Request) {
     });
 
     if (teacherStep.ok && teacherStep.value) {
-      const rpcStep = await timeStep("get_teacher_dashboard_analytics", async () => {
-        const { data, error } = await supabase.rpc(
-          "get_teacher_dashboard_analytics",
-          { p_teacher_id: teacherStep.value }
-        );
-        if (error) throw new Error(error.message);
-        return data;
+      const rpcStep = await timeStep("get_teacher_dashboard_kpis", async () => {
+        const primary = await supabase.rpc("get_teacher_dashboard_kpis", {
+          p_teacher_id: teacherStep.value,
+        });
+        if (!primary.error) return primary.data;
+        const legacy = await supabase.rpc("get_teacher_dashboard_analytics", {
+          p_teacher_id: teacherStep.value,
+        });
+        if (legacy.error) throw new Error(legacy.error.message);
+        return legacy.data;
       });
       steps.push({
         label: rpcStep.label,

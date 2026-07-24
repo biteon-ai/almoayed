@@ -914,6 +914,66 @@ partial_features:
       - teacher-weekly-activity-chart
       - student-detail-score-chart
 
+  - id: PERF-004
+    name: Teacher Dashboard Aggregate KPIs
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/dashboard"]
+    files:
+      - supabase/migrations/011_db_scale_hardening.sql
+      - src/lib/teacher-analytics.ts
+      - src/actions/teacher.ts
+    acceptance:
+      - get_teacher_dashboard_kpis returns aggregates only (no full student/submission arrays); popularExams ≤ 10
+      - EXECUTE revoked from anon/authenticated; granted to service_role
+      - Lean multi-query fallback then Arabic section error; MT-002 scoped by session teacher id
+      - QUIZ-001 answer fields never in KPI payload
+    spekit: [teacher-analytics-kpis]
+
+  - id: PERF-005
+    name: Server-Side List Pagination & Admin Quiz Counts
+    status: implemented
+    persona: [TEACHER, STUDENT, SUPER_ADMIN]
+    routes:
+      - "/teacher/students"
+      - "/teacher/quizzes"
+      - "/quizzes"
+      - "/results"
+      - "/admin/teachers"
+    files:
+      - src/lib/pagination-server.ts
+      - src/actions/teacher.ts
+      - src/actions/quiz.ts
+      - src/lib/admin/teachers.ts
+      - src/components/teacher/StudentManagement.tsx
+      - src/components/teacher/QuizManagement.tsx
+      - src/components/student/StudentQuizzesView.tsx
+      - src/components/student/StudentResultsView.tsx
+      - src/components/admin/AdminTeachersTable.tsx
+    acceptance:
+      - Primary hubs use PagedResult + .range() with page clamp; page sizes 8/6/4/4/20
+      - Student home dashboard capped at 12 quizzes (STUDENT_HOME_QUIZ_WINDOW)
+      - Admin quiz counts via admin_quiz_counts_by_teacher (no global created_by scan)
+      - Spekit pagination hooks preserved
+    spekit: [student-pagination, teacher-students-page, teacher-quizzes-page]
+
+  - id: PERF-006
+    name: RLS Defense-in-Depth & Lean Hot Paths
+    status: implemented
+    persona: [DEVELOPER]
+    routes: []
+    files:
+      - supabase/migrations/011_db_scale_hardening.sql
+      - src/lib/perf-selects.ts
+      - src/lib/admin/auth.ts
+      - src/actions/quiz.ts
+    acceptance:
+      - Deny-all RLS on server-only tenant tables; auth.uid() wrapped as (SELECT auth.uid())
+      - Indexes for student submissions order, question sort, upgrade partial, quiz recency
+      - Hot lists use lean selects + questions(count); no password_hash on admin directory lists
+      - Optional low-selectivity boolean index drops documented only (not required to exit)
+    spekit: []
+
   - id: PERF-TEST-001
     name: Stress Testing & Performance Measurement Suite
     status: implemented

@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/014-app-performance/plan.md`
+**Active plan**: `specs/015-db-scale-hardening/plan.md`
 
 Related artifacts:
-- Spec: `specs/014-app-performance/spec.md`
-- Research: `specs/014-app-performance/research.md`
-- Data model: `specs/014-app-performance/data-model.md`
-- Contracts: `specs/014-app-performance/contracts/`
-- Quickstart: `specs/014-app-performance/quickstart.md`
+- Spec: `specs/015-db-scale-hardening/spec.md`
+- Research: `specs/015-db-scale-hardening/research.md`
+- Data model: `specs/015-db-scale-hardening/data-model.md`
+- Contracts: `specs/015-db-scale-hardening/contracts/`
+- Quickstart: `specs/015-db-scale-hardening/quickstart.md`
 <!-- SPECKIT END -->

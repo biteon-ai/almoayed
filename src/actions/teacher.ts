@@ -30,7 +30,11 @@ import {
   isValidWhatsAppE164,
   sanitizeWhatsAppForDb,
 } from "@/lib/constants";
-import { computeTeacherDashboardAnalytics, mapTeacherDashboardRpcPayload } from "@/lib/teacher-analytics";
+import {
+  isTeacherDashboardKpiPayload,
+  mapTeacherDashboardKpiPayload,
+  mapTeacherDashboardRpcPayload,
+} from "@/lib/teacher-analytics";
 import type { TeacherDashboardRpcPayload } from "@/lib/teacher-analytics";
 import { computeTeacherStudentAnalytics } from "@/lib/student-analytics";
 import {
@@ -39,6 +43,14 @@ import {
   TEACHER_GROUP_LIST_SELECT,
   TOPIC_LIST_SELECT,
 } from "@/lib/perf-selects";
+import {
+  clampPage,
+  rangeFromPage,
+  toPagedResult,
+  type PageInput,
+  type PagedResult,
+} from "@/lib/pagination-server";
+import { QUIZ_PAGE_SIZE, STUDENT_PAGE_SIZE } from "@/lib/paginate-students";
 
 function teacherId(session: { profileId: string }) {
   return session.profileId;
@@ -89,58 +101,72 @@ export async function getTeacherDashboardAnalytics(): Promise<TeacherDashboardAn
   const tid = teacherId(session);
 
   const { data: rpcData, error: rpcError } = await supabase.rpc(
-    "get_teacher_dashboard_analytics",
+    "get_teacher_dashboard_kpis",
     { p_teacher_id: tid }
   );
 
-  if (!rpcError && rpcData) {
-    return mapTeacherDashboardRpcPayload(
-      rpcData as TeacherDashboardRpcPayload
-    );
+  if (!rpcError && rpcData && isTeacherDashboardKpiPayload(rpcData)) {
+    return mapTeacherDashboardKpiPayload(rpcData);
   }
 
+  // Legacy analytics name if KPIs not yet migrated
   if (rpcError) {
-    console.error("[PERF-002] get_teacher_dashboard_analytics RPC", rpcError);
+    const legacy = await supabase.rpc("get_teacher_dashboard_analytics", {
+      p_teacher_id: tid,
+    });
+    if (!legacy.error && legacy.data) {
+      if (isTeacherDashboardKpiPayload(legacy.data)) {
+        return mapTeacherDashboardKpiPayload(legacy.data);
+      }
+      if (
+        legacy.data &&
+        typeof legacy.data === "object" &&
+        Array.isArray((legacy.data as TeacherDashboardRpcPayload).studentLinks)
+      ) {
+        return mapTeacherDashboardRpcPayload(
+          legacy.data as TeacherDashboardRpcPayload
+        );
+      }
+    }
+    console.error("[PERF-004] get_teacher_dashboard_kpis RPC", rpcError);
   }
 
-  // Fallback: lean multi-query path if RPC unavailable
-  const [studentsRes, quizzesRes, pendingRes, groupsRes] = await Promise.all([
+  // Lean multi-query aggregate fallback (no full catalog dump into KPI mapper)
+  try {
+    return await leanTeacherDashboardKpiFallback(supabase, tid);
+  } catch (err) {
+    console.error("[PERF-004] lean dashboard fallback failed", err);
+    throw new Error("تعذر تحميل ملخص لوحة التحكم. حاول مرة أخرى.");
+  }
+}
+
+async function leanTeacherDashboardKpiFallback(
+  supabase: ReturnType<typeof createAdminClient>,
+  tid: string
+): Promise<TeacherDashboardAnalytics> {
+  const [studentsRes, quizzesRes, pendingRes] = await Promise.all([
     supabase
       .from("student_teachers")
-      .select("student_id, tier")
+      .select("student_id")
       .eq("teacher_id", tid)
       .eq("status", "active"),
-    supabase.from("quizzes").select(QUIZ_LIST_SELECT).eq("created_by", tid),
+    supabase
+      .from("quizzes")
+      .select("id, title, is_active")
+      .eq("created_by", tid)
+      .eq("is_archived", false),
     supabase
       .from("student_teachers")
       .select("id", { count: "exact", head: true })
       .eq("teacher_id", tid)
       .eq("upgrade_requested", true),
-    supabase.from("teacher_groups").select("id").eq("teacher_id", tid),
   ]);
 
-  const studentLinks =
-    (studentsRes.data as Array<{ student_id: string; tier: StudentTier }>) ?? [];
-  const quizzes = (quizzesRes.data as Quiz[]) ?? [];
-  const studentIds = studentLinks.map((link) => link.student_id);
-  const quizIds = quizzes.map((quiz) => quiz.id);
-  const groupIds = (groupsRes.data ?? []).map((group) => group.id as string);
-
-  const groupIdsByStudent = new Map<string, string[]>();
-  if (groupIds.length && studentIds.length) {
-    const { data: members } = await supabase
-      .from("teacher_group_members")
-      .select("student_id, group_id")
-      .in("group_id", groupIds)
-      .in("student_id", studentIds);
-
-    for (const member of members ?? []) {
-      const sid = member.student_id as string;
-      const list = groupIdsByStudent.get(sid) ?? [];
-      list.push(member.group_id as string);
-      groupIdsByStudent.set(sid, list);
-    }
-  }
+  const studentIds = (studentsRes.data ?? []).map((r) => r.student_id as string);
+  const quizzes = quizzesRes.data ?? [];
+  const activeQuizIds = quizzes
+    .filter((q) => q.is_active)
+    .map((q) => q.id as string);
 
   let submissions: Array<{
     student_id: string;
@@ -149,43 +175,105 @@ export async function getTeacherDashboardAnalytics(): Promise<TeacherDashboardAn
     submitted_at: string;
   }> = [];
 
-  if (studentIds.length && quizIds.length) {
+  if (studentIds.length && activeQuizIds.length) {
     const { data } = await supabase
       .from("exam_submissions")
       .select("student_id, quiz_id, score, submitted_at")
       .in("student_id", studentIds)
-      .in("quiz_id", quizIds);
+      .in("quiz_id", activeQuizIds);
     submissions = data ?? [];
   }
 
-  let profiles: Array<{ id: string; full_name: string }> = [];
-  if (studentIds.length) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", studentIds);
-    profiles = data ?? [];
+  // Aggregate in Node without shipping row arrays to the UI mapper contract
+  const titleById = new Map(
+    quizzes.map((q) => [q.id as string, q.title as string])
+  );
+  const attemptsByQuiz = new Map<string, number>();
+  for (const s of submissions) {
+    attemptsByQuiz.set(s.quiz_id, (attemptsByQuiz.get(s.quiz_id) ?? 0) + 1);
   }
+  const popularExams = Array.from(attemptsByQuiz.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([quizId, attempts], i) => ({
+      rank: i + 1,
+      title: titleById.get(quizId) ?? "",
+      attempts,
+      completionRate:
+        studentIds.length > 0
+          ? Math.round((attempts / studentIds.length) * 100)
+          : 0,
+    }));
 
-  return computeTeacherDashboardAnalytics({
-    studentLinks,
-    quizzes,
-    submissions,
-    profiles,
-    groupIdsByStudent,
-    studentCount: studentLinks.length,
+  const submissionCount = submissions.length;
+  const averageScore =
+    submissionCount > 0
+      ? Math.round(
+          submissions.reduce((sum, s) => sum + s.score, 0) / submissionCount
+        )
+      : 0;
+  const passRate =
+    submissionCount > 0
+      ? Math.round(
+          (submissions.filter((s) => s.score >= 60).length / submissionCount) *
+            100
+        )
+      : 0;
+
+  return mapTeacherDashboardKpiPayload({
+    studentCount: studentIds.length,
     quizCount: quizzes.length,
     pendingUpgrades: pendingRes.count ?? 0,
+    submissionCount,
+    averageScore,
+    passRate,
+    perfectScoreStudentCount: new Set(
+      submissions.filter((s) => s.score === 100).map((s) => s.student_id)
+    ).size,
+    completionRate:
+      studentIds.length * activeQuizIds.length > 0
+        ? Math.round(
+            (submissionCount / (studentIds.length * activeQuizIds.length)) *
+              1000
+          ) / 10
+        : 0,
+    gradeDistribution: [],
+    weeklyActivity: [],
+    popularExams,
+    topPerformer: null,
+    examDifficulty: { hardest: null, easiest: null },
   });
 }
 
-export async function getTeacherStudents(filters?: {
-  tier?: StudentTier | "all";
-  status?: StudentTeacherStatus | "all";
-}): Promise<TeacherStudentRow[]> {
+export async function getTeacherStudents(
+  filters?: {
+    tier?: StudentTier | "all";
+    status?: StudentTeacherStatus | "all";
+  },
+  pageInput?: PageInput
+): Promise<PagedResult<TeacherStudentRow>> {
   const session = await requireTeacher();
   const supabase = createAdminClient();
   const tid = teacherId(session);
+  const pageSize = pageInput?.pageSize ?? STUDENT_PAGE_SIZE;
+  const requestedPage = pageInput?.page ?? 1;
+
+  let countQuery = supabase
+    .from("student_teachers")
+    .select("id", { count: "exact", head: true })
+    .eq("teacher_id", tid);
+
+  if (filters?.tier && filters.tier !== "all") {
+    countQuery = countQuery.eq("tier", filters.tier);
+  }
+  if (filters?.status && filters.status !== "all") {
+    countQuery = countQuery.eq("status", filters.status);
+  }
+
+  const { count } = await countQuery;
+  const total = count ?? 0;
+  const page = clampPage(requestedPage, pageSize, total);
+  const { from, to } = rangeFromPage(page, pageSize);
 
   let query = supabase
     .from("student_teachers")
@@ -196,7 +284,8 @@ export async function getTeacherStudents(filters?: {
     `
     )
     .eq("teacher_id", tid)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (filters?.tier && filters.tier !== "all") {
     query = query.eq("tier", filters.tier);
@@ -206,7 +295,9 @@ export async function getTeacherStudents(filters?: {
   }
 
   const { data: links } = await query;
-  if (!links) return [];
+  if (!links?.length) {
+    return toPagedResult([], total, page, pageSize);
+  }
 
   const { data: groups } = await supabase
     .from("teacher_groups")
@@ -218,10 +309,12 @@ export async function getTeacherStudents(filters?: {
 
   let members: { student_id: string; group_id: string }[] = [];
   if (groupIds.length) {
+    const pageStudentIds = links.map((l) => l.student_id as string);
     const { data: m } = await supabase
       .from("teacher_group_members")
       .select("student_id, group_id")
-      .in("group_id", groupIds);
+      .in("group_id", groupIds)
+      .in("student_id", pageStudentIds);
     members = m ?? [];
   }
 
@@ -237,7 +330,7 @@ export async function getTeacherStudents(filters?: {
     }
   }
 
-  return links.map((l) => {
+  const items = links.map((l) => {
     const p = l.profiles as unknown as {
       full_name: string;
       whatsapp_number: string;
@@ -256,6 +349,8 @@ export async function getTeacherStudents(filters?: {
       createdAt: (l.created_at as string) ?? "",
     };
   });
+
+  return toPagedResult(items, total, page, pageSize);
 }
 
 export async function getTeacherStudentDetail(
@@ -957,17 +1052,32 @@ export async function createTopic(categoryId: string, name: string) {
   revalidatePath("/teacher/quizzes");
 }
 
-export async function getTeacherQuizzes(): Promise<TeacherQuiz[]> {
+export async function getTeacherQuizzes(
+  pageInput?: PageInput
+): Promise<PagedResult<TeacherQuiz>> {
   const session = await requireTeacher();
   const supabase = createAdminClient();
+  const pageSize = pageInput?.pageSize ?? QUIZ_PAGE_SIZE;
+  const requestedPage = pageInput?.page ?? 1;
+
+  const { count } = await supabase
+    .from("quizzes")
+    .select("id", { count: "exact", head: true })
+    .eq("created_by", session.profileId);
+
+  const total = count ?? 0;
+  const page = clampPage(requestedPage, pageSize, total);
+  const { from, to } = rangeFromPage(page, pageSize);
+
   const { data } = await supabase
     .from("quizzes")
-    .select("*, questions(count)")
+    .select(`${QUIZ_LIST_SELECT}, questions(count)`)
     .eq("created_by", session.profileId)
     .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
-  return (data ?? []).map((row) => {
+  const items = (data ?? []).map((row) => {
     const { questions, ...quiz } = row as Quiz & {
       questions: { count: number }[];
     };
@@ -976,6 +1086,30 @@ export async function getTeacherQuizzes(): Promise<TeacherQuiz[]> {
       question_count: questions?.[0]?.count ?? 0,
     };
   });
+
+  return toPagedResult(items, total, page, pageSize);
+}
+
+export async function getTeacherQuizById(
+  quizId: string
+): Promise<TeacherQuiz | null> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("quizzes")
+    .select(`${QUIZ_LIST_SELECT}, questions(count)`)
+    .eq("created_by", session.profileId)
+    .eq("id", quizId)
+    .maybeSingle();
+
+  if (!data) return null;
+  const { questions, ...quiz } = data as Quiz & {
+    questions: { count: number }[];
+  };
+  return {
+    ...(quiz as Quiz),
+    question_count: questions?.[0]?.count ?? 0,
+  };
 }
 
 export async function createQuiz(formData: FormData) {

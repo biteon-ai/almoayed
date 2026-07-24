@@ -8,10 +8,15 @@ import { BookOpen, Crown, Sparkles } from "lucide-react";
 
 interface QuizMetricsKPIHeaderProps {
   quizzes?: TeacherQuiz[];
+  /** Full catalog size when quizzes is a server page slice. */
+  catalogTotal?: number;
 }
 
-export function QuizMetricsKPIHeader({ quizzes = [] }: QuizMetricsKPIHeaderProps) {
-  const totalQuizzes = quizzes.length;
+export function QuizMetricsKPIHeader({
+  quizzes = [],
+  catalogTotal,
+}: QuizMetricsKPIHeaderProps) {
+  const totalQuizzes = catalogTotal ?? quizzes.length;
   const proQuizzes = quizzes.filter((q) => !q.is_free).length;
   const freeQuizzes = totalQuizzes - proQuizzes;
 

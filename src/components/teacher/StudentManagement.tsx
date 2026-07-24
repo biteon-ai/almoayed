@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   approveProUpgrade,
   deleteStudentLink,
@@ -9,6 +9,7 @@ import {
   updateStudentTier,
 } from "@/actions/teacher";
 import type { TeacherGroup, TeacherStudentRow } from "@/types/database";
+import type { PagedResult } from "@/lib/pagination-server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,11 +44,7 @@ import { CreateGroupDialog } from "@/components/teacher/CreateGroupDialog";
 import { EditStudentDialog } from "@/components/teacher/EditStudentDialog";
 import { DeleteStudentConfirmDialog } from "@/components/teacher/DeleteStudentConfirmDialog";
 import { HubToast } from "@/components/teacher/HubToast";
-import { usePagination } from "@/hooks/usePagination";
-import {
-  filterStudentsByQuery,
-  STUDENT_PAGE_SIZE,
-} from "@/lib/paginate-students";
+import { filterStudentsByQuery } from "@/lib/paginate-students";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 
@@ -77,31 +74,39 @@ type HubModalType =
   | null;
 
 interface StudentManagementProps {
-  students: TeacherStudentRow[];
+  studentsPage: PagedResult<TeacherStudentRow>;
   groups: TeacherGroup[];
+  initialTier?: "all" | "free" | "pro";
+  initialStatus?: "all" | "pending" | "active" | "deactivated";
 }
 
 export function StudentManagement({
-  students: initial,
+  studentsPage,
   groups: initialGroups,
+  initialTier = "all",
+  initialStatus = "all",
 }: StudentManagementProps) {
   const router = useRouter();
-  const [students, setStudents] = useState(initial);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [students, setStudents] = useState(studentsPage.items);
   const [groups, setGroups] = useState(initialGroups);
 
   useEffect(() => {
-    setStudents(initial);
-  }, [initial]);
+    setStudents(studentsPage.items);
+  }, [studentsPage.items]);
 
   useEffect(() => {
     setGroups(initialGroups);
   }, [initialGroups]);
 
   const [search, setSearch] = useState("");
-  const [filterTier, setFilterTier] = useState<"all" | "free" | "pro">("all");
+  const [filterTier, setFilterTier] = useState<"all" | "free" | "pro">(
+    initialTier
+  );
   const [filterStatus, setFilterStatus] = useState<
     "all" | "pending" | "active" | "deactivated"
-  >("all");
+  >(initialStatus);
   const [filterGroupId, setFilterGroupId] = useState<"all" | string>("all");
   /** Toggle from «طلبات معلقة» KPI — Pro upgrade requests (+ account pending). */
   const [filterPendingRequests, setFilterPendingRequests] = useState(false);
@@ -136,53 +141,47 @@ export function StudentManagement({
 
   const isPendingRequest = (s: TeacherStudentRow) => Boolean(s.upgradeRequested);
 
+  const pushQuery = useCallback(
+    (patch: Record<string, string | undefined>) => {
+      const next = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(patch)) {
+        if (!value || value === "all") next.delete(key);
+        else next.set(key, value);
+      }
+      const qs = next.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
+    },
+    [pathname, router, searchParams]
+  );
+
   const kpi = useMemo(() => {
-    const totalStudents = students.length;
+    const totalStudents = studentsPage.total;
     const activePro = students.filter(
       (s) => s.tier === "pro" && s.status === "active"
     ).length;
     const pendingRequests = students.filter(isPendingRequest).length;
     return { totalStudents, activePro, pendingRequests };
-  }, [students]);
+  }, [students, studentsPage.total]);
 
-  const filtered = useMemo(() => {
+  const items = useMemo(() => {
     let rows = filterStudentsByQuery(students, search);
     if (filterPendingRequests) {
       rows = rows.filter(isPendingRequest);
     }
-    if (filterTier !== "all") {
-      rows = rows.filter((s) => s.tier === filterTier);
-    }
-    if (filterStatus !== "all") {
-      rows = rows.filter((s) => s.status === filterStatus);
-    }
     if (filterGroupId !== "all") {
       rows = rows.filter((s) => s.groupId === filterGroupId);
     }
+    return rows;
+  }, [students, search, filterPendingRequests, filterGroupId]);
 
-    // Newest registration / link first
-    return [...rows].sort((a, b) => {
-      const aTime = new Date(a.createdAt || 0).getTime();
-      const bTime = new Date(b.createdAt || 0).getTime();
-      return bTime - aTime;
-    });
-  }, [
-    students,
-    search,
-    filterPendingRequests,
-    filterTier,
-    filterStatus,
-    filterGroupId,
-  ]);
+  const safePage = studentsPage.page;
+  const pageSize = studentsPage.pageSize;
+  const total = studentsPage.total;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
 
-  const {
-    items,
-    page: safePage,
-    totalPages,
-    total,
-    setPage,
-    resetPage,
-  } = usePagination(filtered, STUDENT_PAGE_SIZE);
+  const setPage = (page: number) => {
+    pushQuery({ page: String(page) });
+  };
 
   const refreshStudent = (linkId: string, patch: Partial<TeacherStudentRow>) => {
     setStudents((prev) =>
@@ -203,12 +202,11 @@ export function StudentManagement({
     setFilterStatus(FILTER_ALL);
     setFilterGroupId(FILTER_ALL);
     setFilterPendingRequests(false);
-    resetPage();
+    pushQuery({ page: undefined, tier: undefined, status: undefined });
   };
 
   const togglePendingRequestsFilter = () => {
     setFilterPendingRequests((prev) => !prev);
-    resetPage();
   };
 
   const runStudentAction = (
@@ -296,7 +294,6 @@ export function StudentManagement({
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                resetPage();
               }}
               placeholder="بحث باسم الطالب أو رقم الواتساب..."
               className="h-10 rounded-lg border-input bg-background pe-3 ps-9 text-sm text-start placeholder:text-muted-foreground"
@@ -338,8 +335,9 @@ export function StudentManagement({
               value={filterTier}
               onValueChange={(value) => {
                 if (!value || typeof value !== "string") return;
-                setFilterTier(value as "all" | "free" | "pro");
-                resetPage();
+                const tier = value as "all" | "free" | "pro";
+                setFilterTier(tier);
+                pushQuery({ tier, page: "1" });
               }}
             >
               <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
@@ -363,10 +361,13 @@ export function StudentManagement({
               value={filterStatus}
               onValueChange={(value) => {
                 if (!value || typeof value !== "string") return;
-                setFilterStatus(
-                  value as "all" | "pending" | "active" | "deactivated"
-                );
-                resetPage();
+                const status = value as
+                  | "all"
+                  | "pending"
+                  | "active"
+                  | "deactivated";
+                setFilterStatus(status);
+                pushQuery({ status, page: "1" });
               }}
             >
               <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
@@ -395,7 +396,6 @@ export function StudentManagement({
                 onValueChange={(value) => {
                   if (!value || typeof value !== "string") return;
                   setFilterGroupId(value);
-                  resetPage();
                 }}
               >
                 <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
@@ -451,7 +451,7 @@ export function StudentManagement({
             page={safePage}
             totalPages={totalPages}
             total={total}
-            pageSize={STUDENT_PAGE_SIZE}
+            pageSize={pageSize}
             onPageChange={setPage}
             onGroupChanged={(linkId, gid, gname) =>
               refreshStudent(linkId, {
@@ -510,7 +510,7 @@ export function StudentManagement({
             ما في طلاب بعد — ابدأ بإضافة طالب جديد.
           </p>
         )}
-        {students.length > 0 && filtered.length === 0 && (
+        {students.length > 0 && items.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             لا يوجد طلاب يطابقون خيارات البحث
           </p>

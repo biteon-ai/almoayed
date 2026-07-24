@@ -11,8 +11,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q") ?? undefined;
     const status = (searchParams.get("status") as "active" | "inactive" | "all") ?? "all";
-    const teachers = await listTeachers({ q, status });
-    return NextResponse.json({ teachers });
+    const page = Number(searchParams.get("page") ?? "1");
+    const result = await listTeachers({ q, status }, { page });
+    return NextResponse.json(result);
   });
 }
 

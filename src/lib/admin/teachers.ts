@@ -5,12 +5,36 @@ import {
   hashPassword,
   isValidEmail,
 } from "@/lib/admin/passwords";
+import {
+  ADMIN_TEACHERS_PAGE_SIZE,
+  clampPage,
+  rangeFromPage,
+  toPagedResult,
+  type PageInput,
+  type PagedResult,
+} from "@/lib/pagination-server";
 import type {
   AdminTeacherRow,
   Profile,
   SubjectCatalogItem,
   TeacherAccountStatus,
 } from "@/types/database";
+
+const TEACHER_LIST_COLUMNS =
+  "id, full_name, email, phone_number, teacher_account_status, max_quiz_limit, created_at, role";
+
+type TeacherListProfile = Pick<
+  Profile,
+  | "id"
+  | "full_name"
+  | "email"
+  | "phone_number"
+  | "max_quiz_limit"
+  | "created_at"
+  | "role"
+> & {
+  teacher_account_status: TeacherAccountStatus;
+};
 
 export async function listSubjectCatalog(): Promise<SubjectCatalogItem[]> {
   const supabase = createAdminClient();
@@ -28,7 +52,7 @@ export async function listSubjectCatalog(): Promise<SubjectCatalogItem[]> {
 }
 
 async function mapTeacherRow(
-  profile: Profile & { teacher_account_status: TeacherAccountStatus },
+  profile: TeacherListProfile,
   quizCount: number,
   subjects: SubjectCatalogItem[]
 ): Promise<AdminTeacherRow> {
@@ -45,40 +69,96 @@ async function mapTeacherRow(
   };
 }
 
-export async function listTeachers(filters?: {
-  q?: string;
-  status?: "active" | "inactive" | "all";
-}): Promise<AdminTeacherRow[]> {
-  const supabase = createAdminClient();
-  let query = supabase
-    .from("profiles")
-    .select("*")
-    .eq("role", "TEACHER")
-    .order("created_at", { ascending: false });
-
+function applyTeacherListFilters(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  query: any,
+  filters?: { q?: string; status?: "active" | "inactive" | "all" }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+  let next = query.eq("role", "TEACHER");
   if (filters?.status && filters.status !== "all") {
-    query = query.eq("teacher_account_status", filters.status);
+    next = next.eq("teacher_account_status", filters.status);
+  }
+  const qNorm = filters?.q?.trim();
+  if (qNorm) {
+    const escaped = qNorm.replace(/[%_\\]/g, "\\$&");
+    next = next.or(`full_name.ilike.%${escaped}%,email.ilike.%${escaped}%`);
+  }
+  return next;
+}
+
+async function buildQuizCountMap(
+  supabase: ReturnType<typeof createAdminClient>,
+  teacherIds: string[]
+): Promise<Map<string, number>> {
+  const countMap = new Map<string, number>();
+
+  const { data: rpcCounts, error: rpcError } = await supabase.rpc(
+    "admin_quiz_counts_by_teacher"
+  );
+
+  if (!rpcError && rpcCounts) {
+    for (const row of rpcCounts as { teacher_id: string; quiz_count: number }[]) {
+      countMap.set(row.teacher_id, Number(row.quiz_count));
+    }
+    return countMap;
   }
 
-  const { data: teachers } = await query;
-  if (!teachers?.length) return [];
+  if (teacherIds.length === 0) return countMap;
 
-  const teacherIds = teachers.map((t) => t.id);
+  const { data: quizCounts } = await supabase
+    .from("quizzes")
+    .select("created_by")
+    .in("created_by", teacherIds)
+    .eq("is_archived", false);
 
-  const [{ data: quizCounts }, { data: assignments }, { data: subjects }] =
-    await Promise.all([
-      supabase.from("quizzes").select("created_by").eq("is_archived", false),
-      supabase
-        .from("teacher_subject_assignments")
-        .select("teacher_id, subject_id")
-        .in("teacher_id", teacherIds),
-      supabase.from("subject_catalog").select("id, name_ar, slug"),
-    ]);
-
-  const countMap = new Map<string, number>();
   for (const q of quizCounts ?? []) {
     countMap.set(q.created_by, (countMap.get(q.created_by) ?? 0) + 1);
   }
+
+  return countMap;
+}
+
+export async function listTeachers(
+  filters?: { q?: string; status?: "active" | "inactive" | "all" },
+  pageInput?: PageInput
+): Promise<PagedResult<AdminTeacherRow>> {
+  const supabase = createAdminClient();
+  const pageSize = pageInput?.pageSize ?? ADMIN_TEACHERS_PAGE_SIZE;
+  const requestedPage = pageInput?.page ?? 1;
+
+  const countQuery = applyTeacherListFilters(
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    filters
+  );
+  const { count } = await countQuery;
+  const total = count ?? 0;
+  const page = clampPage(requestedPage, pageSize, total);
+  const { from, to } = rangeFromPage(page, pageSize);
+
+  const dataQuery = applyTeacherListFilters(
+    supabase.from("profiles").select(TEACHER_LIST_COLUMNS),
+    filters
+  )
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  const { data: teachersRaw } = await dataQuery;
+  const teachers = (teachersRaw ?? []) as TeacherListProfile[];
+  if (!teachers.length) {
+    return toPagedResult([], total, page, pageSize);
+  }
+
+  const teacherIds = teachers.map((t: TeacherListProfile) => t.id);
+
+  const [{ data: assignments }, { data: subjects }, countMap] = await Promise.all([
+    supabase
+      .from("teacher_subject_assignments")
+      .select("teacher_id, subject_id")
+      .in("teacher_id", teacherIds),
+    supabase.from("subject_catalog").select("id, name_ar, slug"),
+    buildQuizCountMap(supabase, teacherIds),
+  ]);
 
   const subjectMap = new Map(
     (subjects ?? []).map((s) => [s.id, { id: s.id, nameAr: s.name_ar, slug: s.slug }])
@@ -93,24 +173,18 @@ export async function listTeachers(filters?: {
     teacherSubjects.set(a.teacher_id, list);
   }
 
-  const qNorm = filters?.q?.trim().toLowerCase() ?? "";
-
-  const rows: AdminTeacherRow[] = [];
-  for (const t of teachers as Profile[]) {
-    if (qNorm) {
-      const hay = `${t.full_name} ${t.email ?? ""}`.toLowerCase();
-      if (!hay.includes(qNorm)) continue;
-    }
-    rows.push(
+  const items: AdminTeacherRow[] = [];
+  for (const t of teachers as TeacherListProfile[]) {
+    items.push(
       await mapTeacherRow(
-        t as Profile & { teacher_account_status: TeacherAccountStatus },
+        t,
         countMap.get(t.id) ?? 0,
         teacherSubjects.get(t.id) ?? []
       )
     );
   }
 
-  return rows;
+  return toPagedResult(items, total, page, pageSize);
 }
 
 async function syncTeacherSubjects(
