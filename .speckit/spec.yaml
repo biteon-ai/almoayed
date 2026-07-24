@@ -253,6 +253,44 @@ features:
       - Dashboard quizzes refresh for selected teacher
     spekit: [teacher-switcher]
 
+  - id: MT-003
+    name: Student Unlink vs Admin Hard Delete
+    status: implemented
+    persona: [TEACHER, SUPER_ADMIN]
+    routes: ["/teacher/students", "/admin/students", "/admin/students/[id]"]
+    files:
+      - src/actions/teacher.ts
+      - src/components/teacher/DeleteStudentConfirmDialog.tsx
+      - src/components/teacher/StudentsTable.tsx
+      - src/components/teacher/StudentManagement.tsx
+      - src/lib/admin/students.ts
+      - src/app/api/admin/students/route.ts
+      - src/app/api/admin/students/[id]/route.ts
+      - src/app/admin/(portal)/students/page.tsx
+      - src/app/admin/(portal)/students/[id]/page.tsx
+      - src/components/admin/AdminStudentsTable.tsx
+      - src/components/admin/AdminStudentDetailView.tsx
+      - src/components/admin/DeleteStudentPurgeDialog.tsx
+      - tests/features/mt-003-student-unlink-purge.test.ts
+    acceptance:
+      - Teacher remove uses «إزالة من قائمتك» and only unlinks student_teachers (scoped) + this-teacher group membership
+      - Teacher unlink never deletes profiles or exam history
+      - Spekit unlink-student-action on teacher remove control
+      - Super Admin /admin/students lists all STUDENT profiles including orphans
+      - Admin can open student profile at /admin/students/[id] via عرض
+      - Admin hard delete requires two sequential confirmation alerts; first shows teacher link count
+      - Admin purge refuses non-STUDENT roles; audits student.hard_delete
+    spekit:
+      [
+        unlink-student-action,
+        admin-nav-students,
+        admin-students-table,
+        admin-student-purge-action,
+        admin-student-search,
+        admin-student-view-action,
+        admin-student-detail-page,
+      ]
+
   # ── Quiz (student) ──────────────────────────────────────────────────────────
   - id: QUIZ-001
     name: Gatekeeper Quiz Flow
@@ -533,6 +571,37 @@ features:
       - Persistent validation hint (import-validation-tips) above dropzone
       - parseWordLikeText accepts الشرح/التصنيف and legacy شرح/قسم labels
     spekit: [bulk-import-zone, bulk-import-submit, import-validation-tips, manual-question-form]
+
+  - id: TEACH-011
+    name: Quiz Soft Delete and Trash
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/quizzes", "/teacher/quizzes/[id]"]
+    files:
+      - supabase/migrations/012_quiz_soft_delete.sql
+      - src/actions/teacher.ts
+      - src/actions/quiz.ts
+      - src/components/teacher/QuizManagement.tsx
+      - src/components/teacher/QuizListItem.tsx
+      - src/components/teacher/QuizTrashBanner.tsx
+      - src/app/teacher/(portal)/quizzes/page.tsx
+      - src/app/teacher/(portal)/quizzes/[id]/page.tsx
+      - src/lib/spekit-targets.ts
+      - tests/features/teach-011-quiz-soft-delete.test.ts
+    acceptance:
+      - Soft-delete sets deleted_at; active list hides quiz; Trash tab lists it
+      - Restore clears deleted_at and preserves prior flags
+      - Permanent delete only from Trash after Arabic AlertDialog; cascades questions/attempts
+      - Student catalog excludes soft-deleted; mid-exam submit still allowed
+      - Edit deep link shows Trash banner + Restore (no silent redirect)
+      - MT-002 owner scope on all trash mutations
+    spekit:
+      - quiz-delete-action
+      - quiz-trash-tab
+      - quiz-restore-action
+      - quiz-permanent-delete-action
+      - quiz-trash-banner
+    notes: Extends TEACH-003; deleted_at distinct from admin is_archived
 
   - id: TEACH-005
     name: Teacher Dashboard Stats

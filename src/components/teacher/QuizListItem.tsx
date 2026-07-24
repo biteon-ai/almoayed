@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { TeacherQuiz } from "@/types/database";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -18,28 +18,37 @@ import {
   FileText,
   Loader2,
   Sparkles,
+  Trash2,
   Users,
 } from "lucide-react";
 
 interface QuizListItemProps {
   quiz: TeacherQuiz;
+  mode?: "active" | "trash";
   pending?: boolean;
   pendingQuizId?: string | null;
-  onRequestToggleActive: (quiz: TeacherQuiz) => void;
-  onToggleFree: (quiz: TeacherQuiz) => void;
+  onRequestToggleActive?: (quiz: TeacherQuiz) => void;
+  onToggleFree?: (quiz: TeacherQuiz) => void;
+  onSoftDelete?: (quiz: TeacherQuiz) => void;
+  onRestore?: (quiz: TeacherQuiz) => void;
+  onRequestPermanentDelete?: (quiz: TeacherQuiz) => void;
 }
 
 /**
- * Quiz card row for teacher quiz management.
+ * Quiz card row for teacher quiz management (active or Trash).
  * Activation requires confirmation in the parent (`QuizManagement`).
  * تفعيل is disabled when `question_count === 0`.
  */
 export function QuizListItem({
   quiz,
+  mode = "active",
   pending = false,
   pendingQuizId = null,
   onRequestToggleActive,
   onToggleFree,
+  onSoftDelete,
+  onRestore,
+  onRequestPermanentDelete,
 }: QuizListItemProps) {
   const router = useRouter();
   const [isNavPending, startNavTransition] = useTransition();
@@ -47,6 +56,7 @@ export function QuizListItem({
   const canActivate = quiz.question_count > 0;
   const isBusy = pending && pendingQuizId === quiz.id;
   const editHref = `/teacher/quizzes/${quiz.id}`;
+  const isTrash = mode === "trash";
 
   const navigateTo = (href: string) => {
     setNavigatingHref(href);
@@ -113,91 +123,165 @@ export function QuizListItem({
             className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0"
             {...spekit(SPEKIT.quizToggleActions)}
           >
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-10 gap-1.5 px-3"
-              disabled={pending || (!quiz.is_active && !canActivate)}
-              title={
-                !quiz.is_active && !canActivate
-                  ? "أضف سؤالاً واحداً على الأقل قبل التفعيل"
-                  : undefined
-              }
-              onClick={() => onRequestToggleActive(quiz)}
-            >
-              {isBusy ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : quiz.is_active ? (
-                <>
-                  <EyeOff className="size-3.5" />
-                  إخفاء
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="size-3.5" />
-                  تفعيل
-                </>
-              )}
-            </Button>
+            {isTrash ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-10 gap-1.5 px-3"
+                  disabled={pending}
+                  onClick={() => onRestore?.(quiz)}
+                  {...spekit(SPEKIT.quizRestoreAction)}
+                >
+                  {isBusy ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : null}
+                  استعادة
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  className="h-10 gap-1.5 px-3"
+                  disabled={pending}
+                  onClick={() => onRequestPermanentDelete?.(quiz)}
+                  {...spekit(SPEKIT.quizPermanentDeleteAction)}
+                >
+                  {isBusy ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3.5" />
+                  )}
+                  حذف نهائي
+                </Button>
+                <Link
+                  href={editHref}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigateTo(editHref);
+                  }}
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "inline-flex h-10 items-center gap-1.5 px-3",
+                    isLinkLoading(editHref) && "pointer-events-none opacity-70"
+                  )}
+                  {...spekit(SPEKIT.quizEditLink)}
+                >
+                  {isLinkLoading(editHref) ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Edit3 className="size-3.5" />
+                  )}
+                  عرض
+                </Link>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-10 gap-1.5 px-3"
+                  disabled={pending || (!quiz.is_active && !canActivate)}
+                  title={
+                    !quiz.is_active && !canActivate
+                      ? "أضف سؤالاً واحداً على الأقل قبل التفعيل"
+                      : undefined
+                  }
+                  onClick={() => onRequestToggleActive?.(quiz)}
+                >
+                  {isBusy ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : quiz.is_active ? (
+                    <>
+                      <EyeOff className="size-3.5" />
+                      إخفاء
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="size-3.5" />
+                      تفعيل
+                    </>
+                  )}
+                </Button>
 
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-10 gap-1.5 px-3"
-              disabled={pending}
-              onClick={() => onToggleFree(quiz)}
-            >
-              {isBusy ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Crown className="size-3.5" />
-              )}
-              {quiz.is_free ? "تحويل لـ Pro" : "تحويل لمجاني"}
-            </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-10 gap-1.5 px-3"
+                  disabled={pending}
+                  onClick={() => onToggleFree?.(quiz)}
+                >
+                  {isBusy ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Crown className="size-3.5" />
+                  )}
+                  {quiz.is_free ? "تحويل لـ Pro" : "تحويل لمجاني"}
+                </Button>
 
-            <Link
-              href={editHref}
-              onClick={(event) => {
-                event.preventDefault();
-                navigateTo(editHref);
-              }}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "inline-flex h-10 items-center gap-1.5 px-3",
-                isLinkLoading(editHref) && "pointer-events-none opacity-70"
-              )}
-              title="إعدادات المجموعة"
-            >
-              {isLinkLoading(editHref) ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Users className="size-3.5" />
-              )}
-              مجموعة
-            </Link>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-10 gap-1.5 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={pending}
+                  onClick={() => onSoftDelete?.(quiz)}
+                  {...spekit(SPEKIT.quizDeleteAction)}
+                >
+                  {isBusy ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3.5" />
+                  )}
+                  حذف
+                </Button>
 
-            <Link
-              href={editHref}
-              onClick={(event) => {
-                event.preventDefault();
-                navigateTo(editHref);
-              }}
-              className={cn(
-                buttonVariants({ variant: "brand", size: "sm" }),
-                "inline-flex h-10 items-center gap-1.5 px-3",
-                isLinkLoading(editHref) && "pointer-events-none opacity-70"
-              )}
-              {...spekit(SPEKIT.quizEditLink)}
-            >
-              {isLinkLoading(editHref) ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Edit3 className="size-3.5" />
-              )}
-              تحرير
-            </Link>
+                <Link
+                  href={editHref}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigateTo(editHref);
+                  }}
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "inline-flex h-10 items-center gap-1.5 px-3",
+                    isLinkLoading(editHref) && "pointer-events-none opacity-70"
+                  )}
+                  title="إعدادات المجموعة"
+                >
+                  {isLinkLoading(editHref) ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Users className="size-3.5" />
+                  )}
+                  مجموعة
+                </Link>
+
+                <Link
+                  href={editHref}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigateTo(editHref);
+                  }}
+                  className={cn(
+                    buttonVariants({ variant: "brand", size: "sm" }),
+                    "inline-flex h-10 items-center gap-1.5 px-3",
+                    isLinkLoading(editHref) && "pointer-events-none opacity-70"
+                  )}
+                  {...spekit(SPEKIT.quizEditLink)}
+                >
+                  {isLinkLoading(editHref) ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Edit3 className="size-3.5" />
+                  )}
+                  تحرير
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </CardContent>

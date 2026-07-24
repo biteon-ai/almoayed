@@ -2,7 +2,7 @@
 
 /** Quiz row fields needed for list/access/dashboard (full Quiz shape, no related questions). */
 export const QUIZ_LIST_SELECT =
-  "id, title, created_by, category_id, topic_id, is_active, is_free, is_archived, quiz_type, target_group_id, created_at, updated_at" as const;
+  "id, title, created_by, category_id, topic_id, is_active, is_free, is_archived, deleted_at, quiz_type, target_group_id, created_at, updated_at" as const;
 
 /** Lean submission fields for student/teacher dashboards (not full answer payloads). */
 export const SUBMISSION_LIST_SELECT =

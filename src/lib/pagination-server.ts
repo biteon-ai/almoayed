@@ -15,6 +15,9 @@ export type PagedResult<T> = {
 /** Admin teachers directory default page size. */
 export const ADMIN_TEACHERS_PAGE_SIZE = 20;
 
+/** Admin students directory default page size. */
+export const ADMIN_STUDENTS_PAGE_SIZE = 20;
+
 /** Student home dashboard max recent/active quizzes (not full catalog). */
 export const STUDENT_HOME_QUIZ_WINDOW = 12;
 

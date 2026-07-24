@@ -44,17 +44,20 @@ export function DropdownMenuItem({
   onClick,
   disabled,
   destructive,
+  "data-spekit": dataSpekit,
 }: {
   className?: string;
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
   destructive?: boolean;
+  "data-spekit"?: string;
 }) {
   return (
     <Menu.Item
       disabled={disabled}
       onClick={onClick}
+      data-spekit={dataSpekit}
       className={cn(
         "flex cursor-default items-center gap-2 rounded-lg px-2.5 py-2 text-sm outline-none select-none data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         destructive &&

@@ -53,14 +53,23 @@ test.describe(`${FEATURE} Mobile dashboard density`, () => {
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"
     );
 
+    page.on("pageerror", (err) => {
+      console.error("[DASH-001 e2e] pageerror:", err.message);
+    });
+
     await loginAsDemoStudent(page);
 
     await page.goto("/quizzes");
-    await expect(page.locator('[data-spekit="student-quizzes-page"]')).toBeVisible();
+    await expect(page.locator('[data-spekit="student-quizzes-page"]')).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByText("الاختبارات المتاحة").first()).toBeVisible();
 
     await page.goto("/results");
-    await expect(page.locator('[data-spekit="student-results-page"]')).toBeVisible();
+    await expect(page).toHaveURL(/\/results/);
+    await expect(
+      page.locator('[data-spekit="student-results-page"]')
+    ).toBeVisible({ timeout: 15_000 });
     await expect(
       page.locator('[data-spekit="student-results-page"]').getByRole("heading", {
         name: "نتائجي",

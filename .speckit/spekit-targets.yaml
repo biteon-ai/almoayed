@@ -127,6 +127,15 @@ TEACH-000:
   teacher-exam-difficulty-panel: "Hardest / easiest exam insights"
   teacher-popular-exams-panel: "Most solved popular exams list"
 
+MT-003:
+  unlink-student-action: "Teacher remove-from-roster control (unlink only)"
+  admin-nav-students: "Admin nav link — students"
+  admin-students-table: "Platform students management table"
+  admin-student-purge-action: "Admin permanent student purge control"
+  admin-student-search: "Admin students search input"
+  admin-student-view-action: "Admin view student profile control"
+  admin-student-detail-page: "Admin student profile detail page"
+
 TEACH-001:
   teacher-students-page: "Student management page root"
   student-filters: "Tier and status filter buttons"
@@ -161,6 +170,13 @@ TEACH-003:
   teacher-quiz-create-form: "New quiz creation form"
   teacher-quiz-create-flags: "Free/pro flags on create (quiz starts inactive until ≥1 question)"
   quiz-setup-import-banner: "Post-create setup banner on edit page (?setup=import)"
+
+TEACH-011:
+  quiz-delete-action: "Soft-delete (move to Trash) control on active quiz card"
+  quiz-trash-tab: "Trash tab/filter on teacher quizzes page"
+  quiz-restore-action: "Restore soft-deleted quiz from Trash"
+  quiz-permanent-delete-action: "Permanent delete control (Trash / banner)"
+  quiz-trash-banner: "In-Trash banner on quiz edit deep link"
 
 TEACH-004:
   teacher-quiz-edit-page: "Edit quiz page root"

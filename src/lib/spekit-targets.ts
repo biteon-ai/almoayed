@@ -113,6 +113,13 @@ export const SPEKIT = {
   teacherQuizCreateFlags: "teacher-quiz-create-flags",
   quizSetupImportBanner: "quiz-setup-import-banner",
 
+  // ── TEACH-011 ────────────────────────────────────────────────
+  quizDeleteAction: "quiz-delete-action",
+  quizTrashTab: "quiz-trash-tab",
+  quizRestoreAction: "quiz-restore-action",
+  quizPermanentDeleteAction: "quiz-permanent-delete-action",
+  quizTrashBanner: "quiz-trash-banner",
+
   // ── TEACH-004 ────────────────────────────────────────────────
   teacherQuizEditPage: "teacher-quiz-edit-page",
   bulkImportZone: "bulk-import-zone",
@@ -160,6 +167,15 @@ export const SPEKIT = {
   adminImpersonationBanner: "admin-impersonation-banner",
   adminImpersonationExit: "admin-impersonation-exit",
   teacherEmailLoginForm: "teacher-email-login-form",
+
+  // ── MT-003 ───────────────────────────────────────────────────
+  unlinkStudentAction: "unlink-student-action",
+  adminNavStudents: "admin-nav-students",
+  adminStudentsTable: "admin-students-table",
+  adminStudentPurgeAction: "admin-student-purge-action",
+  adminStudentSearch: "admin-student-search",
+  adminStudentViewAction: "admin-student-view-action",
+  adminStudentDetailPage: "admin-student-detail-page",
 
   // ── UI-007 ───────────────────────────────────────────────────
   resultsCard: "results-card",

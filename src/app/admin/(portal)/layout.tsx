@@ -4,7 +4,7 @@ import { APP_SLOGAN } from "@/lib/constants";
 import { SPEKIT, spekitAttr } from "@/lib/spekit-targets";
 import { Logo } from "@/components/brand/Logo";
 import { LogoutActionButton } from "@/components/layout/LogoutActionButton";
-import { LayoutDashboard, Users } from "lucide-react";
+import { LayoutDashboard, GraduationCap, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default async function AdminLayout({
@@ -48,6 +48,16 @@ export default async function AdminLayout({
             >
               <Users className="size-4" />
               إدارة المدرسين
+            </Link>
+            <Link
+              href="/admin/students"
+              data-spekit={spekitAttr(SPEKIT.adminNavStudents)}
+              className={cn(
+                "inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-bold hover:bg-muted"
+              )}
+            >
+              <GraduationCap className="size-4" />
+              إدارة الطلاب
             </Link>
             <LogoutActionButton aria-label="خروج" />
           </nav>

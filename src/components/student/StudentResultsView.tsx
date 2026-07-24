@@ -47,20 +47,24 @@ interface StudentResultsViewProps {
 }
 
 function formatSubmittedDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
   return new Intl.DateTimeFormat("ar", {
     year: "numeric",
     month: "long",
     day: "numeric",
     numberingSystem: "latn",
-  }).format(new Date(iso));
+  }).format(date);
 }
 
 function formatSubmittedTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
   return new Intl.DateTimeFormat("ar", {
     hour: "2-digit",
     minute: "2-digit",
     numberingSystem: "latn",
-  }).format(new Date(iso));
+  }).format(date);
 }
 
 export function StudentResultsView({

@@ -3,13 +3,20 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { toggleQuizStatus, updateQuizFlags } from "@/actions/teacher";
+import {
+  permanentlyDeleteQuiz,
+  restoreQuiz,
+  softDeleteQuiz,
+  toggleQuizStatus,
+  updateQuizFlags,
+  type QuizListView,
+} from "@/actions/teacher";
 import type { TeacherQuiz } from "@/types/database";
 import type { PagedResult } from "@/lib/pagination-server";
 import { QuizListItem } from "@/components/teacher/QuizListItem";
 import { QuizMetricsKPIHeader } from "@/components/teacher/QuizMetricsKPIHeader";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,6 +46,7 @@ import {
   RotateCcw,
   Search,
   SearchX,
+  Trash2,
 } from "lucide-react";
 
 const FILTER_ALL = "all";
@@ -57,9 +65,13 @@ const STATUS_LABELS: Record<string, string> = {
 
 interface QuizManagementProps {
   quizzesPage: PagedResult<TeacherQuiz>;
+  view?: QuizListView;
 }
 
-export function QuizManagement({ quizzesPage }: QuizManagementProps) {
+export function QuizManagement({
+  quizzesPage,
+  view = "active",
+}: QuizManagementProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -72,7 +84,11 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
   const [pending, startTransition] = useTransition();
   const [pendingQuizId, setPendingQuizId] = useState<string | null>(null);
   const [confirmQuiz, setConfirmQuiz] = useState<TeacherQuiz | null>(null);
+  const [purgeQuiz, setPurgeQuiz] = useState<TeacherQuiz | null>(null);
+  const [purging, setPurging] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const isTrash = view === "trash";
 
   useEffect(() => {
     setQuizzes(quizzesPage.items);
@@ -82,14 +98,25 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
     (patch: Record<string, string | undefined>) => {
       const next = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(patch)) {
-        if (!value || value === "all") next.delete(key);
-        else next.set(key, value);
+        if (
+          !value ||
+          value === "all" ||
+          (key === "view" && value === "active")
+        ) {
+          next.delete(key);
+        } else {
+          next.set(key, value);
+        }
       }
       const qs = next.toString();
       router.push(qs ? `${pathname}?${qs}` : pathname);
     },
     [pathname, router, searchParams]
   );
+
+  const setView = (next: QuizListView) => {
+    pushQuery({ view: next, page: undefined });
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -102,8 +129,12 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
       return true;
     });
 
-    // Newest activity first (updated_at, then created_at)
     return [...rows].sort((a, b) => {
+      if (isTrash) {
+        const aDel = new Date(a.deleted_at || a.updated_at).getTime();
+        const bDel = new Date(b.deleted_at || b.updated_at).getTime();
+        return bDel - aDel;
+      }
       const aUpdated = new Date(a.updated_at || a.created_at).getTime();
       const bUpdated = new Date(b.updated_at || b.created_at).getTime();
       if (bUpdated !== aUpdated) return bUpdated - aUpdated;
@@ -111,7 +142,7 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     });
-  }, [quizzes, search, filterTier, filterStatus]);
+  }, [quizzes, search, filterTier, filterStatus, isTrash]);
 
   const safePage = quizzesPage.page;
   const pageSize = quizzesPage.pageSize;
@@ -119,7 +150,7 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
 
   const setPage = (page: number) => {
-    pushQuery({ page: String(page) });
+    pushQuery({ page: String(page), view: isTrash ? "trash" : undefined });
   };
 
   const hasActiveFilters =
@@ -131,13 +162,17 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
     setSearch("");
     setFilterTier("all");
     setFilterStatus("all");
-    pushQuery({ page: undefined });
+    pushQuery({ page: undefined, view: isTrash ? "trash" : undefined });
   };
 
   const patchQuiz = (id: string, patch: Partial<TeacherQuiz>) => {
     setQuizzes((prev) =>
       prev.map((q) => (q.id === id ? { ...q, ...patch } : q))
     );
+  };
+
+  const removeQuizLocal = (id: string) => {
+    setQuizzes((prev) => prev.filter((q) => q.id !== id));
   };
 
   const confirmToggleLabel = confirmQuiz?.is_active ? "إخفاء" : "تفعيل";
@@ -151,10 +186,33 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
         </p>
       </div>
 
-      <QuizMetricsKPIHeader
-        quizzes={quizzes}
-        catalogTotal={quizzesPage.total}
-      />
+      <div className="flex gap-2 rounded-xl border border-border bg-card p-1.5">
+        <Button
+          type="button"
+          variant={isTrash ? "ghost" : "brand"}
+          className="h-10 flex-1 gap-1.5"
+          onClick={() => setView("active")}
+        >
+          اختباراتي
+        </Button>
+        <Button
+          type="button"
+          variant={isTrash ? "brand" : "ghost"}
+          className="h-10 flex-1 gap-1.5"
+          onClick={() => setView("trash")}
+          data-spekit={SPEKIT.quizTrashTab}
+        >
+          <Trash2 className="size-4" />
+          سلة المهملات
+        </Button>
+      </div>
+
+      {!isTrash && (
+        <QuizMetricsKPIHeader
+          quizzes={quizzes}
+          catalogTotal={quizzesPage.total}
+        />
+      )}
 
       <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -169,72 +227,76 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
               className="h-10 rounded-lg border-input bg-background pe-3 ps-9 text-sm text-start"
             />
           </div>
-          <Link
-            href="/teacher/quizzes/new"
-            className={cn(
-              buttonVariants({ variant: "brand" }),
-              "h-10 w-full shrink-0 gap-1.5 sm:w-auto"
-            )}
-            data-spekit={SPEKIT.teacherQuizNewButton}
-          >
-            <Plus className="size-4" />
-            اختبار جديد
-          </Link>
+          {!isTrash && (
+            <Link
+              href="/teacher/quizzes/new"
+              className={cn(
+                buttonVariants({ variant: "brand" }),
+                "h-10 w-full shrink-0 gap-1.5 sm:w-auto"
+              )}
+              data-spekit={SPEKIT.teacherQuizNewButton}
+            >
+              <Plus className="size-4" />
+              اختبار جديد
+            </Link>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">
-              المستوى
-            </label>
-            <Select
-              value={filterTier}
-              items={TIER_LABELS}
-              onValueChange={(value) => {
-                if (!value || typeof value !== "string") return;
-                setFilterTier(value as "all" | "free" | "pro");
-              }}
-            >
-              <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
-                <SelectValue placeholder={TIER_LABELS.all}>
-                  {TIER_LABELS[filterTier] ?? TIER_LABELS.all}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent align="start">
-                <SelectItem value="all">{TIER_LABELS.all}</SelectItem>
-                <SelectItem value="free">{TIER_LABELS.free}</SelectItem>
-                <SelectItem value="pro">{TIER_LABELS.pro}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {!isTrash && (
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                المستوى
+              </label>
+              <Select
+                value={filterTier}
+                items={TIER_LABELS}
+                onValueChange={(value) => {
+                  if (!value || typeof value !== "string") return;
+                  setFilterTier(value as "all" | "free" | "pro");
+                }}
+              >
+                <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
+                  <SelectValue placeholder={TIER_LABELS.all}>
+                    {TIER_LABELS[filterTier] ?? TIER_LABELS.all}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent align="start">
+                  <SelectItem value="all">{TIER_LABELS.all}</SelectItem>
+                  <SelectItem value="free">{TIER_LABELS.free}</SelectItem>
+                  <SelectItem value="pro">{TIER_LABELS.pro}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">
-              الحالة
-            </label>
-            <Select
-              value={filterStatus}
-              items={STATUS_LABELS}
-              onValueChange={(value) => {
-                if (!value || typeof value !== "string") return;
-                setFilterStatus(value as "all" | "active" | "inactive");
-              }}
-            >
-              <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
-                <SelectValue placeholder={STATUS_LABELS.all}>
-                  {STATUS_LABELS[filterStatus] ?? STATUS_LABELS.all}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent align="start">
-                <SelectItem value="all">{STATUS_LABELS.all}</SelectItem>
-                <SelectItem value="active">{STATUS_LABELS.active}</SelectItem>
-                <SelectItem value="inactive">
-                  {STATUS_LABELS.inactive}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                الحالة
+              </label>
+              <Select
+                value={filterStatus}
+                items={STATUS_LABELS}
+                onValueChange={(value) => {
+                  if (!value || typeof value !== "string") return;
+                  setFilterStatus(value as "all" | "active" | "inactive");
+                }}
+              >
+                <SelectTrigger className="h-10 w-full min-w-0 rounded-lg bg-background text-start shadow-none">
+                  <SelectValue placeholder={STATUS_LABELS.all}>
+                    {STATUS_LABELS[filterStatus] ?? STATUS_LABELS.all}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent align="start">
+                  <SelectItem value="all">{STATUS_LABELS.all}</SelectItem>
+                  <SelectItem value="active">{STATUS_LABELS.active}</SelectItem>
+                  <SelectItem value="inactive">
+                    {STATUS_LABELS.inactive}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
+        )}
 
         {hasActiveFilters && (
           <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
@@ -269,6 +331,7 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
           <QuizListItem
             key={quiz.id}
             quiz={quiz}
+            mode={isTrash ? "trash" : "active"}
             pending={pending}
             pendingQuizId={pendingQuizId}
             onRequestToggleActive={(q) => {
@@ -294,26 +357,75 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
                 }
               });
             }}
+            onSoftDelete={(q) => {
+              setActionError(null);
+              setPendingQuizId(q.id);
+              startTransition(async () => {
+                try {
+                  const result = await softDeleteQuiz(q.id);
+                  if (!result.ok) {
+                    setActionError(result.error);
+                    return;
+                  }
+                  removeQuizLocal(q.id);
+                  router.refresh();
+                } finally {
+                  setPendingQuizId(null);
+                }
+              });
+            }}
+            onRestore={(q) => {
+              setActionError(null);
+              setPendingQuizId(q.id);
+              startTransition(async () => {
+                try {
+                  const result = await restoreQuiz(q.id);
+                  if (!result.ok) {
+                    setActionError(result.error);
+                    return;
+                  }
+                  removeQuizLocal(q.id);
+                  router.refresh();
+                } finally {
+                  setPendingQuizId(null);
+                }
+              });
+            }}
+            onRequestPermanentDelete={(q) => {
+              setActionError(null);
+              setPurgeQuiz(q);
+            }}
           />
         ))}
 
         {total === 0 && (
           <Card className="rounded-xl border bg-card">
             <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
-              <FileQuestion className="size-10 text-muted-foreground" />
-              <p className="text-sm font-medium text-foreground">
-                ما في اختبارات بعد. أنشئ أول اختبار!
-              </p>
-              <Link
-                href="/teacher/quizzes/new"
-                className={cn(
-                  buttonVariants({ variant: "brand" }),
-                  "h-10 gap-1.5"
-                )}
-              >
-                <Plus className="size-4" />
-                اختبار جديد
-              </Link>
+              {isTrash ? (
+                <>
+                  <Trash2 className="size-10 text-muted-foreground" />
+                  <p className="text-sm font-medium text-foreground">
+                    سلة المهملات فارغة
+                  </p>
+                </>
+              ) : (
+                <>
+                  <FileQuestion className="size-10 text-muted-foreground" />
+                  <p className="text-sm font-medium text-foreground">
+                    ما في اختبارات بعد. أنشئ أول اختبار!
+                  </p>
+                  <Link
+                    href="/teacher/quizzes/new"
+                    className={cn(
+                      buttonVariants({ variant: "brand" }),
+                      "h-10 gap-1.5"
+                    )}
+                  >
+                    <Plus className="size-4" />
+                    اختبار جديد
+                  </Link>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
@@ -399,6 +511,61 @@ export function QuizManagement({ quizzesPage }: QuizManagementProps) {
                 </>
               ) : (
                 "تأكيد"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!purgeQuiz}
+        onOpenChange={(open) => {
+          if (!open && !purging) setPurgeQuiz(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف النهائي</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف هذا الاختبار بشكل نهائي؟ لا يمكن التراجع عن
+              هذا الإجراء. سيتم حذف الأسئلة وسجلات النتائج المرتبطة بـ «
+              {purgeQuiz?.title}».
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!purgeQuiz || purging) return;
+                const quiz = purgeQuiz;
+                setPurging(true);
+                setPendingQuizId(quiz.id);
+                startTransition(async () => {
+                  try {
+                    const result = await permanentlyDeleteQuiz(quiz.id);
+                    if (!result.ok) {
+                      setActionError(result.error);
+                      return;
+                    }
+                    removeQuizLocal(quiz.id);
+                    setPurgeQuiz(null);
+                    setActionError(null);
+                    router.refresh();
+                  } finally {
+                    setPurging(false);
+                    setPendingQuizId(null);
+                  }
+                });
+              }}
+              className="inline-flex gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {purging ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  جاري الحذف...
+                </>
+              ) : (
+                "حذف نهائي"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
