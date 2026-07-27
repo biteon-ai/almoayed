@@ -57,21 +57,18 @@ export function sanitizeArabicTxt(rawText: string): string {
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\r\n?/g, "\n");
 
-  // Ensure numbered question starts sit on line boundaries for block splitting
-  text = text.replace(/([^\n])(\d{1,3}[\)\.]\s+)/g, "$1\n$2");
-
   return text.replace(/[ \t]{2,}/g, " ").trim();
 }
 
 const QUESTION_BLOCK_REGEX =
-  /(?:^|\n)\s*(\d{1,3})[\)\.]\s*([\s\S]*?)(?=(?:\n\s*\d{1,3}[\)\.]\s*)|$)/g;
+  /(?:^|\n)(\d{1,2})\)\s+([\s\S]*?)(?=(?:\n\d{1,2}\)\s+)|$)/g;
 
 /**
- * Option marker: `(a)`, `(a `, `a)`, `أ)` — letter may be Latin or Arabic.
- * Open form `(a text` (no close paren) is common in Syrian exam .txt exports.
+ * Option marker: `(a)`, `(a `, `(a` alone on a line, `a)`, `أ)` — Latin or Arabic.
+ * Syrian .txt exports often use `(a` + newline + option text.
  */
 const OPTION_MARKER_REGEX =
-  /(?:^|[\s\n])(?:\(([a-dA-Dأإابججد])\)?|([a-dA-Dأإابججد])\))\s+/g;
+  /(?:^|[\s\n])(?:\(([a-dA-Dأإابججد])\)?|([a-dA-Dأإابججد])\))(?:\s+|$)/gm;
 
 function extractInlineOptions(block: string): {
   questionText: string;
@@ -312,11 +309,33 @@ function parseLabeledWordBlocks(content: string): ImportQuestionRow[] {
 
 /**
  * Parse `.txt` / Word-like text: labeled blocks first, then numbered inline MCQ.
+ * Prefer whichever strategy yields more questions (labeled-only short-circuit dropped
+ * rows when a single labeled block matched but inline had the full exam).
  */
 export function parseWordLikeText(content: string): ImportQuestionRow[] {
   const labeled = parseLabeledWordBlocks(content);
+  const inline = parseArabicTxtQuiz(content);
+  if (inline.length > labeled.length) return inline;
   if (labeled.length > 0) return labeled;
-  return parseArabicTxtQuiz(content);
+  return inline;
+}
+
+/** Decode `.txt` bytes — Arabic Windows exports are often CP1256, not UTF-8. */
+export function decodeImportTextBuffer(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  const utf8 = new TextDecoder("utf-8").decode(bytes);
+  const replacements = utf8.match(/\uFFFD/g)?.length ?? 0;
+
+  // Heuristic: CP1256 Arabic read as UTF-8 produces many replacement chars.
+  if (replacements > Math.max(4, bytes.length * 0.02)) {
+    try {
+      return new TextDecoder("windows-1256").decode(bytes);
+    } catch {
+      /* Node without windows-1256 — fall through */
+    }
+  }
+
+  return utf8;
 }
 
 export function importRowsToQuestionInserts(rows: ImportQuestionRow[]) {

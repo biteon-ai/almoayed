@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTeacher } from "@/lib/auth";
 import {
+  decodeImportTextBuffer,
   importRowsToQuestionInserts,
   parseCsvQuestions,
   parseWordLikeText,
@@ -1590,8 +1591,11 @@ export async function importQuestions(quizId: string, formData: FormData) {
   if (!file) throw new Error("اختار ملف للاستيراد.");
 
   const buffer = await file.arrayBuffer();
-  const text = await file.text();
   const ext = file.name.split(".").pop()?.toLowerCase();
+  const text =
+    ext === "txt" || ext === "doc"
+      ? decodeImportTextBuffer(buffer)
+      : await file.text();
   const importMode =
     formData.get("import_mode") === "replace" ? "replace" : "append";
   const defaultCategory =
