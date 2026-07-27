@@ -8,6 +8,7 @@ import type { QuizCarouselItem } from "@/types/database";
 import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Crown, FileText, Lock } from "lucide-react";
+import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -76,7 +77,17 @@ function StatusBadgeRow({ quiz }: { quiz: QuizCarouselItem }) {
     );
   }
 
-  if (quiz.hasSubmission) {
+  if (quiz.hasSubmission && !quiz.canRetake) {
+    return (
+      <div className="flex w-full items-center justify-between gap-2">
+        <span className="rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+          مكتمل {quiz.bestScore != null ? `(${quiz.bestScore}%)` : ""}
+        </span>
+      </div>
+    );
+  }
+
+  if (quiz.hasSubmission && quiz.canRetake) {
     return (
       <div className="flex w-full items-center justify-between gap-2">
         <InProgressBadge />
@@ -138,8 +149,17 @@ export function QuizCarouselCard({
 
       <div className="mt-auto pt-5">
         <Link href={`/quiz/${quiz.id}`} className={ctaClasses}>
-          {quiz.hasSubmission ? "متابعة" : "ابدأ الآن"}
+          {quiz.hasSubmission
+            ? quiz.canRetake
+              ? "إعادة الاختبار"
+              : "مراجعة النتيجة"
+            : "ابدأ الآن"}
         </Link>
+        {quiz.hasSubmission && quiz.canRetake && quiz.maxAttempts > 0 ? (
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            {formatAttemptProgressAr(quiz.usedAttempts, quiz.maxAttempts)}
+          </p>
+        ) : null}
       </div>
     </article>
   );

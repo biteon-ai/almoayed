@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/018-quiz-countdown-timer/plan.md`
+**Active plan**: `specs/019-quiz-attempt-limits/plan.md`
 
 Related artifacts:
-- Spec: `specs/018-quiz-countdown-timer/spec.md`
-- Research: `specs/018-quiz-countdown-timer/research.md`
-- Data model: `specs/018-quiz-countdown-timer/data-model.md`
-- Contracts: `specs/018-quiz-countdown-timer/contracts/`
-- Quickstart: `specs/018-quiz-countdown-timer/quickstart.md`
+- Spec: `specs/019-quiz-attempt-limits/spec.md`
+- Research: `specs/019-quiz-attempt-limits/research.md`
+- Data model: `specs/019-quiz-attempt-limits/data-model.md`
+- Contracts: `specs/019-quiz-attempt-limits/contracts/`
+- Quickstart: `specs/019-quiz-attempt-limits/quickstart.md`
 <!-- SPECKIT END -->

@@ -1281,7 +1281,9 @@ export async function createQuiz(formData: FormData) {
   if (!title) throw new Error("عنوان الاختبار مطلوب.");
 
   const { parseTimerFormFields } = await import("@/lib/quiz-timer");
+  const { parseAttemptFormFields } = await import("@/lib/quiz-attempts");
   const timerFields = parseTimerFormFields(formData);
+  const attemptFields = parseAttemptFormFields(formData);
 
   const { data, error } = await supabase
     .from("quizzes")
@@ -1296,6 +1298,8 @@ export async function createQuiz(formData: FormData) {
       target_group_id: (formData.get("target_group_id") as string) || null,
       is_timed: timerFields.is_timed,
       duration_minutes: timerFields.duration_minutes,
+      assessment_category: attemptFields.assessment_category,
+      max_attempts: attemptFields.max_attempts,
     })
     .select()
     .single();
@@ -1313,6 +1317,8 @@ export async function updateQuizFlags(
     quiz_type?: string;
     is_timed?: boolean;
     duration_minutes?: number | null;
+    assessment_category?: string;
+    max_attempts?: number;
   }
 ) {
   const session = await requireTeacher();
@@ -1344,6 +1350,28 @@ export async function updateQuizFlags(
     }
   }
 
+  if (
+    flags.assessment_category !== undefined ||
+    flags.max_attempts !== undefined
+  ) {
+    const { parseAssessmentCategory, validateMaxAttempts } = await import(
+      "@/lib/quiz-attempts"
+    );
+    if (flags.assessment_category !== undefined) {
+      const category = parseAssessmentCategory(flags.assessment_category);
+      if (!category) throw new Error("نوع الاختبار غير صالح.");
+      flags.assessment_category = category;
+    }
+    if (flags.max_attempts !== undefined) {
+      const validated = validateMaxAttempts({
+        unlimited: flags.max_attempts === 0,
+        value: flags.max_attempts,
+      });
+      if (!validated.ok) throw new Error(validated.error);
+      flags.max_attempts = validated.value;
+    }
+  }
+
   const { error } = await supabase
     .from("quizzes")
     .update(flags)
@@ -1368,6 +1396,28 @@ export async function updateQuizTimerSettings(
     return {
       ok: false,
       error: e instanceof Error ? e.message : "فشل تحديث إعدادات التوقيت.",
+    };
+  }
+}
+
+export async function updateQuizAttemptSettings(
+  quizId: string,
+  input: {
+    assessmentCategory: import("@/types/database").AssessmentCategory;
+    maxAttempts: number;
+  }
+): Promise<ActionResult> {
+  try {
+    await updateQuizFlags(quizId, {
+      assessment_category: input.assessmentCategory,
+      max_attempts: input.maxAttempts,
+    });
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      error:
+        e instanceof Error ? e.message : "فشل تحديث إعدادات المحاولات.",
     };
   }
 }

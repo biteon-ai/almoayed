@@ -12,10 +12,6 @@ import {
   EXAM_QUESTION_SELECT_FIELDS,
 } from "@/lib/quiz-gatekeeper";
 import {
-  computeDashboardStats,
-  filterScoresByTeacherQuizIds,
-} from "@/lib/dashboard-stats";
-import {
   estimateQuizDurationMinutes,
   STUDENT_EXAMS_PAGE_SIZE,
   STUDENT_RESULTS_PAGE_SIZE,
@@ -42,10 +38,18 @@ import {
   validateDurationMinutes,
 } from "@/lib/quiz-timer";
 import { getStudentTeachers } from "@/actions/student";
+import {
+  buildAttemptState,
+  canStartNewAttempt,
+  rankChallengeLeaderboard,
+  type SubmissionRowLite,
+} from "@/lib/quiz-attempts";
+import { aggregateSubmissionStats } from "@/lib/teacher-gamification";
 import type {
   CategoryPerformance,
   ExamQuestion,
   Quiz,
+  QuizAttemptState,
   QuizCarouselItem,
   QuizListItem,
   QuizSubmitResult,
@@ -122,14 +126,16 @@ export async function ensureTimedQuizSession(
     }
   }
 
-  const { data: existingSubmission } = await supabase
+  const { count: usedAttempts } = await supabase
     .from("exam_submissions")
-    .select("id")
+    .select("id", { count: "exact", head: true })
     .eq("student_id", session.profileId)
-    .eq("quiz_id", quizId)
-    .maybeSingle();
+    .eq("quiz_id", quizId);
 
-  if (existingSubmission) return null;
+  const used = usedAttempts ?? 0;
+  if (!canStartNewAttempt(used, quiz.max_attempts ?? 1)) {
+    return null;
+  }
 
   const { data: existingSession } = await supabase
     .from("quiz_timed_sessions")
@@ -138,7 +144,13 @@ export async function ensureTimedQuizSession(
     .eq("quiz_id", quizId)
     .maybeSingle();
 
-  if (existingSession) {
+  if (used > 0) {
+    await supabase
+      .from("quiz_timed_sessions")
+      .delete()
+      .eq("student_id", session.profileId)
+      .eq("quiz_id", quizId);
+  } else if (existingSession) {
     return toTimedQuizSessionView(
       existingSession.started_at as string,
       existingSession.duration_minutes as number
@@ -191,6 +203,7 @@ export async function getQuizForStudent(quizId: string): Promise<{
   quiz: Quiz | null;
   questions: ExamQuestion[];
   existingSubmissionId: string | null;
+  attemptState: QuizAttemptState;
   timer: TimedQuizSessionView | null;
 }> {
   const session = await requireStudent();
@@ -217,6 +230,7 @@ export async function getQuizForStudent(quizId: string): Promise<{
       quiz: null,
       questions: [],
       existingSubmissionId: null,
+      attemptState: buildAttemptState(1, []),
       timer: null,
     };
   }
@@ -237,22 +251,34 @@ export async function getQuizForStudent(quizId: string): Promise<{
     .eq("quiz_id", quizId)
     .order("sort_order", { ascending: true });
 
-  const { data: existing } = await supabase
+  const { data: submissionRows } = await supabase
     .from("exam_submissions")
-    .select("id")
+    .select("id, score, submitted_at")
     .eq("student_id", session.profileId)
     .eq("quiz_id", quizId)
-    .maybeSingle();
+    .order("submitted_at", { ascending: false });
+
+  const submissions: SubmissionRowLite[] = (submissionRows ?? []).map((row) => ({
+    id: row.id as string,
+    score: row.score as number,
+    submitted_at: row.submitted_at as string,
+  }));
+
+  const attemptState = buildAttemptState(
+    quiz.max_attempts ?? 1,
+    submissions
+  );
 
   const timer =
-    !existing && quiz.is_timed
+    attemptState.canStartNewAttempt && quiz.is_timed
       ? await ensureTimedQuizSession(quizId)
       : null;
 
   return {
     quiz,
     questions: (questions ?? []) as ExamQuestion[],
-    existingSubmissionId: existing?.id ?? null,
+    existingSubmissionId: attemptState.reviewSubmissionId,
+    attemptState,
     timer,
   };
 }
@@ -339,16 +365,16 @@ export async function submitQuiz(
 
   const supabase = createAdminClient();
 
-  const { data: existing } = await supabase
+  const { count: usedAttempts } = await supabase
     .from("exam_submissions")
-    .select("id")
+    .select("id", { count: "exact", head: true })
     .eq("student_id", session.profileId)
-    .eq("quiz_id", quizId)
-    .maybeSingle();
+    .eq("quiz_id", quizId);
 
-  if (existing) {
-    const results = await getSubmissionResults(existing.id);
-    if (results) return results;
+  const maxAttempts = gate.quiz.max_attempts ?? 1;
+  const used = usedAttempts ?? 0;
+  if (!canStartNewAttempt(used, maxAttempts)) {
+    throw appError(ErrorCode.QUIZ_ATTEMPTS_EXHAUSTED);
   }
 
   const { data: liveQuestions, error: liveError } = await supabase
@@ -455,6 +481,15 @@ export async function submitQuiz(
   if (ansError) {
     logRequestError("QUIZ_ANSWERS_SAVE_FAILED", ansError);
     throw appError(ErrorCode.QUIZ_ANSWERS_SAVE_FAILED);
+  }
+
+  const retakesRemain = canStartNewAttempt(used + 1, maxAttempts);
+  if (retakesRemain && timedSession) {
+    await supabase
+      .from("quiz_timed_sessions")
+      .delete()
+      .eq("student_id", session.profileId)
+      .eq("quiz_id", quizId);
   }
 
   return {
@@ -602,9 +637,20 @@ async function fetchStudentQuizBundle(
   );
 
   const quizzesWithQuestions = new Set(questionCountByQuiz.keys());
-  const submissionByQuiz = new Map(
-    (submissionRows ?? []).map((row) => [row.quiz_id as string, row])
-  );
+  const submissionsByQuiz = new Map<
+    string,
+    Array<{ id: string; score: number; submitted_at: string }>
+  >();
+  for (const row of submissionRows ?? []) {
+    const quizId = row.quiz_id as string;
+    const list = submissionsByQuiz.get(quizId) ?? [];
+    list.push({
+      id: row.id as string,
+      score: row.score as number,
+      submitted_at: row.submitted_at as string,
+    });
+    submissionsByQuiz.set(quizId, list);
+  }
 
   const quizzes: QuizCarouselItem[] = typedQuizRows
     .filter((quiz) => quizzesWithQuestions.has(quiz.id))
@@ -615,31 +661,40 @@ async function fetchStudentQuizBundle(
         tier: ctx.tier,
         groupIds: ctx.groupIds,
       });
-      const submission = submissionByQuiz.get(quiz.id);
+      const quizSubmissions = submissionsByQuiz.get(quiz.id) ?? [];
+      const attemptState = buildAttemptState(
+        quiz.max_attempts ?? 1,
+        quizSubmissions
+      );
+      const latest = quizSubmissions.sort((a, b) =>
+        b.submitted_at.localeCompare(a.submitted_at)
+      )[0];
 
       return {
         ...listItem,
         questionCount,
-        hasSubmission: submissionByQuiz.has(quiz.id),
-        lastActivityAt: (submission?.submitted_at as string | undefined) ?? null,
+        hasSubmission: attemptState.usedAttempts > 0,
+        lastActivityAt: latest?.submitted_at ?? null,
         categoryName: quiz.category_id
           ? (categoryNameById.get(quiz.category_id) ?? "عام")
           : "عام",
-        lastScore: submission ? (submission.score as number) : null,
+        lastScore: attemptState.bestScore,
+        bestScore: attemptState.bestScore,
+        usedAttempts: attemptState.usedAttempts,
+        maxAttempts: quiz.max_attempts ?? 1,
+        canRetake: attemptState.canStartNewAttempt,
         estimatedMinutes: estimateQuizDurationMinutes(questionCount),
       };
     });
 
   const teacherQuizIds = new Set(quizzes.map((q) => q.id));
-  const teacherScores = filterScoresByTeacherQuizIds(
-    (submissionRows ?? []).map((row) => ({
-      quiz_id: row.quiz_id as string,
+  const submissionScoreRows = (submissionRows ?? [])
+    .filter((row) => teacherQuizIds.has(row.quiz_id as string))
+    .map((row) => ({
+      quizId: row.quiz_id as string,
       score: row.score as number,
-    })),
-    teacherQuizIds
-  );
-  const { completedQuizCount, overallAverageScore } =
-    computeDashboardStats(teacherScores);
+    }));
+  const gamifStats = aggregateSubmissionStats(submissionScoreRows);
 
   const quizMetaById = new Map(
     quizzes.map((quiz) => [
@@ -665,8 +720,8 @@ async function fetchStudentQuizBundle(
   return {
     stats: {
       tier: ctx.tier,
-      completedQuizCount,
-      overallAverageScore,
+      completedQuizCount: gamifStats.totalQuizzesCompleted,
+      overallAverageScore: Math.round(gamifStats.averageScorePercentage),
     },
     quizzes,
     allScores,
@@ -779,4 +834,88 @@ export async function getStudentProfile() {
     .single();
 
   return data;
+}
+
+export type ChallengeLeaderboardEntry = {
+  rank: number;
+  studentId: string;
+  displayName: string;
+  score: number;
+  submittedAt: string;
+};
+
+export async function getChallengeLeaderboard(quizId: string): Promise<{
+  entries: ChallengeLeaderboardEntry[];
+  viewerEntry: ChallengeLeaderboardEntry | null;
+}> {
+  const session = await requireStudent();
+  const supabase = createAdminClient();
+  const ctx = await getStudentContext(session);
+
+  if (!ctx.teacherId) {
+    throw appError(ErrorCode.SUBSCRIPTION_REQUIRED);
+  }
+
+  const { data: quiz } = await supabase
+    .from("quizzes")
+    .select(QUIZ_LIST_SELECT)
+    .eq("id", quizId)
+    .eq("created_by", ctx.teacherId)
+    .eq("is_active", true)
+    .maybeSingle<Quiz>();
+
+  if (!quiz || quiz.assessment_category !== "challenge") {
+    return { entries: [], viewerEntry: null };
+  }
+
+  if (ctx.tier === "free" && !quiz.is_free) {
+    throw appError(ErrorCode.PRO_REQUIRED);
+  }
+
+  const { data: linkedStudents } = await supabase
+    .from("student_teachers")
+    .select("student_id")
+    .eq("teacher_id", ctx.teacherId)
+    .eq("status", "active");
+
+  const studentIds = (linkedStudents ?? []).map((r) => r.student_id as string);
+  if (studentIds.length === 0) {
+    return { entries: [], viewerEntry: null };
+  }
+
+  const { data: submissions } = await supabase
+    .from("exam_submissions")
+    .select("student_id, score, submitted_at")
+    .eq("quiz_id", quizId)
+    .in("student_id", studentIds);
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", studentIds);
+
+  const nameById = new Map(
+    (profiles ?? []).map((p) => [p.id as string, p.full_name as string])
+  );
+
+  const ranked = rankChallengeLeaderboard(
+    (submissions ?? []).map((row) => ({
+      studentId: row.student_id as string,
+      displayName: nameById.get(row.student_id as string) ?? "طالب",
+      score: row.score as number,
+      submittedAt: row.submitted_at as string,
+    }))
+  );
+
+  const entries: ChallengeLeaderboardEntry[] = ranked.map((row) => ({
+    rank: row.rank,
+    studentId: row.studentId,
+    displayName: row.displayName,
+    score: row.score,
+    submittedAt: row.submittedAt,
+  }));
+
+  const viewerEntry = entries.find((e) => e.studentId === session.profileId) ?? null;
+
+  return { entries, viewerEntry };
 }

@@ -396,6 +396,30 @@ features:
       - Untimed quizzes show no timer badge; QUIZ-001 gatekeeper selects unchanged
     spekit: [quiz-timer, quiz-timer-settings, quiz-timer-card]
 
+  - id: QUIZ-005
+    name: Quiz Attempt Limits & Category
+    status: implemented
+    persona: [TEACHER, STUDENT]
+    routes:
+      - /teacher/quizzes/new
+      - /teacher/quizzes/[id]
+      - /quiz/[id]
+    files:
+      - supabase/migrations/014_quiz_attempt_limits.sql
+      - src/lib/quiz-attempts.ts
+      - src/actions/teacher.ts
+      - src/actions/quiz.ts
+      - src/components/teacher/QuizAttemptSettings.tsx
+      - src/components/teacher/quiz-attempt-settings-card.tsx
+      - src/components/quiz/ChallengeLeaderboard.tsx
+      - tests/features/quiz-005-attempt-limits.test.ts
+    acceptance:
+      - Teacher sets assessment category and max attempts (unlimited or 1–10) on create/edit
+      - Student retakes until cap; review-only when exhausted
+      - Server rejects over-limit submit; challenge leaderboard for challenge quizzes
+      - Gamification uses best score per quiz (no double-count)
+    spekit: [quiz-attempt-settings, quiz-attempt-badge, challenge-leaderboard]
+
   # ── Gamification ────────────────────────────────────────────────────────────
   - id: GAMIF-001
     name: Teacher-Driven Gamification & Ranking

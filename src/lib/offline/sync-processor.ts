@@ -56,7 +56,8 @@ async function flushPendingSubmissionsInternal(): Promise<FlushResult> {
       if (error instanceof AppError) {
         if (
           error.code === ErrorCode.QUIZ_INACTIVE ||
-          error.code === ErrorCode.QUIZ_CHANGED
+          error.code === ErrorCode.QUIZ_CHANGED ||
+          error.code === ErrorCode.QUIZ_ATTEMPTS_EXHAUSTED
         ) {
           await updatePendingStatus(item.id, "rejected", error.userMessage);
           result.rejected += 1;
