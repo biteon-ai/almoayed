@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computeQuizListItem } from "@/lib/quiz-access";
+import {
+  computeQuizListItem,
+  filterQuizzesVisibleToStudent,
+  indexQuizGroupAssignments,
+  isQuizGroupAccessible,
+  isQuizVisibleToStudent,
+} from "@/lib/quiz-access";
 import {
   applyProApproval,
   canRequestProUpgrade,
@@ -54,6 +60,59 @@ describe(`${FEATURE_TIER} Free vs Pro gating`, () => {
       groupIds: ["group-a"],
     });
     expect(allowed.isAccessible).toBe(true);
+  });
+
+  it("session_group quiz allows any assigned group via junction list", () => {
+    const quiz = createQuiz({
+      quiz_type: "session_group",
+      target_group_id: "group-a",
+      is_free: true,
+    });
+
+    const allowed = computeQuizListItem(
+      quiz,
+      { tier: "pro", groupIds: ["group-b"] },
+      ["group-a", "group-b"]
+    );
+    expect(allowed.isAccessible).toBe(true);
+  });
+
+  it("public quiz with no assigned groups is visible to all students", () => {
+    const quiz = createQuiz({ quiz_type: "regular", is_free: true });
+
+    expect(isQuizVisibleToStudent(quiz, [], [])).toBe(true);
+    expect(isQuizVisibleToStudent(quiz, ["group-a"], [])).toBe(true);
+
+    const item = computeQuizListItem(quiz, { tier: "pro", groupIds: [] }, []);
+    expect(item.isAccessible).toBe(true);
+  });
+
+  it("group-assigned quiz is hidden from students outside assigned groups", () => {
+    const quiz = createQuiz({ quiz_type: "regular", is_free: true });
+    const assignments = indexQuizGroupAssignments([
+      { quiz_id: quiz.id, group_id: "group-a" },
+    ]);
+
+    const visible = filterQuizzesVisibleToStudent(
+      [quiz],
+      ["group-b"],
+      assignments
+    );
+    expect(visible).toHaveLength(0);
+
+    const allowed = filterQuizzesVisibleToStudent(
+      [quiz],
+      ["group-a"],
+      assignments
+    );
+    expect(allowed).toHaveLength(1);
+  });
+
+  it("group-assigned quiz visible when student belongs to any assigned group", () => {
+    const quiz = createQuiz({ is_free: true });
+    expect(
+      isQuizGroupAccessible(quiz, ["group-b"], ["group-a", "group-b"])
+    ).toBe(true);
   });
 });
 

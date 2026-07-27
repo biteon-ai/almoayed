@@ -7,7 +7,7 @@ import {
   logRequestError,
 } from "@/lib/app-errors";
 import { requireStudent, getActiveTeacherId } from "@/lib/auth";
-import { computeQuizListItem } from "@/lib/quiz-access";
+import { computeQuizListItem, filterQuizzesVisibleToStudent, indexQuizGroupAssignments, isQuizGroupAccessible } from "@/lib/quiz-access";
 import {
   EXAM_QUESTION_SELECT_FIELDS,
 } from "@/lib/quiz-gatekeeper";
@@ -120,10 +120,17 @@ export async function ensureTimedQuizSession(
     throw appError(ErrorCode.PRO_REQUIRED);
   }
 
-  if (quiz.quiz_type === "session_group" && quiz.target_group_id) {
-    if (!ctx.groupIds.includes(quiz.target_group_id)) {
-      throw appError(ErrorCode.GROUP_REQUIRED);
-    }
+  const { data: assignmentRows } = await supabase
+    .from("quiz_groups")
+    .select("group_id")
+    .eq("quiz_id", quizId);
+
+  const assignedGroupIds = (assignmentRows ?? []).map(
+    (row) => row.group_id as string
+  );
+
+  if (!isQuizGroupAccessible(quiz, ctx.groupIds, assignedGroupIds)) {
+    throw appError(ErrorCode.GROUP_REQUIRED);
   }
 
   const { count: usedAttempts } = await supabase
@@ -239,10 +246,17 @@ export async function getQuizForStudent(quizId: string): Promise<{
     throw appError(ErrorCode.PRO_REQUIRED);
   }
 
-  if (quiz.quiz_type === "session_group" && quiz.target_group_id) {
-    if (!ctx.groupIds.includes(quiz.target_group_id)) {
-      throw appError(ErrorCode.GROUP_REQUIRED);
-    }
+  const { data: assignmentRows } = await supabase
+    .from("quiz_groups")
+    .select("group_id")
+    .eq("quiz_id", quizId);
+
+  const assignedGroupIds = (assignmentRows ?? []).map(
+    (row) => row.group_id as string
+  );
+
+  if (!isQuizGroupAccessible(quiz, ctx.groupIds, assignedGroupIds)) {
+    throw appError(ErrorCode.GROUP_REQUIRED);
   }
 
   const { data: questions } = await supabase
@@ -604,33 +618,49 @@ async function fetchStudentQuizBundle(
 
   const typedQuizRows = quizRows as QuizRowWithQuestionCount[];
   const quizIds = typedQuizRows.map((q) => q.id);
-  const categoryIds = Array.from(
-    new Set(
-      typedQuizRows
-        .map((quiz) => quiz.category_id)
-        .filter((id): id is string => Boolean(id))
-    )
-  );
 
-  const questionCountByQuiz = new Map<string, number>();
-  for (const row of typedQuizRows) {
-    const count = row.questions?.[0]?.count ?? 0;
-    if (count > 0) {
-      questionCountByQuiz.set(row.id, count);
-    }
-  }
-
-  const [{ data: submissionRows }, { data: categoryRows }] = await Promise.all([
+  const [{ data: submissionRows }, { data: assignmentRows }] = await Promise.all([
     supabase
       .from("exam_submissions")
       .select("id, score, submitted_at, quiz_id")
       .eq("student_id", session.profileId)
       .in("quiz_id", quizIds)
       .order("submitted_at", { ascending: false }),
-    categoryIds.length
-      ? supabase.from("categories").select("id, name").in("id", categoryIds)
-      : Promise.resolve({ data: [] as Array<{ id: string; name: string }> }),
+    supabase
+      .from("quiz_groups")
+      .select("quiz_id, group_id")
+      .in("quiz_id", quizIds),
   ]);
+
+  const assignmentsByQuiz = indexQuizGroupAssignments(
+    (assignmentRows ?? []) as Array<{ quiz_id: string; group_id: string }>
+  );
+
+  const visibleQuizRows = filterQuizzesVisibleToStudent(
+    typedQuizRows,
+    ctx.groupIds,
+    assignmentsByQuiz
+  );
+
+  const categoryIds = Array.from(
+    new Set(
+      visibleQuizRows
+        .map((quiz) => quiz.category_id)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+
+  const { data: categoryRows } = categoryIds.length
+    ? await supabase.from("categories").select("id, name").in("id", categoryIds)
+    : { data: [] as Array<{ id: string; name: string }> };
+
+  const questionCountByQuiz = new Map<string, number>();
+  for (const row of visibleQuizRows) {
+    const count = row.questions?.[0]?.count ?? 0;
+    if (count > 0) {
+      questionCountByQuiz.set(row.id, count);
+    }
+  }
 
   const categoryNameById = new Map(
     (categoryRows ?? []).map((row) => [row.id as string, row.name as string])
@@ -652,15 +682,19 @@ async function fetchStudentQuizBundle(
     submissionsByQuiz.set(quizId, list);
   }
 
-  const quizzes: QuizCarouselItem[] = typedQuizRows
+  const quizzes: QuizCarouselItem[] = visibleQuizRows
     .filter((quiz) => quizzesWithQuestions.has(quiz.id))
     .map((row) => {
       const { questions, ...quiz } = row;
       const questionCount = questions?.[0]?.count ?? 0;
-      const listItem = computeQuizListItem(quiz, {
-        tier: ctx.tier,
-        groupIds: ctx.groupIds,
-      });
+      const listItem = computeQuizListItem(
+        quiz,
+        {
+          tier: ctx.tier,
+          groupIds: ctx.groupIds,
+        },
+        assignmentsByQuiz.get(quiz.id)
+      );
       const quizSubmissions = submissionsByQuiz.get(quiz.id) ?? [];
       const attemptState = buildAttemptState(
         quiz.max_attempts ?? 1,
@@ -813,14 +847,36 @@ export async function getAvailableQuizzes(): Promise<QuizListItem[]> {
 
   if (!data?.length) return [];
 
-  return (data as QuizRowWithQuestionCount[])
-    .filter((row) => (row.questions?.[0]?.count ?? 0) > 0)
-    .map((row) =>
-      computeQuizListItem(row as Quiz, {
+  const quizIds = (data as QuizRowWithQuestionCount[]).map((row) => row.id);
+  const { data: assignmentRows } = await supabase
+    .from("quiz_groups")
+    .select("quiz_id, group_id")
+    .in("quiz_id", quizIds);
+
+  const assignmentsByQuiz = indexQuizGroupAssignments(
+    (assignmentRows ?? []) as Array<{ quiz_id: string; group_id: string }>
+  );
+
+  const visibleRows = filterQuizzesVisibleToStudent(
+    (data as QuizRowWithQuestionCount[]).filter(
+      (row) => (row.questions?.[0]?.count ?? 0) > 0
+    ),
+    ctx.groupIds,
+    assignmentsByQuiz
+  );
+
+  return visibleRows.map((row) => {
+    const { questions, ...quiz } = row;
+    void questions;
+    return computeQuizListItem(
+      quiz as Quiz,
+      {
         tier: ctx.tier,
         groupIds: ctx.groupIds,
-      })
+      },
+      assignmentsByQuiz.get(row.id)
     );
+  });
 }
 
 export async function getStudentProfile() {

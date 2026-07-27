@@ -214,6 +214,8 @@ export interface AdminStudentDetail extends AdminStudentRow {
 
 export interface TeacherQuiz extends Quiz {
   question_count: number;
+  /** Groups assigned via quiz_groups junction (TEACH-001) */
+  assigned_groups: Array<{ id: string; name: string }>;
 }
 
 export interface QuizListItem extends Quiz {

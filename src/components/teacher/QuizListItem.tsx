@@ -32,6 +32,7 @@ interface QuizListItemProps {
   onSoftDelete?: (quiz: TeacherQuiz) => void;
   onRestore?: (quiz: TeacherQuiz) => void;
   onRequestPermanentDelete?: (quiz: TeacherQuiz) => void;
+  onAssignGroups?: (quiz: TeacherQuiz) => void;
 }
 
 /**
@@ -49,6 +50,7 @@ export function QuizListItem({
   onSoftDelete,
   onRestore,
   onRequestPermanentDelete,
+  onAssignGroups,
 }: QuizListItemProps) {
   const router = useRouter();
   const [isNavPending, startNavTransition] = useTransition();
@@ -107,16 +109,38 @@ export function QuizListItem({
                 {quiz.is_free ? "مجاني" : "Pro"}
               </StatusBadge>
               <StatusBadge
-                tone={quiz.quiz_type === "session_group" ? "group" : "regular"}
+                tone={quiz.assigned_groups.length > 0 ? "group" : "regular"}
                 className="inline-flex items-center gap-1"
               >
                 <Users className="size-3.5" />
-                {quiz.quiz_type === "session_group" ? "مجموعة" : "عادي"}
+                {quiz.assigned_groups.length > 0 ? "مجموعة" : "عادي"}
               </StatusBadge>
               <span className="text-xs text-muted-foreground">
                 {quiz.question_count} سؤال
               </span>
             </div>
+            {quiz.assigned_groups.length > 0 ? (
+              <div
+                className="flex flex-wrap items-center gap-1.5"
+                {...spekit(SPEKIT.quizAssignedGroups)}
+              >
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  المجموعات:
+                </span>
+                {quiz.assigned_groups.map((group) => (
+                  <span
+                    key={group.id}
+                    className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-800 dark:border-violet-900/40 dark:bg-violet-950/30 dark:text-violet-200"
+                  >
+                    {group.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                متاح لكل الطلاب — اضغط «مجموعة» لتقييد الوصول
+              </p>
+            )}
           </div>
 
           <div
@@ -239,26 +263,19 @@ export function QuizListItem({
                   حذف
                 </Button>
 
-                <Link
-                  href={editHref}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    navigateTo(editHref);
-                  }}
-                  className={cn(
-                    buttonVariants({ variant: "outline", size: "sm" }),
-                    "inline-flex h-10 items-center gap-1.5 px-3",
-                    isLinkLoading(editHref) && "pointer-events-none opacity-70"
-                  )}
-                  title="إعدادات المجموعة"
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-10 gap-1.5 px-3"
+                  disabled={pending}
+                  title="تعيين المجموعات"
+                  onClick={() => onAssignGroups?.(quiz)}
+                  {...spekit(SPEKIT.quizAssignGroupAction)}
                 >
-                  {isLinkLoading(editHref) ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    <Users className="size-3.5" />
-                  )}
+                  <Users className="size-3.5" />
                   مجموعة
-                </Link>
+                </Button>
 
                 <Link
                   href={editHref}

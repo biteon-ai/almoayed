@@ -601,6 +601,125 @@ export async function createTeacherGroup(groupName: string) {
   revalidatePath("/teacher/students");
 }
 
+export type QuizGroupAssignmentModalData = {
+  quizId: string;
+  quizTitle: string;
+  groups: TeacherGroup[];
+  assignedGroupIds: string[];
+};
+
+export async function getQuizGroupAssignmentModalData(
+  quizId: string
+): Promise<QuizGroupAssignmentModalData | null> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+
+  const { data: quiz } = await supabase
+    .from("quizzes")
+    .select("id, title, created_by")
+    .eq("id", quizId)
+    .eq("created_by", session.profileId)
+    .maybeSingle();
+
+  if (!quiz) return null;
+
+  const [{ data: groups }, { data: assignments }] = await Promise.all([
+    supabase
+      .from("teacher_groups")
+      .select(TEACHER_GROUP_LIST_SELECT)
+      .eq("teacher_id", session.profileId)
+      .order("group_name", { ascending: true }),
+    supabase
+      .from("quiz_groups")
+      .select("group_id")
+      .eq("quiz_id", quizId),
+  ]);
+
+  return {
+    quizId: quiz.id as string,
+    quizTitle: quiz.title as string,
+    groups: (groups as TeacherGroup[]) ?? [],
+    assignedGroupIds: (assignments ?? []).map((row) => row.group_id as string),
+  };
+}
+
+export async function updateQuizGroupAssignments(
+  quizId: string,
+  groupIds: string[]
+): Promise<ActionResult> {
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+
+  const { data: quiz } = await supabase
+    .from("quizzes")
+    .select("id, created_by")
+    .eq("id", quizId)
+    .eq("created_by", session.profileId)
+    .maybeSingle();
+
+  if (!quiz) {
+    return { ok: false, error: "الاختبار غير موجود أو ليس ضمن حسابك." };
+  }
+
+  const uniqueGroupIds = Array.from(new Set(groupIds.filter(Boolean)));
+
+  const { data: teacherGroups } = await supabase
+    .from("teacher_groups")
+    .select("id")
+    .eq("teacher_id", session.profileId);
+
+  const ownedGroupIds = new Set(
+    (teacherGroups ?? []).map((row) => row.id as string)
+  );
+
+  for (const groupId of uniqueGroupIds) {
+    if (!ownedGroupIds.has(groupId)) {
+      return { ok: false, error: "إحدى المجموعات المحددة غير موجودة." };
+    }
+  }
+
+  const { error: deleteError } = await supabase
+    .from("quiz_groups")
+    .delete()
+    .eq("quiz_id", quizId);
+
+  if (deleteError) {
+    return { ok: false, error: "فشل تحديث تعيين المجموعات." };
+  }
+
+  if (uniqueGroupIds.length > 0) {
+    const { error: insertError } = await supabase.from("quiz_groups").insert(
+      uniqueGroupIds.map((groupId) => ({
+        quiz_id: quizId,
+        group_id: groupId,
+      }))
+    );
+
+    if (insertError) {
+      return { ok: false, error: "فشل حفظ تعيين المجموعات." };
+    }
+  }
+
+  const { error: quizUpdateError } = await supabase
+    .from("quizzes")
+    .update({
+      quiz_type: uniqueGroupIds.length > 0 ? "session_group" : "regular",
+      target_group_id: uniqueGroupIds[0] ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", quizId)
+    .eq("created_by", session.profileId);
+
+  if (quizUpdateError) {
+    return { ok: false, error: "فشل تحديث نوع الاختبار." };
+  }
+
+  revalidatePath("/teacher/quizzes");
+  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidatePath("/quizzes");
+  return { ok: true };
+}
+
 export async function assignStudentToGroup(groupId: string, studentId: string) {
   const result = await setStudentGroup({ studentId, groupId });
   if (!result.ok) throw new Error(result.error);
@@ -1103,7 +1222,7 @@ export async function getTeacherQuizzes(
 
   const { data } = await dataQuery.range(from, to);
 
-  const items = (data ?? []).map((row) => {
+  const baseItems = (data ?? []).map((row) => {
     const { questions, ...quiz } = row as Quiz & {
       questions: { count: number }[];
     };
@@ -1112,6 +1231,35 @@ export async function getTeacherQuizzes(
       question_count: questions?.[0]?.count ?? 0,
     };
   });
+
+  const quizIds = baseItems.map((quiz) => quiz.id);
+  const assignmentsByQuiz = new Map<
+    string,
+    Array<{ id: string; name: string }>
+  >();
+
+  if (quizIds.length > 0) {
+    const { data: assignmentRows } = await supabase
+      .from("quiz_groups")
+      .select("quiz_id, group_id, teacher_groups(group_name)")
+      .in("quiz_id", quizIds);
+
+    for (const row of assignmentRows ?? []) {
+      const quizId = row.quiz_id as string;
+      const groupId = row.group_id as string;
+      const groupName =
+        (row.teacher_groups as { group_name?: string } | null)?.group_name ??
+        "مجموعة";
+      const list = assignmentsByQuiz.get(quizId) ?? [];
+      list.push({ id: groupId, name: groupName });
+      assignmentsByQuiz.set(quizId, list);
+    }
+  }
+
+  const items: TeacherQuiz[] = baseItems.map((quiz) => ({
+    ...quiz,
+    assigned_groups: assignmentsByQuiz.get(quiz.id) ?? [],
+  }));
 
   return toPagedResult(items, total, page, pageSize);
 }
@@ -1132,9 +1280,23 @@ export async function getTeacherQuizById(
   const { questions, ...quiz } = data as Quiz & {
     questions: { count: number }[];
   };
+
+  const { data: assignmentRows } = await supabase
+    .from("quiz_groups")
+    .select("group_id, teacher_groups(group_name)")
+    .eq("quiz_id", quizId);
+
+  const assigned_groups = (assignmentRows ?? []).map((row) => ({
+    id: row.group_id as string,
+    name:
+      (row.teacher_groups as { group_name?: string } | null)?.group_name ??
+      "مجموعة",
+  }));
+
   return {
     ...(quiz as Quiz),
     question_count: questions?.[0]?.count ?? 0,
+    assigned_groups,
   };
 }
 

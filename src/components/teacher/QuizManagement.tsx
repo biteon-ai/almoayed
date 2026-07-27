@@ -14,6 +14,7 @@ import {
 import type { TeacherQuiz } from "@/types/database";
 import type { PagedResult } from "@/lib/pagination-server";
 import { QuizListItem } from "@/components/teacher/QuizListItem";
+import { AssignGroupModal } from "@/components/teacher/AssignGroupModal";
 import { QuizMetricsKPIHeader } from "@/components/teacher/QuizMetricsKPIHeader";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,10 @@ export function QuizManagement({
   const [pendingQuizId, setPendingQuizId] = useState<string | null>(null);
   const [confirmQuiz, setConfirmQuiz] = useState<TeacherQuiz | null>(null);
   const [purgeQuiz, setPurgeQuiz] = useState<TeacherQuiz | null>(null);
+  const [assignGroupQuiz, setAssignGroupQuiz] = useState<TeacherQuiz | null>(
+    null
+  );
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [purging, setPurging] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -317,6 +322,15 @@ export function QuizManagement({
         )}
       </div>
 
+      {successMessage && (
+        <p
+          role="status"
+          className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-100"
+        >
+          {successMessage}
+        </p>
+      )}
+
       {actionError && (
         <p
           role="alert"
@@ -394,6 +408,11 @@ export function QuizManagement({
             onRequestPermanentDelete={(q) => {
               setActionError(null);
               setPurgeQuiz(q);
+            }}
+            onAssignGroups={(q) => {
+              setActionError(null);
+              setSuccessMessage(null);
+              setAssignGroupQuiz(q);
             }}
           />
         ))}
@@ -571,6 +590,31 @@ export function QuizManagement({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AssignGroupModal
+        quizId={assignGroupQuiz?.id ?? null}
+        open={!!assignGroupQuiz}
+        onOpenChange={(open) => {
+          if (!open) setAssignGroupQuiz(null);
+        }}
+        onSuccess={(message) => {
+          setSuccessMessage(message);
+          setActionError(null);
+          window.setTimeout(() => setSuccessMessage(null), 4000);
+        }}
+        onError={(message) => {
+          setActionError(message);
+          setSuccessMessage(null);
+        }}
+        onSaved={(quizId, groups) => {
+          patchQuiz(quizId, {
+            quiz_type: groups.length > 0 ? "session_group" : "regular",
+            target_group_id: groups[0]?.id ?? null,
+            assigned_groups: groups,
+          });
+          router.refresh();
+        }}
+      />
     </div>
   );
 }
