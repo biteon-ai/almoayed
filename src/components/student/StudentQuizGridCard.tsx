@@ -10,6 +10,7 @@ import {
   getQuizCardStatus,
   isRecentlyCreatedQuiz,
 } from "@/lib/student-quiz-ui";
+import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
 import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,12 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
   }
 
   const completed = quiz.hasSubmission;
+  const showRetake = completed && quiz.canRetake;
+  const showReview = completed && !quiz.canRetake;
+  const attemptLabel =
+    quiz.maxAttempts > 0 && quiz.hasSubmission
+      ? formatAttemptProgressAr(quiz.usedAttempts, quiz.maxAttempts)
+      : null;
 
   return (
     <Card
@@ -141,7 +148,21 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
       </CardContent>
 
       <CardFooter className="p-5 pt-3">
-        {completed ? (
+        {showReview ? (
+          <Link
+            href={`/quiz/${quiz.id}`}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
+            )}
+          >
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <span>
+              مراجعة النتيجة
+              {quiz.lastScore != null ? ` (${quiz.lastScore}%)` : ""}
+            </span>
+          </Link>
+        ) : showRetake ? (
           <Link
             href={`/quiz/${quiz.id}`}
             className={cn(
@@ -155,7 +176,7 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
               {quiz.lastScore != null ? ` (${quiz.lastScore}%)` : ""}
             </span>
           </Link>
-        ) : (
+        ) : completed ? null : (
           <Link
             href={`/quiz/${quiz.id}`}
             className={cn(
@@ -167,6 +188,14 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
             <span>ابدأ الاختبار الآن</span>
           </Link>
         )}
+        {attemptLabel && showRetake ? (
+          <p
+            className="mt-2 text-center text-[11px] text-muted-foreground"
+            {...spekit(SPEKIT.quizAttemptBadge)}
+          >
+            {attemptLabel}
+          </p>
+        ) : null}
       </CardFooter>
     </Card>
   );

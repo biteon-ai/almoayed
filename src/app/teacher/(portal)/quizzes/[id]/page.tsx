@@ -1,6 +1,6 @@
 import { getQuizQuestions, getTeacherQuizById } from "@/actions/teacher";
 import { QuizQuestionsDashboard } from "@/components/teacher/QuizQuestionsDashboard";
-import { QuizTimerSettings } from "@/components/teacher/QuizTimerSettings";
+import { QuizEditSettingsPanel } from "@/components/teacher/QuizEditSettingsPanel";
 import { QuizTrashBanner } from "@/components/teacher/QuizTrashBanner";
 import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
 import { SPEKIT } from "@/lib/spekit-targets";
@@ -34,13 +34,14 @@ export default async function EditQuizPage({ params }: PageProps) {
       ) : null}
 
       {!quiz.deleted_at ? (
-        <div className="px-4 pt-4 sm:px-6">
-          <QuizTimerSettings
-            quizId={quiz.id}
-            initialIsTimed={Boolean(quiz.is_timed)}
-            initialDurationMinutes={quiz.duration_minutes}
-          />
-        </div>
+        <QuizEditSettingsPanel
+          quizId={quiz.id}
+          quizTitle={quiz.title}
+          initialIsTimed={Boolean(quiz.is_timed)}
+          initialDurationMinutes={quiz.duration_minutes}
+          initialCategory={quiz.assessment_category ?? "evaluation"}
+          initialMaxAttempts={quiz.max_attempts ?? 1}
+        />
       ) : null}
 
       <Suspense

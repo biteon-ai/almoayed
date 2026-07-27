@@ -31,7 +31,8 @@ export function getQuizCardStatus(
   isRecentlyCreated: boolean
 ): QuizCardStatus {
   if (quiz.isLocked) return "locked";
-  if (quiz.hasSubmission) return "completed";
+  if (quiz.hasSubmission && !quiz.canRetake) return "completed";
+  if (quiz.hasSubmission && quiz.canRetake) return "in_progress";
   if (isRecentlyCreated) return "new";
   return "new";
 }

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
+import { QuizAttemptSettings } from "@/components/teacher/QuizAttemptSettings";
 
 const fieldInputClass =
   "h-11 min-h-[44px] bg-muted/40 px-4 text-start text-sm shadow-none";
@@ -118,7 +119,7 @@ export function QuizCreateForm({
           htmlFor="quiz_type"
           className="mb-1 text-sm font-medium text-muted-foreground"
         >
-          نوع الاختبار
+          نطاق الوصول
         </Label>
         <input type="hidden" name="quiz_type" value={quizType} />
         <Select
@@ -232,6 +233,8 @@ export function QuizCreateForm({
             </div>
           ) : null}
         </div>
+
+        <QuizAttemptSettings />
       </div>
 
       <Button

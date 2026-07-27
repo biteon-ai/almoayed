@@ -14,6 +14,7 @@ export const ErrorCode = {
   QUIZ_QUESTIONS_FETCH_FAILED: "QUIZ_QUESTIONS_FETCH_FAILED",
   QUIZ_SUBMIT_SAVE_FAILED: "QUIZ_SUBMIT_SAVE_FAILED",
   QUIZ_ANSWERS_SAVE_FAILED: "QUIZ_ANSWERS_SAVE_FAILED",
+  QUIZ_ATTEMPTS_EXHAUSTED: "QUIZ_ATTEMPTS_EXHAUSTED",
   AUTH_PROFILE_FETCH_FAILED: "AUTH_PROFILE_FETCH_FAILED",
   AUTH_PROFILE_CREATE_FAILED: "AUTH_PROFILE_CREATE_FAILED",
   PRO_UPGRADE_REQUEST_FAILED: "PRO_UPGRADE_REQUEST_FAILED",
@@ -39,6 +40,8 @@ const UI_AR: Record<string, string> = {
   [ErrorCode.QUIZ_SUBMIT_SAVE_FAILED]:
     "ما قدرنا نحفظ إجاباتك. جرّب مرة تانية.",
   [ErrorCode.QUIZ_ANSWERS_SAVE_FAILED]: "صار خطأ بحفظ الإجابات.",
+  [ErrorCode.QUIZ_ATTEMPTS_EXHAUSTED]:
+    "لا تبقى محاولات لهذا الاختبار. يمكنك مراجعة نتيجتك فقط.",
   [ErrorCode.AUTH_PROFILE_FETCH_FAILED]:
     "صار في مشكلة بالاتصال. جرّب مرة تانية.",
   [ErrorCode.AUTH_PROFILE_CREATE_FAILED]:

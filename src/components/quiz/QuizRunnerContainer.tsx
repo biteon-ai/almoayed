@@ -9,7 +9,14 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { useOnlineStatus } from "@/lib/offline/connectivity";
 import { getQuizPackage, saveQuizPackage } from "@/lib/offline/quiz-cache";
 import type { TimedQuizSessionView } from "@/lib/quiz-timer";
-import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
+import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
+import type {
+  ExamQuestion,
+  Quiz,
+  QuizAttemptState,
+  QuizSubmitResult,
+} from "@/types/database";
 
 interface QuizRunnerContainerProps {
   teacherId: string;
@@ -17,6 +24,7 @@ interface QuizRunnerContainerProps {
   questions: ExamQuestion[];
   initialResults?: QuizSubmitResult | null;
   timer?: TimedQuizSessionView | null;
+  attemptState?: QuizAttemptState;
 }
 
 export function QuizRunnerContainer({
@@ -25,6 +33,7 @@ export function QuizRunnerContainer({
   questions,
   initialResults,
   timer = null,
+  attemptState,
 }: QuizRunnerContainerProps) {
   const params = useParams();
   const quizId = (params.id as string) ?? quiz.id;
@@ -110,12 +119,32 @@ export function QuizRunnerContainer({
   }
 
   return (
-    <QuizRunner
-      quiz={loadedQuiz}
-      questions={loadedQuestions}
-      initialResults={loadedResults}
-      teacherId={teacherId}
-      timer={loadedResults ? null : loadedTimer}
-    />
+    <>
+      {attemptState?.canStartNewAttempt &&
+      attemptState.usedAttempts > 0 &&
+      attemptState.maxAttempts > 0 ? (
+        <div
+          className="border-b border-emerald-200/60 bg-emerald-50/80 px-4 py-2 text-center text-xs font-bold text-emerald-800"
+          {...spekit(SPEKIT.quizAttemptBadge)}
+        >
+          {formatAttemptProgressAr(
+            attemptState.usedAttempts,
+            attemptState.maxAttempts
+          )}
+        </div>
+      ) : null}
+      {!attemptState?.canStartNewAttempt && attemptState?.usedAttempts ? (
+        <div className="border-b border-amber-200/60 bg-amber-50/80 px-4 py-2 text-center text-xs font-bold text-amber-800">
+          انتهت المحاولات المتاحة — هذه مراجعة لنتيجتك الأخيرة.
+        </div>
+      ) : null}
+      <QuizRunner
+        quiz={loadedQuiz}
+        questions={loadedQuestions}
+        initialResults={loadedResults}
+        teacherId={teacherId}
+        timer={loadedResults ? null : loadedTimer}
+      />
+    </>
   );
 }

@@ -5,6 +5,9 @@ export type StudentTeacherStatus = "pending" | "active" | "deactivated";
 export type StudentTier = "free" | "pro";
 export type QuizType = "regular" | "session_group";
 
+/** QUIZ-005 — pedagogical quiz category (distinct from audience quiz_type) */
+export type AssessmentCategory = "practice" | "evaluation" | "challenge";
+
 export interface BankDetails {
   bank_name?: string;
   account_holder?: string;
@@ -124,8 +127,22 @@ export interface Quiz {
   is_timed: boolean;
   /** QUIZ-004 — whole minutes 1–180 when timed; null when untimed */
   duration_minutes: number | null;
+  /** QUIZ-005 — practice / evaluation / challenge */
+  assessment_category: AssessmentCategory;
+  /** QUIZ-005 — 0 = unlimited; 1–10 = finite cap */
+  max_attempts: number;
   created_at: string;
   updated_at: string;
+}
+
+/** QUIZ-005 — student attempt summary on quiz load */
+export interface QuizAttemptState {
+  usedAttempts: number;
+  maxAttempts: number;
+  canStartNewAttempt: boolean;
+  bestScore: number | null;
+  latestSubmissionId: string | null;
+  reviewSubmissionId: string | null;
 }
 
 /** [ADMIN-001] Platform KPI snapshot */
@@ -219,10 +236,15 @@ export interface QuizCarouselItem extends QuizListItem {
   lastActivityAt: string | null;
   /** Resolved category label for student UI filters */
   categoryName: string;
-  /** Latest submission score when completed */
+  /** Best submission score when completed (QUIZ-005) */
   lastScore: number | null;
   /** Estimated duration derived from question count */
   estimatedMinutes: number;
+  /** QUIZ-005 */
+  usedAttempts: number;
+  maxAttempts: number;
+  canRetake: boolean;
+  bestScore: number | null;
 }
 
 /** [DASH-001] Recent completed quiz row for My Scores tab */

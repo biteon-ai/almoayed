@@ -1,8 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import {
+  getChallengeLeaderboard,
   getQuizForStudent,
   getSubmissionResults,
 } from "@/actions/quiz";
+import { ChallengeLeaderboard } from "@/components/quiz/ChallengeLeaderboard";
 import {
   countUniqueCompletedQuizzes,
   getStudentProfileState,
@@ -67,39 +69,53 @@ export default async function QuizPage({ params }: QuizPageProps) {
     );
   }
 
-  const { quiz, questions, existingSubmissionId, timer } = data!;
+  const { quiz, questions, existingSubmissionId, attemptState, timer } = data!;
 
   if (!quiz) {
     notFound();
   }
 
-  const [profileState, uniqueCompletedQuizzes] = await Promise.all([
+  const [profileState, uniqueCompletedQuizzes, leaderboard] = await Promise.all([
     getStudentProfileState(),
     countUniqueCompletedQuizzes(session.profileId),
+    quiz.assessment_category === "challenge"
+      ? getChallengeLeaderboard(id)
+      : Promise.resolve({ entries: [], viewerEntry: null }),
   ]);
 
   if (
     shouldBlockNewQuiz({
       profileCompleted: profileState.profileCompleted,
       uniqueCompletedQuizzes,
-      hasSubmissionForQuiz: Boolean(existingSubmissionId),
-    })
+      hasSubmissionForQuiz: attemptState.usedAttempts > 0,
+    }) &&
+    attemptState.canStartNewAttempt
   ) {
     redirect(`/profile/complete?from=${encodeURIComponent(`/quiz/${id}`)}`);
   }
 
-  const initialResults = existingSubmissionId
-    ? await getSubmissionResults(existingSubmissionId)
-    : null;
+  const initialResults =
+    existingSubmissionId && !attemptState.canStartNewAttempt
+      ? await getSubmissionResults(existingSubmissionId)
+      : null;
 
   return (
-    <div data-spekit={SPEKIT.quizPage}>
+    <div data-spekit={SPEKIT.quizPage} className="space-y-4">
+      {quiz.assessment_category === "challenge" ? (
+        <div className="px-4 pt-4">
+          <ChallengeLeaderboard
+            entries={leaderboard.entries}
+            viewerEntry={leaderboard.viewerEntry}
+          />
+        </div>
+      ) : null}
       <QuizRunnerContainer
         teacherId={teacherId}
         quiz={quiz}
         questions={questions}
         initialResults={initialResults}
-        timer={existingSubmissionId ? null : timer}
+        timer={attemptState.canStartNewAttempt ? timer : null}
+        attemptState={attemptState}
       />
     </div>
   );

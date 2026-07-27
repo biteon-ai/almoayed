@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { updateQuizTimerSettings } from "@/actions/teacher";
 import { HubToast } from "@/components/teacher/HubToast";
+import { QuizTimerSettingsFields } from "@/components/teacher/QuizTimerSettingsFields";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,15 +13,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { validateDurationMinutes } from "@/lib/quiz-timer";
 import { cn } from "@/lib/utils";
 import { Clock, Loader2 } from "lucide-react";
-
-const PRESET_MINUTES = [15, 30, 45, 60, 90] as const;
 
 interface QuizTimerCardProps {
   quizId: string;
@@ -75,16 +71,6 @@ export function QuizTimerCard({
   const statusLabel = isTimed
     ? `مفعّل — ${durationValid ? durationMinutes : "—"} دقيقة`
     : "غير مفعّل";
-
-  const selectedPreset = isTimed
-    ? PRESET_MINUTES.find((m) => String(m) === durationMinutes.trim())
-    : undefined;
-
-  function applyPreset(minutes: number) {
-    setIsTimed(true);
-    setDurationMinutes(String(minutes));
-    setError(null);
-  }
 
   function onSave() {
     if (!isDirty || pending) return;
@@ -162,97 +148,19 @@ export function QuizTimerCard({
         </CardHeader>
 
         <CardContent className="space-y-5 p-6">
-          <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-            <div className="min-w-0 space-y-0.5 text-start">
-              <Label
-                htmlFor={`edit-is-timed-${quizId}`}
-                className="cursor-pointer text-sm font-semibold text-foreground"
-              >
-                تفعيل التوقيت
-              </Label>
-              <p className="text-[11px] text-muted-foreground">
-                يبدأ العد التنازلي عند فتح الطالب للاختبار
-              </p>
-            </div>
-            <Switch
-              id={`edit-is-timed-${quizId}`}
-              checked={isTimed}
-              onCheckedChange={setIsTimed}
-              aria-label="تفعيل التوقيت"
-            />
-          </div>
-
-          <div
-            className={cn(
-              "grid transition-all duration-300 ease-in-out",
-              isTimed
-                ? "grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0"
-            )}
-            aria-hidden={!isTimed}
-          >
-            <div className="overflow-hidden">
-              <div className="space-y-4 pt-1">
-                <div className="space-y-2 text-start">
-                  <Label className="text-sm font-medium">
-                    مدة سريعة
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {PRESET_MINUTES.map((minutes) => (
-                      <Button
-                        key={minutes}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={!isTimed || pending}
-                        onClick={() => applyPreset(minutes)}
-                        className={cn(
-                          "h-9 rounded-full px-3.5 text-xs font-bold",
-                          selectedPreset === minutes &&
-                            "border-brand-500 bg-brand-50 text-brand-800 dark:bg-brand-950/40 dark:text-brand-200"
-                        )}
-                      >
-                        {minutes} دقيقة
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-start">
-                  <Label htmlFor={`edit-duration-${quizId}`} className="text-sm">
-                    مدة مخصصة
-                  </Label>
-                  <div className="inline-flex max-w-[14rem] overflow-hidden rounded-xl border border-input bg-background shadow-xs">
-                    <Input
-                      id={`edit-duration-${quizId}`}
-                      type="number"
-                      min={1}
-                      max={180}
-                      value={durationMinutes}
-                      onChange={(e) => setDurationMinutes(e.target.value)}
-                      disabled={!isTimed || pending}
-                      className="h-11 min-w-[5rem] flex-1 rounded-none border-0 bg-transparent px-3 font-mono tabular-nums shadow-none focus-visible:ring-0"
-                      dir="ltr"
-                      inputMode="numeric"
-                      aria-describedby={`duration-hint-${quizId}`}
-                    />
-                    <div
-                      className="flex shrink-0 items-center border-s border-input bg-muted/50 px-3.5 text-xs font-bold text-muted-foreground"
-                      aria-hidden
-                    >
-                      دقيقة
-                    </div>
-                  </div>
-                  <p
-                    id={`duration-hint-${quizId}`}
-                    className="text-[11px] text-muted-foreground"
-                  >
-                    بين 1 و 180 دقيقة. المحاولات الجارية تحتفظ بالمدة الأصلية.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <QuizTimerSettingsFields
+            quizId={quizId}
+            isTimed={isTimed}
+            durationMinutes={durationMinutes}
+            pending={pending}
+            onIsTimedChange={setIsTimed}
+            onDurationChange={setDurationMinutes}
+            onPreset={(minutes) => {
+              setIsTimed(true);
+              setDurationMinutes(String(minutes));
+              setError(null);
+            }}
+          />
 
           {error ? (
             <p className="text-xs font-semibold text-destructive" role="alert">
@@ -288,5 +196,5 @@ export function QuizTimerCard({
   );
 }
 
-/** @deprecated Use QuizTimerCard */
+/** @deprecated Use QuizEditSettingsPanel on the quiz edit page */
 export const QuizTimerSettings = QuizTimerCard;
