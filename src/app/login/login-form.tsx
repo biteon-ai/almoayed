@@ -48,7 +48,7 @@ const initialOtp: StartOtpState | null = null;
 
 /** Hosted Login — open Biteon OTP page (no WhatsApp form on this tab). */
 const BITEON_HOSTED_LOGIN_URL =
-  process.env.NEXT_PUBLIC_BITEON_HOSTED_LOGIN_URL?.trim() ||
+  process.env.BITEONSWITCH_HOSTED_LOGIN_URL?.trim() ||
   "http://localhost:3000/almoayed-edu";
 const BITEON_RETURN_URL =
   process.env.NEXT_PUBLIC_APP_URL?.trim()
