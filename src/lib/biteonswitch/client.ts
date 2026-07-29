@@ -22,6 +22,47 @@ export function roleHomePath(role: "TEACHER" | "STUDENT"): string {
   return role === "TEACHER" ? "/teacher/dashboard" : "/dashboard";
 }
 
+/** Decode JWT payload (no signature check) — hosted return tokens. */
+export function decodeJwtPayload(
+  token: string
+): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const pad = b64.length % 4 === 0 ? "" : "=".repeat(4 - (b64.length % 4));
+    const json = Buffer.from(b64 + pad, "base64").toString("utf8");
+    const payload = JSON.parse(json) as Record<string, unknown>;
+    return payload && typeof payload === "object" ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Phone digits from federation JWT (`phone` / `whatsapp_number`). */
+export function whatsappFromBiteonToken(token: string): string | null {
+  const trimmed = token.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("mock:")) {
+    const digits = normalizeWhatsAppNumber(trimmed.slice("mock:".length));
+    return digits.length >= 10 && digits.length <= 15 ? digits : null;
+  }
+
+  const payload = decodeJwtPayload(trimmed);
+  if (!payload) return null;
+
+  const exp = typeof payload.exp === "number" ? payload.exp : null;
+  if (exp != null && exp * 1000 < Date.now()) return null;
+
+  const rawPhone =
+    (typeof payload.phone === "string" && payload.phone) ||
+    (typeof payload.whatsapp_number === "string" && payload.whatsapp_number) ||
+    "";
+  const digits = normalizeWhatsAppNumber(rawPhone);
+  return digits.length >= 10 && digits.length <= 15 ? digits : null;
+}
+
 /**
  * Build BiteonSwitch hosted login URL.
  * Mock mode: bounce straight to our callback with token mock:<whatsappHint>.

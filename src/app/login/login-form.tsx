@@ -24,6 +24,7 @@ import {
   startTopNavLoader,
 } from "@/components/ui/top-loader";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -43,6 +44,16 @@ import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 const initialLogin: LoginState | null = null;
 const initialOtp: StartOtpState | null = null;
+
+/** Hosted Login — open Biteon OTP page (no WhatsApp form on this tab). */
+const BITEON_HOSTED_LOGIN_URL =
+  process.env.NEXT_PUBLIC_BITEON_HOSTED_LOGIN_URL?.trim() ||
+  "http://localhost:3000/almoayed-edu";
+const BITEON_RETURN_URL =
+  process.env.NEXT_PUBLIC_APP_URL?.trim()
+    ? `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/login`
+    : "http://localhost:3001/login";
+const BITEON_HOSTED_HREF = `${BITEON_HOSTED_LOGIN_URL}?return=${encodeURIComponent(BITEON_RETURN_URL)}`;
 
 const fieldGap =
   "space-y-4 [@media(max-height:700px)]:space-y-3 sm:space-y-5";
@@ -288,6 +299,32 @@ export function LoginForm({
 
   useEffect(() => {
     setHydrated(true);
+  }, []);
+
+  // Hosted Login returns `#access_token=…` — browsers never send hash to the server.
+  // Forward token to the session callback so iron-session can be minted.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash) return;
+    const params = new URLSearchParams(hash);
+    const token =
+      params.get("access_token") ||
+      params.get("biteon_token") ||
+      params.get("verification_token");
+    if (!token) return;
+
+    startTopNavLoader();
+    setBusy(true);
+    setOverlay(true);
+    const callback = new URL(
+      "/api/auth/biteonswitch/callback",
+      window.location.origin
+    );
+    callback.searchParams.set("token", token);
+    // Drop hash so a refresh does not re-fire the handoff.
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    window.location.assign(callback.toString());
   }, []);
 
   useEffect(() => {
@@ -566,35 +603,29 @@ export function LoginForm({
                       value="login"
                       className="mt-0 data-[hidden]:hidden"
                     >
-                      <form
-                        action={otpAction}
-                        className={fieldGap}
-                        onSubmit={() => {
-                          startTopNavLoader();
-                          setBusy(true);
-                          setOverlay(true);
-                        }}
-                      >
-                        <PendingWatcher onPendingChange={markPending} />
+                      <div className={fieldGap}>
                         <p className="text-sm leading-relaxed text-muted-foreground">
-                          أدخل رقم واتسابك المسجّل — سنحوّلك لخدمة التحقق ثم
-                          نفتح جلستك.
+                          سجّل الدخول عبر واتساب على صفحة التحقق — ثم نعيدك
+                          إلى المنصة.
                         </p>
-                        <WhatsAppField
-                          id="login_whatsapp"
-                          value={whatsapp}
-                          onChange={setWhatsapp}
-                          spekitProps={spekit(SPEKIT.loginWhatsappField)}
-                        />
-                        <SubmitButton
-                          label="تسجيل الدخول عبر واتساب"
-                          pendingLabel="جاري التحويل..."
-                          variant="whatsapp"
-                          icon={LogIn}
-                          spekitId={SPEKIT.loginOtpCta}
-                          forceDisabled={isBusy}
-                        />
-                      </form>
+                        <a
+                          href={BITEON_HOSTED_HREF}
+                          className={cn(
+                            buttonVariants({ variant: "whatsapp", size: "default" }),
+                            touchBtnClass,
+                            isBusy && "pointer-events-none opacity-70"
+                          )}
+                          data-spekit={SPEKIT.loginOtpCta}
+                          onClick={() => {
+                            startTopNavLoader();
+                            setBusy(true);
+                            setOverlay(true);
+                          }}
+                        >
+                          <LogIn className="size-4" aria-hidden />
+                          تسجيل الدخول عبر واتساب
+                        </a>
+                      </div>
                     </TabsContent>
 
                     <TabsContent
