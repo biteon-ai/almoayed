@@ -290,7 +290,7 @@ export function LoginForm({
     registerStudentAndRequestOTP,
     initialLogin
   );
-  const [otpState, otpAction] = useFormState(startBiteonSwitchOtp, initialOtp);
+  const [otpState] = useFormState(startBiteonSwitchOtp, initialOtp);
   const [demoState, demoAction] = useFormState(loginDemoAccount, initialLogin);
   const [linkState, linkAction] = useFormState(
     linkTeacherCodeAction,
