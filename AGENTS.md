@@ -23,7 +23,7 @@ npm run dev
 
 ## Implemented feature IDs
 
-`AUTH-001` · `AUTH-002` · `AUTH-003` · `AUTH-004` · `AUTH-005` · `AUTH-006` · `FIX-AUTH-001` · `FIX-UI-001` · `FIX-UI-002` · `FIX-UI-003` · `MT-001` · `MT-002` · `MT-003` · `QUIZ-001` · `QUIZ-002` · `QUIZ-003` · `QUIZ-004` · `GAMIF-001` · `GAMIF-002` · `GAMIF-004` · `PROFILE-001` · `PROFILE-002` · `TIER-001` · `TIER-002` · `TEACH-001` · `TEACH-002` · `TEACH-003` · `TEACH-004` · `TEACH-005` · `TEACH-011` · `UI-001` · `UI-002` · `UI-006` · `UI-007` · `UI-009` · `ENABLE-001`
+`AUTH-001` · `AUTH-002` · `AUTH-003` · `AUTH-004` · `AUTH-005` · `AUTH-006` · `FIX-AUTH-001` · `FIX-UI-001` · `FIX-UI-002` · `FIX-UI-003` · `MT-001` · `MT-002` · `MT-003` · `QUIZ-001` · `QUIZ-002` · `QUIZ-003` · `QUIZ-004` · `GAMIF-001` · `GAMIF-002` · `GAMIF-004` · `PROFILE-001` · `PROFILE-002` · `TIER-001` · `TIER-002` · `TEACH-001` · `TEACH-002` · `TEACH-003` · `TEACH-004` · `TEACH-005` · `TEACH-011` · `UI-001` · `UI-002` · `UI-006` · `UI-007` · `UI-009` · `UI-010` · `ENABLE-001`
 
 See `.speckit/spec.yaml` for acceptance criteria, file paths, and partial features.
 

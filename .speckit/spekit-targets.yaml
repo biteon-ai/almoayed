@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 70
+  total_targets: 74
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -250,6 +250,13 @@ UI-006:
 # ── Student results cards ───────────────────────────────────────
 UI-007:
   results-card: "Quiz result history card wrapper (suffix -<submissionId>)"
+
+# ── PWA install on login ────────────────────────────────────────
+UI-010:
+  pwa-install-buttons: "Login page — Android/iOS PWA install CTA row"
+  pwa-install-android: "Android install button (native prompt or guide)"
+  pwa-install-ios: "iOS install button (Safari home-screen guide)"
+  pwa-install-modal: "Arabic step-by-step PWA install instruction dialog"
 
 # ── Teacher gamification ────────────────────────────────────────
 GAMIF-001:

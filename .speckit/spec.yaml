@@ -967,6 +967,28 @@ partial_features:
       - RTL Tajawal layout; data-spekit=quiz-timer-card
     spekit: [quiz-timer-card]
 
+  - id: UI-010
+    name: PWA Install Buttons on Login
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/login"]
+    files:
+      - src/app/login/login-form.tsx
+      - src/components/pwa/PwaInstallPrompt.tsx
+      - src/components/pwa/StoreBadgeLogos.tsx
+      - src/hooks/use-pwa-install.ts
+      - src/lib/pwa-install.ts
+    acceptance:
+      - Login/signup shows brand-green (`brand-600`) install CTAs with white mono Apple/Play icons; labels «تثبيت التطبيق / على Android|iOS» (RTL); no Store/Play/black badge look
+      - Android uses deferred beforeinstallprompt when available; otherwise Arabic Chrome guide modal
+      - iOS opens Safari «إضافة إلى الشاشة الرئيسية» step modal (no beforeinstallprompt)
+      - Spekit hooks: pwa-install-buttons, pwa-install-android, pwa-install-ios, pwa-install-modal
+    spekit:
+      - pwa-install-buttons
+      - pwa-install-android
+      - pwa-install-ios
+      - pwa-install-modal
+
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel
     status: done

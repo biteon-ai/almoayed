@@ -19,6 +19,12 @@ export const SPEKIT = {
   activeLoginLoader: "active-login-loader",
   adminLoginForm: "admin-login-form",
 
+  // ── UI-010 PWA install ───────────────────────────────────────
+  pwaInstallButtons: "pwa-install-buttons",
+  pwaInstallAndroid: "pwa-install-android",
+  pwaInstallIos: "pwa-install-ios",
+  pwaInstallModal: "pwa-install-modal",
+
   // ── MT-001 / MT-002 ──────────────────────────────────────────
   teacherSwitcher: "teacher-switcher",
 

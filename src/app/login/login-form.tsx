@@ -18,6 +18,7 @@ import {
 import { DEMO_STUDENT, DEMO_TEACHER, APP_FOOTER_COPYRIGHT } from "@/lib/constants";
 import { AuthField, AuthInputShell } from "@/components/login/AuthField";
 import { LoginLoadingOverlay } from "@/components/login/LoginLoadingOverlay";
+import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 import { useLoadingBarSync } from "@/components/providers/top-loader-provider";
 import {
   ActiveLoginLoaderBar,
@@ -751,6 +752,8 @@ export function LoginForm({
                 )}
               </div>
             </div>
+
+            <PwaInstallPrompt />
 
             <p className="text-center text-[11px] leading-snug text-muted-foreground sm:text-xs lg:hidden">
               {APP_FOOTER_COPYRIGHT}
