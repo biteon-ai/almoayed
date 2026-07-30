@@ -46,16 +46,6 @@ import { SPEKIT, spekit } from "@/lib/spekit-targets";
 const initialLogin: LoginState | null = null;
 const initialOtp: StartOtpState | null = null;
 
-/** Hosted Login — open Biteon OTP page (no WhatsApp form on this tab). */
-const BITEON_HOSTED_LOGIN_URL =
-  process.env.BITEONSWITCH_HOSTED_LOGIN_URL?.trim() ||
-  "http://localhost:3000/almoayed-edu";
-const BITEON_RETURN_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.trim()
-    ? `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/login`
-    : "http://localhost:3001/login";
-const BITEON_HOSTED_HREF = `${BITEON_HOSTED_LOGIN_URL}?return=${encodeURIComponent(BITEON_RETURN_URL)}`;
-
 const fieldGap =
   "space-y-4 [@media(max-height:700px)]:space-y-3 sm:space-y-5";
 const inputClass =
@@ -244,12 +234,14 @@ type LoginFormProps = {
   demoEnabled: boolean;
   needsTeacherLink: boolean;
   pendingWhatsapp: string;
+  biteonHostedLoginHref: string;
 };
 
 export function LoginForm({
   demoEnabled,
   needsTeacherLink,
   pendingWhatsapp,
+  biteonHostedLoginHref,
 }: LoginFormProps) {
   const searchParams = useSearchParams();
   const queryError = loginMessageForQueryError(searchParams.get("error"));
@@ -610,7 +602,7 @@ export function LoginForm({
                           إلى المنصة.
                         </p>
                         <a
-                          href={BITEON_HOSTED_HREF}
+                          href={biteonHostedLoginHref}
                           className={cn(
                             buttonVariants({ variant: "whatsapp", size: "default" }),
                             touchBtnClass,

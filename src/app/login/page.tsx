@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { LoginForm } from "./login-form";
 import { LoginPageShell } from "./login-page-shell";
+import { getBiteonHostedLoginHref } from "@/lib/biteonswitch/hosted-login-href";
 import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
 import { getPendingTeacherLinkSession } from "@/lib/auth-session";
 import { APP_DESCRIPTION, APP_SLOGAN } from "@/lib/constants";
@@ -21,6 +22,7 @@ function LoginFormFallback() {
 export default async function LoginPage() {
   const demoEnabled = isAuthDemoBypassEnabled();
   const pending = await getPendingTeacherLinkSession();
+  const biteonHostedLoginHref = getBiteonHostedLoginHref();
 
   return (
     <Suspense fallback={<LoginFormFallback />}>
@@ -29,6 +31,7 @@ export default async function LoginPage() {
           demoEnabled={demoEnabled}
           needsTeacherLink={Boolean(pending)}
           pendingWhatsapp={pending?.whatsappNumber ?? ""}
+          biteonHostedLoginHref={biteonHostedLoginHref}
         />
       </LoginPageShell>
     </Suspense>
