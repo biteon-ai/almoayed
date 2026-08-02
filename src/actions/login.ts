@@ -10,6 +10,7 @@ import {
   getAuthSupabaseClient,
   getPendingTeacherLinkSession,
 } from "@/lib/auth-session";
+import { assertCanEstablishSession } from "@/lib/account-access";
 import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
 import { startBiteonSwitchOtp } from "@/actions/biteonswitch";
 import {
@@ -211,6 +212,16 @@ export async function linkTeacherCodeAction(
       return authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED);
     }
 
+    // [AUTH-007] Block if student was fully deactivated while completing رمز الأستاذ.
+    const access = await assertCanEstablishSession(
+      profile.id,
+      profile.role,
+      supabase
+    );
+    if (!access.ok) {
+      return authError(AuthErrorCode.ACCOUNT_INACTIVE);
+    }
+
     const sessionResult = await establishSession(profile, teacher.id, supabase);
     if ("status" in sessionResult && sessionResult.status === "error") {
       return sessionResult;
@@ -253,6 +264,15 @@ export async function loginDemoAccount(
 
     const resolved = await resolveDemoLoginIdentity(supabase, whatsappNumber);
     if (!resolved.ok) return resolved.error;
+
+    const access = await assertCanEstablishSession(
+      resolved.profile.id,
+      resolved.profile.role,
+      supabase
+    );
+    if (!access.ok) {
+      return authError(AuthErrorCode.ACCOUNT_INACTIVE);
+    }
 
     const sessionResult = await establishSession(
       resolved.profile,

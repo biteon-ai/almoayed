@@ -10,7 +10,8 @@ import {
   getAuthSupabaseClient,
   savePendingTeacherLinkSession,
 } from "@/lib/auth-session";
-import { logAuthFailure } from "@/lib/auth-error-codes";
+import { AuthErrorCode, logAuthFailure } from "@/lib/auth-error-codes";
+import { assertCanEstablishSession } from "@/lib/account-access";
 import type { Profile } from "@/types/database";
 
 function loginErrorRedirect(request: NextRequest, error: string) {
@@ -48,7 +49,7 @@ async function finishLogin(
   if (profile.role === "STUDENT") {
     const { data: links, error: linksError } = await supabase
       .from("student_teachers")
-      .select("teacher_id, status")
+      .select("teacher_id, status, created_at")
       .eq("student_id", profile.id)
       .order("created_at", { ascending: true });
 
@@ -58,6 +59,7 @@ async function finishLogin(
     }
 
     if (!links || links.length === 0) {
+      // AUTH-002: limited pending-teacher session — not AUTH-007 inactive.
       const pending = await savePendingTeacherLinkSession(profile);
       if ("status" in pending && pending.status === "error") {
         return loginErrorRedirect(request, "otp_unavailable");
@@ -68,12 +70,34 @@ async function finishLogin(
       return NextResponse.redirect(url);
     }
 
+    const access = await assertCanEstablishSession(
+      profile.id,
+      profile.role,
+      supabase
+    );
+    if (!access.ok) {
+      return loginErrorRedirect(request, "account_inactive");
+    }
+
     const active = links.find((l) => l.status === "active");
-    teacherId = active?.teacher_id ?? links[0]?.teacher_id ?? null;
+    teacherId =
+      access.teacherId ?? active?.teacher_id ?? links[0]?.teacher_id ?? null;
+  } else if (profile.role === "TEACHER") {
+    const access = await assertCanEstablishSession(
+      profile.id,
+      profile.role,
+      supabase
+    );
+    if (!access.ok) {
+      return loginErrorRedirect(request, "account_inactive");
+    }
   }
 
-  const sessionResult = await establishSession(profile, teacherId);
+  const sessionResult = await establishSession(profile, teacherId, supabase);
   if ("status" in sessionResult && sessionResult.status === "error") {
+    if (sessionResult.code === AuthErrorCode.ACCOUNT_INACTIVE) {
+      return loginErrorRedirect(request, "account_inactive");
+    }
     return loginErrorRedirect(request, "otp_unavailable");
   }
 

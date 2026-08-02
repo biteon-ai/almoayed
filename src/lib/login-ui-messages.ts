@@ -41,6 +41,8 @@ const LOGIN_UI_AR: Record<AuthErrorCode, string> = {
   [AuthErrorCode.ADMIN_FALLBACK_DENIED]: "تعذر تسجيل الدخول. تأكد من البيانات.",
   [AuthErrorCode.DEMO_BYPASS_DISABLED]:
     "الحسابات التجريبية غير مفعّلة في هالبيئة.",
+  [AuthErrorCode.ACCOUNT_INACTIVE]:
+    "عذراً، هذا الحساب غير فعال. يرجى التواصل مع الإدارة",
 };
 
 /** Map callback/query `error` param → AuthErrorCode */
@@ -50,6 +52,7 @@ const QUERY_ERROR_MAP: Record<string, AuthErrorCode> = {
   otp_unavailable: AuthErrorCode.OTP_UNAVAILABLE,
   register_required: AuthErrorCode.REGISTER_REQUIRED,
   otp_config: AuthErrorCode.OTP_UNAVAILABLE,
+  account_inactive: AuthErrorCode.ACCOUNT_INACTIVE,
 };
 
 export function loginMessageForCode(code: string): string {

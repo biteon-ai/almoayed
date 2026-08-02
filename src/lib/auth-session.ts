@@ -43,6 +43,17 @@ export async function establishSession(
     return authError(AuthErrorCode.SUPABASE_ENV_MISSING);
   }
 
+  // [AUTH-007] Defense-in-depth: never mint / rotate last_session_id when inactive.
+  const { assertCanEstablishSession } = await import("@/lib/account-access");
+  const access = await assertCanEstablishSession(
+    profile.id,
+    profile.role,
+    supabase
+  );
+  if (!access.ok) {
+    return authError(access.code);
+  }
+
   const sessionToken = generateSessionToken();
 
   const { error: sessionUpdateError } = await supabase

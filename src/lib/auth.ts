@@ -1,12 +1,19 @@
 import { cookies } from "next/headers";
 import { getIronSession } from "iron-session";
 import { redirect } from "next/navigation";
+import {
+  isStudentDeactivatedForLogin,
+  isTeacherAccountActive,
+  resolveActiveTeacherId,
+  type StudentLinkRow,
+} from "@/lib/account-access";
 import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
 import { DEMO_STUDENT, DEMO_TEACHER } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isDeviceSessionValid } from "@/lib/device-session";
 import { requestCache } from "@/lib/request-cache";
 import { sessionOptions, type SessionData } from "@/lib/session";
+import type { TeacherAccountStatus } from "@/types/database";
 
 /** [PERF-001] Request-scoped session decrypt — one iron-session read per RSC tree. */
 export const getSession = requestCache(async (): Promise<SessionData> => {
@@ -22,6 +29,35 @@ function isDemoBypassIdentity(whatsappNumber: string | undefined): boolean {
   );
 }
 
+type AccessRow = {
+  last_session_id: string | null;
+  teacher_account_status: TeacherAccountStatus | null;
+};
+
+/**
+ * [AUTH-003] + [AUTH-007] Combined profile fetch for device lock and inactivity.
+ * PERF-001: one profiles round-trip per validated request (when not demo bypass).
+ */
+async function loadProfileAccess(profileId: string): Promise<AccessRow | null> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("last_session_id, teacher_account_status")
+    .eq("id", profileId)
+    .maybeSingle<AccessRow>();
+  return data;
+}
+
+async function loadStudentLinks(studentId: string): Promise<StudentLinkRow[]> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("student_teachers")
+    .select("teacher_id, status, created_at")
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: true });
+  return (data ?? []) as StudentLinkRow[];
+}
+
 /** Invalidate session if another device logged in (device lock). */
 export async function validateDeviceSession(
   session: SessionData
@@ -35,19 +71,14 @@ export async function validateDeviceSession(
     return true;
   }
 
-  const supabase = createAdminClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("last_session_id")
-    .eq("id", session.profileId)
-    .single();
-
-  return isDeviceSessionValid(session.sessionToken, data?.last_session_id);
+  const access = await loadProfileAccess(session.profileId);
+  return isDeviceSessionValid(session.sessionToken, access?.last_session_id);
 }
 
 /**
- * [PERF-001] One login + AUTH-003 device-lock check per request.
+ * [PERF-001] One login + AUTH-003 device-lock + AUTH-007 inactive check per request.
  * Layout + page + nested Server Actions share this memoized result.
+ * No Supabase in middleware (PERF-001) — enforcement lives here.
  */
 const getValidatedSession = requestCache(async (): Promise<SessionData> => {
   const session = await getSession();
@@ -55,10 +86,54 @@ const getValidatedSession = requestCache(async (): Promise<SessionData> => {
     redirect("/login");
   }
 
-  const valid = await validateDeviceSession(session);
-  if (!valid) {
-    // Cannot clear cookies here (Server Components). Login overwrites the session.
-    redirect("/login?reason=device_lock");
+  const demoBypass = isDemoBypassIdentity(session.whatsappNumber);
+  let access: AccessRow | null = null;
+
+  if (!demoBypass) {
+    access = await loadProfileAccess(session.profileId);
+    const valid = isDeviceSessionValid(
+      session.sessionToken,
+      access?.last_session_id
+    );
+    if (!valid) {
+      // Cannot clear cookies here (Server Components). Login overwrites the session.
+      redirect("/login?reason=device_lock");
+    }
+  } else {
+    access = await loadProfileAccess(session.profileId);
+  }
+
+  // [AUTH-007] Mid-session inactivity
+  if (session.role === "TEACHER") {
+    const status =
+      access?.teacher_account_status ??
+      (await loadProfileAccess(session.profileId))?.teacher_account_status;
+    if (!isTeacherAccountActive(status)) {
+      redirect("/login?error=account_inactive");
+    }
+  }
+
+  if (session.role === "STUDENT") {
+    const links = await loadStudentLinks(session.profileId);
+    if (isStudentDeactivatedForLogin(links)) {
+      redirect("/login?error=account_inactive");
+    }
+
+    const nextTeacherId = resolveActiveTeacherId(
+      links,
+      session.currentTeacherId
+    );
+    if (nextTeacherId && nextTeacherId !== session.currentTeacherId) {
+      // getSession is typed as SessionData; re-open iron-session to persist re-scope.
+      const cookieStore = await cookies();
+      const mutable = await getIronSession<SessionData>(
+        cookieStore,
+        sessionOptions
+      );
+      mutable.currentTeacherId = nextTeacherId;
+      await mutable.save();
+      session.currentTeacherId = nextTeacherId;
+    }
   }
 
   return session;

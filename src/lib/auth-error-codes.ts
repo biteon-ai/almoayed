@@ -21,6 +21,8 @@ export const AuthErrorCode = {
   REGISTER_REQUIRED: "REGISTER_REQUIRED",
   ADMIN_FALLBACK_DENIED: "ADMIN_FALLBACK_DENIED",
   DEMO_BYPASS_DISABLED: "DEMO_BYPASS_DISABLED",
+  /** [AUTH-007] Teacher inactive or student fully deactivated */
+  ACCOUNT_INACTIVE: "ACCOUNT_INACTIVE",
 } as const;
 
 export type AuthErrorCode =

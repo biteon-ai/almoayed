@@ -19,6 +19,7 @@ You are an expert engineer on **Al-Moayed (المؤيد)** — a mobile-first, R
 | AUTH-001 | WhatsApp login |
 | AUTH-002 | Teacher code registration |
 | AUTH-003 | Device session lock |
+| AUTH-007 | Block inactive teacher/student login |
 | MT-001/002 | Multi-tenant + teacher switcher |
 | QUIZ-001 | Gatekeeper quiz (no answers until submit) |
 | QUIZ-002 | Weak points by category_tag |
