@@ -139,6 +139,36 @@ features:
       - RTL error alerts unchanged
     spekit: [login-demo-student, login-demo-teacher, login-loading]
 
+  - id: AUTH-007
+    name: Block Inactive Account Login
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    routes: ["/login", "/api/auth/biteonswitch/callback"]
+    aliases: [FIX-AUTH-002]
+    extends: [AUTH-001, AUTH-003, AUTH-004, AUTH-005, MT-001, MT-002, ADMIN-001]
+    files:
+      - src/lib/account-access.ts
+      - src/lib/auth-error-codes.ts
+      - src/lib/login-ui-messages.ts
+      - src/lib/auth-session.ts
+      - src/lib/auth.ts
+      - src/app/api/auth/biteonswitch/callback/route.ts
+      - src/actions/auth.ts
+      - src/actions/login.ts
+      - src/app/login/login-form.tsx
+      - tests/features/auth-007-inactive-login.test.ts
+    acceptance:
+      - Inactive teachers (teacher_account_status=inactive) cannot mint a session via WhatsApp OTP, email, emergency fallback, or demo
+      - Students with zero active links and ≥1 deactivated link cannot mint a session; pending-only AUTH-002 limited session preserved
+      - Refused login does not update profiles.last_session_id
+      - Mid-session: inactive teacher or fully deactivated student → redirect /login?error=account_inactive with Arabic copy
+      - Mid-session multi-teacher: current link deactivated but another active remains → re-scope currentTeacherId (no logout)
+      - Canonical Arabic: «عذراً، هذا الحساب غير فعال. يرجى التواصل مع الإدارة»
+      - Vitest describe [AUTH-007]; no Supabase inactive checks in middleware (PERF-001)
+    notes: |
+      FIX-AUTH-002 alias for closing prior gaps (email already checked inactive; OTP/demo/emergency did not).
+    spekit: [login-form]
+
   - id: ADMIN-001
     name: Super Admin Dashboard
     status: implemented

@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/019-quiz-attempt-limits/plan.md`
+**Active plan**: `specs/020-block-inactive-login/plan.md`
 
 Related artifacts:
-- Spec: `specs/019-quiz-attempt-limits/spec.md`
-- Research: `specs/019-quiz-attempt-limits/research.md`
-- Data model: `specs/019-quiz-attempt-limits/data-model.md`
-- Contracts: `specs/019-quiz-attempt-limits/contracts/`
-- Quickstart: `specs/019-quiz-attempt-limits/quickstart.md`
+- Spec: `specs/020-block-inactive-login/spec.md`
+- Research: `specs/020-block-inactive-login/research.md`
+- Data model: `specs/020-block-inactive-login/data-model.md`
+- Contracts: `specs/020-block-inactive-login/contracts/`
+- Quickstart: `specs/020-block-inactive-login/quickstart.md`
 <!-- SPECKIT END -->

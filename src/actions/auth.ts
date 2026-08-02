@@ -12,6 +12,7 @@ import {
   isAdminWhatsAppAllowed,
   verifyAdminFallbackSecret,
 } from "@/lib/admin-fallback";
+import { assertCanEstablishSession } from "@/lib/account-access";
 import { establishSession, getAuthSupabaseClient } from "@/lib/auth-session";
 import { normalizeWhatsAppNumber } from "@/lib/constants";
 import {
@@ -100,8 +101,20 @@ async function loginAdminFallbackImpl(formData: FormData): Promise<LoginState> {
     return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
   }
 
+  const access = await assertCanEstablishSession(
+    profile.id,
+    profile.role,
+    supabase
+  );
+  if (!access.ok) {
+    return authError(AuthErrorCode.ACCOUNT_INACTIVE);
+  }
+
   const sessionResult = await establishSession(profile, null, supabase);
   if ("status" in sessionResult && sessionResult.status === "error") {
+    if (sessionResult.code === AuthErrorCode.ACCOUNT_INACTIVE) {
+      return sessionResult;
+    }
     return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
   }
 
@@ -120,7 +133,7 @@ export async function loginTeacherEmail(
   const result = await loginTeacherWithEmail(email, password);
 
   if (result === "inactive") {
-    return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
+    return authError(AuthErrorCode.ACCOUNT_INACTIVE);
   }
   if (!result) {
     return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
@@ -128,6 +141,9 @@ export async function loginTeacherEmail(
 
   const sessionResult = await establishSession(result, null);
   if ("status" in sessionResult && sessionResult.status === "error") {
+    if (sessionResult.code === AuthErrorCode.ACCOUNT_INACTIVE) {
+      return sessionResult;
+    }
     return authError(AuthErrorCode.ADMIN_FALLBACK_DENIED);
   }
 

@@ -13,7 +13,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 
 ## Implemented features (do not break)
 
-- **AUTH-001/002/003/006** — WhatsApp login, teacher code, session lock, login loading feedback
+- **AUTH-001/002/003/006/007** — WhatsApp login, teacher code, session lock, login loading feedback, block inactive teacher/student accounts (FIX-AUTH-002)
 - **MT-001/002/003** — Multi-tenant `student_teachers`, teacher switcher, teacher unlink vs admin hard delete
 - **QUIZ-001** — Gatekeeper: no answers/explanations until submit
 - **QUIZ-002/003** — Weak points + WhatsApp share
