@@ -54,7 +54,7 @@ export function parseLabeledOptionCell(
   if (!trimmed || normalizeOptionLetter(trimmed)) return null;
 
   const match = trimmed.match(
-    /^(أ|إ|ا|ب|ج|د|[abcdABCD])\s*[)）\]:.\-–—]?\s*(.+)$/u
+    /^(أ|إ|ا|ب|ج|د|[abcdABCD])\s*[)）\]:.\-–—]?\s*(.+)$/
   );
   if (!match?.[1] || !match[2]?.trim()) return null;
 

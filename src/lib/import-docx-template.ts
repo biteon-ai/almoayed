@@ -1,11 +1,48 @@
 /**
  * Sample Word (.docx) import template builder (TEACH-012).
- * Canonical framed format (matches teacher exam exports):
- * `(1) س: …` + table cells `أ) value` … + `الجواب:` / `الشرح:` / `التصنيف:`
+ * Canonical framed format matching teacher exam exports such as
+ * «اسئلة_رياضيات_مؤطرة»:
+ * `(1) س: …` + table `أ) … | ب) …` + `الجواب:` / `الشرح:` / `التصنيف:`
  */
 import { SAMPLE_IMPORT_ROW } from "@/lib/import-template";
 
 export const IMPORT_DOCX_TEMPLATE_FILENAME = "almoayed-import-template.docx";
+
+type FramedSampleQuestion = {
+  stem: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: string;
+  explanation_text: string;
+  category_tag: string;
+};
+
+/** Two illustrative MCQs so teachers see numbering + جواب/شرح/تصنيف pattern. */
+export const SAMPLE_DOCX_QUESTIONS: FramedSampleQuestion[] = [
+  {
+    stem: SAMPLE_IMPORT_ROW.question_text,
+    option_a: SAMPLE_IMPORT_ROW.option_a,
+    option_b: SAMPLE_IMPORT_ROW.option_b,
+    option_c: SAMPLE_IMPORT_ROW.option_c,
+    option_d: SAMPLE_IMPORT_ROW.option_d,
+    correct_answer: SAMPLE_IMPORT_ROW.correct_answer,
+    explanation_text: SAMPLE_IMPORT_ROW.explanation_text,
+    category_tag: SAMPLE_IMPORT_ROW.category_tag,
+  },
+  {
+    stem: "إذا كانت الدالة f(x) = x² - 4x + 3، فما هي القيمة الصغرى للدالة؟",
+    option_a: "1",
+    option_b: "-1",
+    option_c: "2",
+    option_d: "0",
+    correct_answer: "ب",
+    explanation_text:
+      "القيمة الصغرى للدالة التربيعية تقع عند الرأس x = -b/(2a). هنا x = 2 و f(2) = -1.",
+    category_tag: "الجبر - الدوال التربيعية",
+  },
+];
 
 /** Builds OOXML bytes for the official sample Word import template. */
 export async function buildSampleImportDocxBuffer(): Promise<Uint8Array> {
@@ -31,59 +68,53 @@ export async function buildSampleImportDocxBuffer(): Promise<Uint8Array> {
       children: [new Paragraph({ children: [new TextRun(text)] })],
     });
 
+  const children = SAMPLE_DOCX_QUESTIONS.flatMap((q, index) => [
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `(${index + 1}) س: ${q.stem}`,
+          bold: true,
+        }),
+      ],
+    }),
+    new Table({
+      width: { size: 9600, type: WidthType.DXA },
+      rows: [
+        new TableRow({
+          children: [
+            cell(`أ) ${q.option_a}`),
+            cell(`ب) ${q.option_b}`),
+            cell(`ج) ${q.option_c}`),
+            cell(`د) ${q.option_d}`),
+          ],
+        }),
+      ],
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `الجواب: ${q.correct_answer}`,
+          bold: true,
+        }),
+      ],
+    }),
+    new Paragraph({
+      children: [new TextRun(`الشرح: ${q.explanation_text}`)],
+    }),
+    new Paragraph({
+      children: [new TextRun(`التصنيف: ${q.category_tag}`)],
+    }),
+  ]);
+
   const doc = new Document({
-    sections: [
-      {
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `(1) س: ${SAMPLE_IMPORT_ROW.question_text}`,
-                bold: true,
-              }),
-            ],
-          }),
-          new Table({
-            width: { size: 9600, type: WidthType.DXA },
-            rows: [
-              new TableRow({
-                children: [
-                  cell(`أ) ${SAMPLE_IMPORT_ROW.option_a}`),
-                  cell(`ب) ${SAMPLE_IMPORT_ROW.option_b}`),
-                  cell(`ج) ${SAMPLE_IMPORT_ROW.option_c}`),
-                  cell(`د) ${SAMPLE_IMPORT_ROW.option_d}`),
-                ],
-              }),
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `الجواب: ${SAMPLE_IMPORT_ROW.correct_answer}`,
-                bold: true,
-              }),
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun(`الشرح: ${SAMPLE_IMPORT_ROW.explanation_text}`),
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun(`التصنيف: ${SAMPLE_IMPORT_ROW.category_tag}`),
-            ],
-          }),
-        ],
-      },
-    ],
+    sections: [{ children }],
   });
 
   const nodeBuffer = await Packer.toBuffer(doc);
   return new Uint8Array(nodeBuffer);
 }
 
-/** Client-side download of the official sample Word import template. */
+/** Client-side download of the official sample Word import template (.docx). */
 export async function downloadSampleImportDocx(): Promise<void> {
   const bytes = await buildSampleImportDocxBuffer();
   const copy = new Uint8Array(bytes.byteLength);

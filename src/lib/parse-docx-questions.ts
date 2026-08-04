@@ -10,7 +10,6 @@ import type { ImportQuestionRow } from "@/types/database";
 import {
   extractParagraphPlainTexts,
   extractTableCellTexts,
-  extractTableHtmlBlocks,
   htmlToPlainMathText,
   normalizeOptionLetter,
   optionLetterToArabic,
@@ -173,7 +172,6 @@ export function extractDocxBlockMeta(afterTableHtml: string): {
 }
 
 export function parseQuestionBlockHtml(blockHtml: string): ImportQuestionRow | null {
-  const tables = extractTableHtmlBlocks(blockHtml);
   const firstTableMatch = blockHtml.match(/<table[\s\S]*?<\/table>/i);
   const firstTableIndex = firstTableMatch?.index ?? -1;
   const firstTableHtml = firstTableMatch?.[0] ?? "";

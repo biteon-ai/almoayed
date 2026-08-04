@@ -36,8 +36,8 @@ describe(`${FEATURE} Word sample template round-trip`, () => {
     const parsed = sanitizeImportRows(parseDocxHtmlQuestions(html));
     expect(
       parsed.length,
-      `Expected ≥1 question from sample DOCX, got ${parsed.length}.\nHTML: ${html.slice(0, 500)}`
-    ).toBeGreaterThanOrEqual(1);
+      `Expected ≥2 questions from sample DOCX, got ${parsed.length}.\nHTML: ${html.slice(0, 500)}`
+    ).toBeGreaterThanOrEqual(2);
 
     const row = parsed[0]!;
     expect(
@@ -75,5 +75,8 @@ describe(`${FEATURE} Word sample template round-trip`, () => {
 
     expect(row.explanation_text).toBe(SAMPLE_IMPORT_ROW.explanation_text);
     expect(row.category_tag).toBe(SAMPLE_IMPORT_ROW.category_tag);
+
+    expect(parsed[1]?.correct_answer).toBe("ب");
+    expect(parsed[1]?.option_b).toBe("-1");
   });
 });
