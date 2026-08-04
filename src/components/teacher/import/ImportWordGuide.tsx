@@ -1,7 +1,10 @@
 "use client";
 
+import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, FileText } from "lucide-react";
+import { downloadSampleImportDocx } from "@/lib/import-docx-template";
+import { SPEKIT } from "@/lib/spekit-targets";
+import { Download, FileText, Loader2 } from "lucide-react";
 
 const TXT_FORMAT = `س: [text]
 أ) [option]
@@ -13,9 +16,10 @@ const TXT_FORMAT = `س: [text]
 التصنيف: [text]`;
 
 const DOCX_HINTS = [
-  "رقّم كل سؤال بين قوسين مثل (1) ثم (2).",
-  "ضع خيارات a–d في جدول أو أسطر واضحة تحت السؤال.",
-  "بعد رفع .docx ستظهر تبويبة «معاينة وتعديل» قبل الحفظ.",
+  "رقّم كل سؤال: (1) س: نص السؤال ثم (2) س: …",
+  "ضع الخيارات في جدول بخلايا مثل: أ) … | ب) … | ج) … | د) …",
+  "بعد الجدول اكتب: الجواب: ب — ثم الشرح: … والتصنيف: …",
+  "بعد رفع .docx ستظهر معاينة قبل الحفظ.",
 ] as const;
 
 function downloadSampleWordTxt() {
@@ -31,6 +35,8 @@ function downloadSampleWordTxt() {
 }
 
 export function ImportWordGuide() {
+  const [pending, startTransition] = useTransition();
+
   return (
     <div dir="rtl" className="space-y-4 text-start">
       <div className="flex items-start gap-3 rounded-xl border border-amber-100 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
@@ -52,15 +58,37 @@ export function ImportWordGuide() {
         {TXT_FORMAT}
       </pre>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="h-11 gap-2 rounded-xl font-bold"
-        onClick={downloadSampleWordTxt}
-      >
-        <Download className="size-4" />
-        تحميل نموذج Word
-      </Button>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 gap-2 rounded-xl font-bold"
+          disabled={pending}
+          data-spekit={SPEKIT.importDocxTemplateDownload}
+          onClick={() => {
+            startTransition(async () => {
+              await downloadSampleImportDocx();
+            });
+          }}
+        >
+          {pending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Download className="size-4" />
+          )}
+          تحميل نموذج Word
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-11 gap-2 rounded-xl font-bold text-muted-foreground"
+          onClick={downloadSampleWordTxt}
+        >
+          <Download className="size-4" />
+          تحميل نموذج نصي (.txt)
+        </Button>
+      </div>
     </div>
   );
 }

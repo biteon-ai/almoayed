@@ -14,6 +14,7 @@ import {
   downloadSampleImportXlsx,
   IMPORT_COLUMN_DEFINITIONS,
 } from "@/lib/import-template";
+import { SPEKIT } from "@/lib/spekit-targets";
 import { Download, FileSpreadsheet, Loader2 } from "lucide-react";
 
 export function ImportExcelGuide() {
@@ -77,6 +78,7 @@ export function ImportExcelGuide() {
         variant="outline"
         className="h-11 gap-2 rounded-xl font-bold"
         disabled={pending}
+        data-spekit={SPEKIT.importExcelTemplateDownload}
         onClick={() => {
           startTransition(async () => {
             await downloadSampleImportXlsx();

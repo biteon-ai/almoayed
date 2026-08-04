@@ -138,11 +138,13 @@ export const SPEKIT = {
   quizPermanentDeleteAction: "quiz-permanent-delete-action",
   quizTrashBanner: "quiz-trash-banner",
 
-  // ── TEACH-004 ────────────────────────────────────────────────
+  // ── TEACH-004 / TEACH-012 ────────────────────────────────────
   teacherQuizEditPage: "teacher-quiz-edit-page",
   bulkImportZone: "bulk-import-zone",
   bulkImportSubmit: "bulk-import-submit",
   importValidationTips: "import-validation-tips",
+  importExcelTemplateDownload: "import-excel-template-download",
+  importDocxTemplateDownload: "import-docx-template-download",
   docxImportPreview: "docx-import-preview",
   docxImportConfirm: "docx-import-confirm",
   manualQuestionForm: "manual-question-form",

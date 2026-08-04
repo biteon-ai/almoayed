@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 74
+  total_targets: 76
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -203,6 +203,10 @@ TEACH-004:
   question-edit-form: "Question edit form inside dialog"
   question-list-item: "Single question row on teacher edit page"
   teacher-questions-list: "Existing questions list"
+
+TEACH-012:
+  import-excel-template-download: "Download sample Excel import template"
+  import-docx-template-download: "Download sample Word (.docx) import template"
 
 # ── Profile & settings ──────────────────────────────────────────
 PROFILE-001:

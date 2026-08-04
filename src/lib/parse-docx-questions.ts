@@ -1,13 +1,20 @@
 /**
- * DOCX/HTML question parsers for bulk import (TEACH-004).
+ * DOCX/HTML question parsers for bulk import (TEACH-004 / TEACH-012).
  * NOTE: Bulk Import Strategy — Append-Only — no duplicate detection; see `import-questions.ts`.
+ *
+ * Supports:
+ * 1) Letter/value alternating table cells (`a` | `20` | `b` | `25` …)
+ * 2) Framed formal exam cells (`أ) 1` | `ب) -1` …) + `الجواب:` / `الشرح:` / `التصنيف:` after the table
  */
 import type { ImportQuestionRow } from "@/types/database";
 import {
+  extractParagraphPlainTexts,
   extractTableCellTexts,
   extractTableHtmlBlocks,
   htmlToPlainMathText,
   normalizeOptionLetter,
+  optionLetterToArabic,
+  parseLabeledOptionCell,
   stripQuestionNumberPrefix,
   type OptionLetter,
 } from "@/lib/docx-html-utils";
@@ -75,12 +82,25 @@ export function parseOptionsFromTableHtml(tableHtml: string): Partial<
   Record<OptionLetter, string>
 > {
   const cells = extractTableCellTexts(tableHtml);
-  const options: Partial<Record<OptionLetter, string>> = {};
+  const labeled: Partial<Record<OptionLetter, string>> = {};
+  let labeledCount = 0;
 
+  for (const cell of cells) {
+    const parsed = parseLabeledOptionCell(cell);
+    if (parsed) {
+      labeled[parsed.letter] = parsed.text;
+      labeledCount += 1;
+    }
+  }
+  if (labeledCount >= 2) {
+    return labeled;
+  }
+
+  const options: Partial<Record<OptionLetter, string>> = {};
   for (let i = 0; i < cells.length - 1; i++) {
-    const letter = normalizeOptionLetter(cells[i]);
+    const letter = normalizeOptionLetter(cells[i] ?? "");
     if (letter) {
-      options[letter] = cells[i + 1].trim();
+      options[letter] = (cells[i + 1] ?? "").trim();
       i += 1;
     }
   }
@@ -88,16 +108,75 @@ export function parseOptionsFromTableHtml(tableHtml: string): Partial<
   if (Object.keys(options).length === 0 && cells.length >= 4) {
     const letters: OptionLetter[] = ["a", "b", "c", "d"];
     for (let i = 0; i < Math.min(cells.length, 4); i++) {
-      options[letters[i]] = cells[i].trim();
+      options[letters[i]] = (cells[i] ?? "").trim();
     }
   }
 
   return options;
 }
 
+function stripLabelPrefix(line: string, prefixes: string[]): string | null {
+  for (const prefix of prefixes) {
+    if (line.startsWith(prefix)) {
+      return line.slice(prefix.length).trim();
+    }
+  }
+  return null;
+}
+
+/** Reads الجواب / الشرح / التصنيف lines after the options table. */
+export function extractDocxBlockMeta(afterTableHtml: string): {
+  correct_answer: string;
+  explanation_text: string;
+  category_tag: string;
+} {
+  const result = {
+    correct_answer: DEFAULT_CORRECT_AR,
+    explanation_text: "",
+    category_tag: "عام",
+  };
+
+  const lines = extractParagraphPlainTexts(afterTableHtml);
+  for (const line of lines) {
+    const answerRaw = stripLabelPrefix(line, ["الجواب:", "الجواب：", "Answer:"]);
+    if (answerRaw !== null) {
+      const letter = normalizeOptionLetter(answerRaw.split(/\s+/)[0] ?? "");
+      if (letter) {
+        result.correct_answer = optionLetterToArabic(letter);
+      }
+      continue;
+    }
+
+    const explanation = stripLabelPrefix(line, [
+      "الشرح:",
+      "الشرح：",
+      "شرح:",
+      "Explanation:",
+    ]);
+    if (explanation !== null) {
+      result.explanation_text = explanation;
+      continue;
+    }
+
+    const category = stripLabelPrefix(line, [
+      "التصنيف:",
+      "التصنيف：",
+      "قسم:",
+      "Category:",
+    ]);
+    if (category !== null) {
+      result.category_tag = category || "عام";
+    }
+  }
+
+  return result;
+}
+
 export function parseQuestionBlockHtml(blockHtml: string): ImportQuestionRow | null {
   const tables = extractTableHtmlBlocks(blockHtml);
-  const firstTableIndex = blockHtml.search(/<table[\s\S]*?<\/table>/i);
+  const firstTableMatch = blockHtml.match(/<table[\s\S]*?<\/table>/i);
+  const firstTableIndex = firstTableMatch?.index ?? -1;
+  const firstTableHtml = firstTableMatch?.[0] ?? "";
 
   const questionHtml =
     firstTableIndex >= 0 ? blockHtml.slice(0, firstTableIndex) : blockHtml;
@@ -111,9 +190,8 @@ export function parseQuestionBlockHtml(blockHtml: string): ImportQuestionRow | n
   }
 
   const mergedOptions: Partial<Record<OptionLetter, string>> = {};
-  const primaryTable = tables[0];
-  if (primaryTable) {
-    Object.assign(mergedOptions, parseOptionsFromTableHtml(primaryTable));
+  if (firstTableHtml) {
+    Object.assign(mergedOptions, parseOptionsFromTableHtml(firstTableHtml));
   }
 
   const option_a = mergedOptions.a ?? "";
@@ -126,15 +204,21 @@ export function parseQuestionBlockHtml(blockHtml: string): ImportQuestionRow | n
     return null;
   }
 
+  const afterTableHtml =
+    firstTableIndex >= 0 && firstTableHtml
+      ? blockHtml.slice(firstTableIndex + firstTableHtml.length)
+      : "";
+  const meta = extractDocxBlockMeta(afterTableHtml);
+
   return {
     question_text,
     option_a,
     option_b,
     option_c,
     option_d,
-    correct_answer: DEFAULT_CORRECT_AR,
-    explanation_text: "",
-    category_tag: "عام",
+    correct_answer: meta.correct_answer,
+    explanation_text: meta.explanation_text,
+    category_tag: meta.category_tag,
   };
 }
 
