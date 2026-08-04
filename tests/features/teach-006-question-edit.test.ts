@@ -38,4 +38,11 @@ describe(`${FEATURE} Question option helpers`, () => {
       "أ"
     );
   });
+
+  it("resolveCorrectOptionText maps letter keys to option text", async () => {
+    const { resolveCorrectOptionText } = await import("@/lib/question-options");
+    expect(resolveCorrectOptionText("ب", ["20", "25", "30", "35"])).toBe("25");
+    expect(resolveCorrectOptionText("25", ["20", "25", "30", "35"])).toBe("25");
+    expect(resolveCorrectOptionText("b", ["20", "25", "30", "35"])).toBe("25");
+  });
 });

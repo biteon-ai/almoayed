@@ -8,7 +8,7 @@ interface ResultReviewPageProps {
 
 /**
  * [UI-007] Review entry — verifies ownership then opens the quiz review
- * surface (answers/explanations only after submission — QUIZ-001).
+ * surface with this submission (answers/explanations only after submission — QUIZ-001).
  */
 export default async function ResultReviewPage({
   params,
@@ -28,5 +28,7 @@ export default async function ResultReviewPage({
     notFound();
   }
 
-  redirect(`/quiz/${submission.quiz_id as string}`);
+  redirect(
+    `/quiz/${submission.quiz_id as string}?review=${encodeURIComponent(submissionId)}`
+  );
 }
