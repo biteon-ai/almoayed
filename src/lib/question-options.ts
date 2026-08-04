@@ -58,3 +58,24 @@ export function inferCorrectLetter(
 export function letterToCorrectAnswer(letter: ArabicOptionLetter): string {
   return letter;
 }
+
+/**
+ * Normalize stored `correct_answer` (letter أ–د or option text) to the option
+ * text students select in the quiz runner — required for grading + review UI.
+ */
+export function resolveCorrectOptionText(
+  correctAnswer: string,
+  options: string[]
+): string {
+  const trimmed = correctAnswer.trim();
+  if (!trimmed) return "";
+
+  const exact = options.find((option) => option.trim() === trimmed);
+  if (exact) return exact.trim();
+
+  const letter = inferCorrectLetter(trimmed, options);
+  const index = ARABIC_LETTERS.indexOf(letter);
+  const fromLetter = options[index]?.trim();
+  return fromLetter || trimmed;
+}
+

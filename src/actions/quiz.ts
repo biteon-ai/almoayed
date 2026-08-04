@@ -45,6 +45,7 @@ import {
   type SubmissionRowLite,
 } from "@/lib/quiz-attempts";
 import { aggregateSubmissionStats } from "@/lib/teacher-gamification";
+import { resolveCorrectOptionText } from "@/lib/question-options";
 import type {
   CategoryPerformance,
   ExamQuestion,
@@ -321,6 +322,7 @@ export async function getSubmissionResults(
       is_correct,
       questions (
         correct_answer,
+        options,
         explanation_text,
         explanation_media_url,
         category_tag,
@@ -336,17 +338,20 @@ export async function getSubmissionResults(
   const mapped = answers.map((a) => {
     const q = a.questions as unknown as {
       correct_answer: string;
+      options: string[] | null;
       explanation_text: string;
       explanation_media_url: string | null;
       category_tag: string;
       question_text: string;
       question_image_url: string | null;
     };
+    const options = Array.isArray(q.options) ? q.options : [];
+    const correctAnswer = resolveCorrectOptionText(q.correct_answer, options);
     return {
       questionId: a.question_id,
       studentAnswer: a.student_answer,
-      isCorrect: a.is_correct,
-      correctAnswer: q.correct_answer,
+      isCorrect: a.student_answer === correctAnswer,
+      correctAnswer,
       explanationText: q.explanation_text,
       explanationMediaUrl: q.explanation_media_url,
       categoryTag: q.category_tag,
@@ -443,7 +448,7 @@ export async function submitQuiz(
   const { data: questions, error: qError } = await supabase
     .from("questions")
     .select(
-      "id, correct_answer, explanation_text, explanation_media_url, category_tag, question_text, question_image_url"
+      "id, correct_answer, options, explanation_text, explanation_media_url, category_tag, question_text, question_image_url"
     )
     .eq("quiz_id", quizId)
     .order("sort_order", { ascending: true });
@@ -459,8 +464,18 @@ export async function submitQuiz(
 
   const graded = questions.map((q) => {
     const studentAnswer = effectiveAnswers[q.id] ?? "";
-    const isCorrect = studentAnswer === q.correct_answer;
-    return { ...q, studentAnswer, isCorrect };
+    const options = Array.isArray(q.options) ? (q.options as string[]) : [];
+    const correctAnswerText = resolveCorrectOptionText(
+      q.correct_answer as string,
+      options
+    );
+    const isCorrect = studentAnswer === correctAnswerText;
+    return {
+      ...q,
+      correct_answer: correctAnswerText,
+      studentAnswer,
+      isCorrect,
+    };
   });
 
   const correctCount = graded.filter((g) => g.isCorrect).length;

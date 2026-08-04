@@ -19,6 +19,7 @@ import { getActiveTeacherId, requireStudent } from "@/lib/auth";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ review?: string }>;
 }
 
 export async function generateMetadata({ params }: QuizPageProps) {
@@ -33,8 +34,9 @@ export async function generateMetadata({ params }: QuizPageProps) {
   }
 }
 
-export default async function QuizPage({ params }: QuizPageProps) {
+export default async function QuizPage({ params, searchParams }: QuizPageProps) {
   const { id } = await params;
+  const { review: reviewSubmissionId } = await searchParams;
   const session = await requireStudent();
   const teacherId =
     session.currentTeacherId ?? (await getActiveTeacherId(session)) ?? "";
@@ -83,7 +85,11 @@ export default async function QuizPage({ params }: QuizPageProps) {
       : Promise.resolve({ entries: [], viewerEntry: null }),
   ]);
 
+  const explicitReviewId = reviewSubmissionId?.trim() || null;
+  const isExplicitReview = Boolean(explicitReviewId);
+
   if (
+    !isExplicitReview &&
     shouldBlockNewQuiz({
       profileCompleted: profileState.profileCompleted,
       uniqueCompletedQuizzes,
@@ -94,10 +100,15 @@ export default async function QuizPage({ params }: QuizPageProps) {
     redirect(`/profile/complete?from=${encodeURIComponent(`/quiz/${id}`)}`);
   }
 
-  const initialResults =
-    existingSubmissionId && !attemptState.canStartNewAttempt
-      ? await getSubmissionResults(existingSubmissionId)
-      : null;
+  const reviewId =
+    explicitReviewId ??
+    (existingSubmissionId && !attemptState.canStartNewAttempt
+      ? existingSubmissionId
+      : null);
+
+  const initialResults = reviewId
+    ? await getSubmissionResults(reviewId)
+    : null;
 
   return (
     <div data-spekit={SPEKIT.quizPage} className="space-y-4">
@@ -114,7 +125,9 @@ export default async function QuizPage({ params }: QuizPageProps) {
         quiz={quiz}
         questions={questions}
         initialResults={initialResults}
-        timer={attemptState.canStartNewAttempt ? timer : null}
+        timer={
+          initialResults || !attemptState.canStartNewAttempt ? null : timer
+        }
         attemptState={attemptState}
       />
     </div>

@@ -61,7 +61,8 @@ export function DocxImportPreview({
           </p>
           <p className="mt-1 text-xs text-muted-foreground">{fileName}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            راجع الأسئلة وحدّد الإجابة الصحيحة قبل الحفظ. الافتراضي: أ
+            راجع الأسئلة والإجابة المستخرجة من «الجواب:» قبل الحفظ. إن لم يُذكر
+            الجواب يُفترض أ.
           </p>
         </div>
       </div>

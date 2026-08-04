@@ -20,10 +20,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ImportValidationTips } from "@/components/teacher/import/ImportValidationTips";
+import { downloadSampleImportDocx } from "@/lib/import-docx-template";
 import {
   downloadSampleImportXlsx,
   IMPORT_COLUMN_DEFINITIONS,
 } from "@/lib/import-template";
+import { SPEKIT } from "@/lib/spekit-targets";
 import {
   Download,
   FileSpreadsheet,
@@ -33,27 +35,6 @@ import {
   Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const TXT_FORMAT = `س: [text]
-أ) [option]
-ب) [option]
-ج) [option]
-د) [option]
-الجواب: [أ/ب/ج/د]
-الشرح: [text]
-التصنيف: [text]`;
-
-function downloadSampleWordTxt() {
-  const blob = new Blob([TXT_FORMAT], {
-    type: "text/plain;charset=utf-8",
-  });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "almoayed-import-template.txt";
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
 
 export type ImportMode = "append" | "replace";
 
@@ -73,6 +54,7 @@ export function ImportAccordionPanels({
   onSettingsChange,
 }: ImportAccordionPanelsProps) {
   const [xlsxPending, startXlsx] = useTransition();
+  const [docxPending, startDocx] = useTransition();
 
   return (
     <div className="space-y-4" dir="rtl">
@@ -80,6 +62,7 @@ export function ImportAccordionPanels({
         <button
           type="button"
           disabled={xlsxPending}
+          data-spekit={SPEKIT.importExcelTemplateDownload}
           onClick={() => {
             startXlsx(async () => {
               await downloadSampleImportXlsx();
@@ -100,13 +83,23 @@ export function ImportAccordionPanels({
         </button>
         <button
           type="button"
-          onClick={downloadSampleWordTxt}
+          disabled={docxPending}
+          data-spekit={SPEKIT.importDocxTemplateDownload}
+          onClick={() => {
+            startDocx(async () => {
+              await downloadSampleImportDocx();
+            });
+          }}
           className={cn(
             "inline-flex h-9 items-center gap-1.5 rounded-full border border-border/80 bg-background px-3.5 text-xs font-bold text-foreground shadow-sm transition-colors",
-            "hover:border-emerald-400 hover:bg-emerald-50/50"
+            "hover:border-emerald-400 hover:bg-emerald-50/50 disabled:opacity-50"
           )}
         >
-          <FileText className="size-3.5 text-emerald-600" />
+          {docxPending ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <FileText className="size-3.5 text-emerald-600" />
+          )}
           تحميل نموذج Word
           <Download className="size-3 opacity-50" />
         </button>
@@ -168,6 +161,16 @@ export function ImportAccordionPanels({
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+
+              <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3 text-xs leading-relaxed text-amber-900/90 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100/90">
+                <p className="font-bold">نموذج Word (.docx)</p>
+                <p className="mt-1">
+                  زر «تحميل نموذج Word» ينزّل ملف{" "}
+                  <span className="font-mono">.docx</span> بالصيغة المؤطّرة:
+                  (1) س: … ثم جدول أ) ب) ج) د) ثم الجواب / الشرح / التصنيف —
+                  نفس أسلوب ملف الامتحان المؤطّر.
+                </p>
               </div>
 
               <ImportValidationTips />

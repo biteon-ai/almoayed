@@ -1818,6 +1818,11 @@ export async function importQuestions(quizId: string, formData: FormData) {
     rows = parseCsvQuestions(text);
   } else if (ext === "xlsx" || ext === "xls") {
     rows = await parseXlsxQuestions(buffer);
+    if (!rows.length) {
+      throw new Error(
+        "ملف Excel فاضي أو بدون أسئلة صالحة. استخدم النموذج مع صف عناوين وصف بيانات واحد على الأقل."
+      );
+    }
   } else if (ext === "docx") {
     throw new Error(
       "ملفات Word تُعرَض للمعاينة في المتصفح. ارفع .docx من جديد وانتظر شاشة المراجعة."

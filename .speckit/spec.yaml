@@ -655,6 +655,30 @@ features:
       - parseWordLikeText accepts الشرح/التصنيف and legacy شرح/قسم labels
     spekit: [bulk-import-zone, bulk-import-submit, import-validation-tips, manual-question-form]
 
+  - id: TEACH-012
+    name: Excel and Word Import Sample Templates
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/quizzes/[id]"]
+    files:
+      - src/lib/import-template.ts
+      - src/lib/import-docx-template.ts
+      - src/components/teacher/import/ImportExcelGuide.tsx
+      - src/components/teacher/import/ImportWordGuide.tsx
+      - src/lib/spekit-targets.ts
+      - src/actions/teacher.ts
+      - tests/features/teach-012-excel-template.test.ts
+      - tests/features/teach-012-docx-template.test.ts
+    acceptance:
+      - Official Excel sample download uploads unchanged and imports SAMPLE_IMPORT_ROW
+      - Word tab downloads real .docx sample (not .txt) that stages via existing DOCX preview
+      - Optional secondary TXT sample download remains for plain-text authors
+      - Empty Excel upload shows Arabic error with zero inserts
+      - Template-driven Vitest round-trips lock Excel and Word builders to parsers
+      - TXT and CSV import remain unchanged (TEACH-004)
+    spekit: [import-excel-template-download, import-docx-template-download]
+    notes: Extends TEACH-004; Word primary CTA was previously a .txt download
+
   - id: TEACH-011
     name: Quiz Soft Delete and Trash
     status: implemented

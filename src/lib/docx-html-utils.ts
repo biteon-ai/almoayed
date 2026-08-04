@@ -43,12 +43,55 @@ export function normalizeOptionLetter(cell: string): OptionLetter | null {
   return null;
 }
 
-/** Strip leading exam numbering like `(1` or `(12)` from question text. */
+/**
+ * Parses framed-exam cells like `أ) 1`, `ب) -1`, `a) 20` where letter and value
+ * share one table cell (canonical Al-Moayed Word template).
+ */
+export function parseLabeledOptionCell(
+  cell: string
+): { letter: OptionLetter; text: string } | null {
+  const trimmed = cell.trim();
+  if (!trimmed || normalizeOptionLetter(trimmed)) return null;
+
+  const match = trimmed.match(
+    /^(أ|إ|ا|ب|ج|د|[abcdABCD])\s*[)）\]:.\-–—]?\s*(.+)$/
+  );
+  if (!match?.[1] || !match[2]?.trim()) return null;
+
+  const letter = normalizeOptionLetter(match[1]);
+  if (!letter) return null;
+  return { letter, text: match[2].trim() };
+}
+
+export function optionLetterToArabic(letter: OptionLetter): string {
+  const map: Record<OptionLetter, string> = {
+    a: "أ",
+    b: "ب",
+    c: "ج",
+    d: "د",
+  };
+  return map[letter];
+}
+
+/** Strip leading exam numbering like `(1` or `(12)` and optional `س:` from question text. */
 export function stripQuestionNumberPrefix(text: string): string {
   return text
     .replace(/^\(\s*\d+\s*\)?\s*[-–—.:]?\s*/, "")
+    .replace(/^س\s*[:：]\s*/, "")
     .replace(/^سؤال\s*\d+\s*[:.)-]?\s*/, "")
     .trim();
+}
+
+/** Plain-text lines from successive `<p>` nodes (order preserved). */
+export function extractParagraphPlainTexts(html: string): string[] {
+  const paras: string[] = [];
+  const pattern = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(html)) !== null) {
+    const text = htmlToPlainMathText(match[1] ?? "");
+    if (text) paras.push(text);
+  }
+  return paras;
 }
 
 export function extractTableHtmlBlocks(html: string): string[] {

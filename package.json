@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:clean": "rm -rf .next && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -29,6 +30,7 @@
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "docx": "^9.7.1",
     "iron-session": "^8.0.4",
     "lucide-react": "^1.21.0",
     "mammoth": "^1.12.0",
