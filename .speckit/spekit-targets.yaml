@@ -208,6 +208,11 @@ TEACH-012:
   import-excel-template-download: "Download sample Excel import template"
   import-docx-template-download: "Download sample Word (.docx) import template"
 
+TEACH-013:
+  quick-text-paste-open: "Open quick text paste import dialog"
+  quick-text-paste-dialog: "Quick text paste import dialog root"
+  quick-text-paste-submit: "Confirm save from quick text paste"
+
 # ── Profile & settings ──────────────────────────────────────────
 PROFILE-001:
   profile-tier-info: "Student settings — Free/Pro tier badge"

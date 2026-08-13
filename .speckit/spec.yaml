@@ -679,6 +679,29 @@ features:
     spekit: [import-excel-template-download, import-docx-template-download]
     notes: Extends TEACH-004; Word primary CTA was previously a .txt download
 
+  - id: TEACH-013
+    name: Quick Text Paste Bulk Question Import
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/quizzes/[id]"]
+    files:
+      - src/lib/import-text.ts
+      - src/components/teacher/QuickTextPasteDialog.tsx
+      - src/components/teacher/QuizQuestionsManager.tsx
+      - src/actions/teacher.ts
+      - src/lib/spekit-targets.ts
+      - tests/features/teach-013-quick-paste-parse.test.ts
+      - tests/features/teach-013-quick-paste-save.test.ts
+    acceptance:
+      - Button «لصق نصي سريع» opens paste dialog next to manual add
+      - Blank-line blocks; optional س:; *letter) or الجواب:; live valid/invalid preview
+      - Save appends up to 50 valid questions; correct_answer stored as option text
+      - Only provided options (2–4) persisted; no empty padding
+      - File import (TEACH-004/012) and manual add unchanged
+    spekit:
+      [quick-text-paste-open, quick-text-paste-dialog, quick-text-paste-submit]
+    notes: Extends TEACH-004 with paste-only path; see specs/022-quick-text-import/
+
   - id: TEACH-011
     name: Quiz Soft Delete and Trash
     status: implemented

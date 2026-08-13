@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { MathText } from "@/components/ui/MathText";
 import { Textarea } from "@/components/ui/textarea";
 import { CorrectAnswerPicker } from "@/components/teacher/CorrectAnswerPicker";
+import { QuickTextPasteDialog } from "@/components/teacher/QuickTextPasteDialog";
 import {
   Dialog,
   DialogClose,
@@ -52,6 +53,7 @@ import { cn } from "@/lib/utils";
 import {
   Check,
   CheckCircle2,
+  ClipboardPaste,
   Copy,
   FileQuestion,
   Loader2,
@@ -145,6 +147,7 @@ export function QuizQuestionsManager({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
   const [editing, setEditing] = useState<Question | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
@@ -297,15 +300,27 @@ export function QuizQuestionsManager({
             aria-label="بحث في الأسئلة"
           />
         </div>
-        <Button
-          type="button"
-          variant="brand"
-          className="h-11 shrink-0 gap-2"
-          onClick={handleAddClick}
-        >
-          <Plus className="size-4" />
-          إضافة سؤال يدوياً
-        </Button>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 shrink-0 gap-2"
+            onClick={() => setPasteOpen(true)}
+            data-spekit={SPEKIT.quickTextPasteOpen}
+          >
+            <ClipboardPaste className="size-4" />
+            لصق نصي سريع
+          </Button>
+          <Button
+            type="button"
+            variant="brand"
+            className="h-11 shrink-0 gap-2"
+            onClick={handleAddClick}
+          >
+            <Plus className="size-4" />
+            إضافة سؤال يدوياً
+          </Button>
+        </div>
       </div>
 
       {listError ? (
@@ -341,6 +356,16 @@ export function QuizQuestionsManager({
               >
                 <Plus className="size-4" />
                 إضافة أول سؤال
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 flex-1 gap-2"
+                onClick={() => setPasteOpen(true)}
+                data-spekit={SPEKIT.quickTextPasteOpen}
+              >
+                <ClipboardPaste className="size-4" />
+                لصق نصي سريع
               </Button>
               {onRequestImport ? (
                 <Button
@@ -601,6 +626,12 @@ export function QuizQuestionsManager({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <QuickTextPasteDialog
+        quizId={quizId}
+        open={pasteOpen}
+        onOpenChange={setPasteOpen}
+      />
     </div>
   );
 }

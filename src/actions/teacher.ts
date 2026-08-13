@@ -10,6 +10,10 @@ import {
   parseWordLikeText,
   parseXlsxQuestions,
 } from "@/lib/import-questions";
+import {
+  parseQuickPasteText,
+  toImportRowsFromValidDrafts,
+} from "@/lib/import-text";
 import type {
   ActionResult,
   Category,
@@ -1792,6 +1796,34 @@ export async function importQuestionRows(
   if (error) throw new Error("فشل استيراد الأسئلة.");
   revalidatePath(`/teacher/quizzes/${quizId}`);
   return { imported: inserts.length };
+}
+
+/** TEACH-013 — paste text bulk import (append-only, max 50 valid). */
+export async function importQuickPasteQuestions(quizId: string, text: string) {
+  const session = await requireTeacher();
+  await assertQuizOwnedByTeacher(quizId, session.profileId);
+
+  const trimmed = text?.trim() ?? "";
+  if (!trimmed) {
+    throw new Error("لا يوجد نص");
+  }
+
+  const drafts = parseQuickPasteText(trimmed);
+  const mapped = toImportRowsFromValidDrafts(drafts);
+
+  if (!mapped.rows.length) {
+    throw new Error("ما في أسئلة صالحة للحفظ.");
+  }
+
+  const result = await importQuestionRows(quizId, mapped.rows, {
+    mode: "append",
+  });
+
+  return {
+    imported: result.imported,
+    skippedInvalid: mapped.skippedInvalid,
+    capped: mapped.capped,
+  };
 }
 
 /** File-upload entry point for bulk question import — delegates to `importQuestionRows`. */
