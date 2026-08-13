@@ -59,8 +59,11 @@ jobs:
 
       - run: npm ci
 
-      - name: Run Vitest (AUTH · MT · QUIZ · TIER · TEACH)
+      - name: Run Vitest (AUTH · MT · QUIZ · TIER · TEACH · RLS)
         run: npm run test:unit
+
+      - name: Run RLS policy contracts
+        run: npm run test:rls
 
   e2e-smoke:
     name: Playwright — RTL & Login Smoke

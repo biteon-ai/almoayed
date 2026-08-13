@@ -21,6 +21,22 @@ npx supabase db push
 npm run dev
 ```
 
+## Tests
+
+```bash
+npm run test:unit    # Vitest feature suite
+npm run test:rls     # RLS migration contracts (+ optional live anon probes)
+npm run test:e2e     # Playwright smoke
+npm run test:all     # Full pipeline: lint → types → build → migrations → unit → rls → e2e
+npm run test:ci      # Alias of test:all
+
+# Optional extras
+INCLUDE_PERF=1 npm run test:all   # also stress/Lighthouse (needs PERF_TEST_SECRET + app up)
+SKIP_E2E=1 npm run test:all       # gates + unit + rls only
+```
+
+Optional live RLS: set `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` to a real project (skipped for CI placeholder hosts).
+
 ## Implemented feature IDs
 
 `AUTH-001` · `AUTH-002` · `AUTH-003` · `AUTH-004` · `AUTH-005` · `AUTH-006` · `AUTH-007` · `FIX-AUTH-001` · `FIX-UI-001` · `FIX-UI-002` · `FIX-UI-003` · `MT-001` · `MT-002` · `MT-003` · `QUIZ-001` · `QUIZ-002` · `QUIZ-003` · `QUIZ-004` · `GAMIF-001` · `GAMIF-002` · `GAMIF-004` · `PROFILE-001` · `PROFILE-002` · `TIER-001` · `TIER-002` · `TEACH-001` · `TEACH-002` · `TEACH-003` · `TEACH-004` · `TEACH-005` · `TEACH-011` · `TEACH-012` · `UI-001` · `UI-002` · `UI-006` · `UI-007` · `UI-009` · `UI-010` · `UI-011` · `ENABLE-001`

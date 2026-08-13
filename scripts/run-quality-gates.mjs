@@ -7,6 +7,7 @@ const steps = [
   { id: "CI-BUILD", cmd: "npm", args: ["run", "build"] },
   { id: "CI-MIGRATIONS", cmd: "node", args: ["scripts/verify-migrations.mjs"] },
   { id: "CI-UNIT", cmd: "npm", args: ["run", "test:unit"] },
+  { id: "CI-RLS", cmd: "npm", args: ["run", "test:rls"] },
 ];
 
 function runStep(step) {

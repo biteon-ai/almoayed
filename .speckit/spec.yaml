@@ -1183,10 +1183,14 @@ partial_features:
       - src/lib/perf-selects.ts
       - src/lib/admin/auth.ts
       - src/actions/quiz.ts
+      - tests/features/perf-006-rls-policies.test.ts
+      - tests/integration/rls-anon-access.test.ts
+      - tests/helpers/migrations-sql.ts
     acceptance:
       - Deny-all RLS on server-only tenant tables; auth.uid() wrapped as (SELECT auth.uid())
       - Indexes for student submissions order, question sort, upgrade partial, quiz recency
       - Hot lists use lean selects + questions(count); no password_hash on admin directory lists
+      - Vitest RLS contracts via npm run test:rls; optional live anon probes when ANON key set
       - Optional low-selectivity boolean index drops documented only (not required to exit)
     spekit: []
 
