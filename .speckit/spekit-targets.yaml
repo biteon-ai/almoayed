@@ -213,6 +213,9 @@ TEACH-013:
   quick-text-paste-dialog: "Quick text paste import dialog root"
   quick-text-paste-submit: "Confirm save from quick text paste"
 
+TEACH-014:
+  quick-text-paste-settings: "LMS quiz settings preview in paste dialog"
+
 # ── Profile & settings ──────────────────────────────────────────
 PROFILE-001:
   profile-tier-info: "Student settings — Free/Pro tier badge"

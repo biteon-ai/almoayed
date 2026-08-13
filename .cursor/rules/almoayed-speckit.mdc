@@ -26,6 +26,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **TEACH-011** — Quiz soft delete → Trash → restore / permanent delete
 - **TEACH-012** — Excel/Word sample templates (real `.docx` download + template-driven tests)
 - **TEACH-013** — Quick text paste bulk import («لصق نصي سريع»; live preview; append ≤50)
+- **TEACH-014** — LMS structured paste (`Qn:`/`Answer:` + optional quiz settings header)
 - **PROFILE-001/002** — Settings + progressive onboarding / quiz profile gate
 - **UI-001/002** — RTL mobile shell, StatusBadge
 - **UI-006** — Header + global top nav progress (`NavbarProgress`, NProgress `top-nav-loader`)

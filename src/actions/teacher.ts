@@ -11,7 +11,8 @@ import {
   parseXlsxQuestions,
 } from "@/lib/import-questions";
 import {
-  parseQuickPasteText,
+  parseQuickPasteDocument,
+  settingsToQuizFlags,
   toImportRowsFromValidDrafts,
 } from "@/lib/import-text";
 import type {
@@ -1798,7 +1799,7 @@ export async function importQuestionRows(
   return { imported: inserts.length };
 }
 
-/** TEACH-013 — paste text bulk import (append-only, max 50 valid). */
+/** TEACH-013 / TEACH-014 — paste text bulk import (append-only, max 50 valid). */
 export async function importQuickPasteQuestions(quizId: string, text: string) {
   const session = await requireTeacher();
   await assertQuizOwnedByTeacher(quizId, session.profileId);
@@ -1808,7 +1809,7 @@ export async function importQuickPasteQuestions(quizId: string, text: string) {
     throw new Error("لا يوجد نص");
   }
 
-  const drafts = parseQuickPasteText(trimmed);
+  const { settings, drafts } = parseQuickPasteDocument(trimmed);
   const mapped = toImportRowsFromValidDrafts(drafts);
 
   if (!mapped.rows.length) {
@@ -1819,10 +1820,24 @@ export async function importQuickPasteQuestions(quizId: string, text: string) {
     mode: "append",
   });
 
+  const settingsApplied: string[] = [];
+  const settingsSkipped: string[] = [];
+
+  if (result.imported >= 1 && settings?.present) {
+    const { flags, applied, skipped } = settingsToQuizFlags(settings);
+    settingsSkipped.push(...skipped);
+    if (Object.keys(flags).length > 0) {
+      await updateQuizFlags(quizId, flags);
+      settingsApplied.push(...applied);
+    }
+  }
+
   return {
     imported: result.imported,
     skippedInvalid: mapped.skippedInvalid,
     capped: mapped.capped,
+    settingsApplied,
+    settingsSkipped,
   };
 }
 

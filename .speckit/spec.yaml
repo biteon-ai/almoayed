@@ -702,6 +702,33 @@ features:
       [quick-text-paste-open, quick-text-paste-dialog, quick-text-paste-submit]
     notes: Extends TEACH-004 with paste-only path; see specs/022-quick-text-import/
 
+  - id: TEACH-014
+    name: Structured LMS Quiz Text Import
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/quizzes/[id]"]
+    files:
+      - src/lib/import-text.ts
+      - src/components/teacher/QuickTextPasteDialog.tsx
+      - src/actions/teacher.ts
+      - src/lib/spekit-targets.ts
+      - tests/features/teach-014-lms-parse.test.ts
+      - tests/features/teach-014-lms-settings.test.ts
+    acceptance:
+      - Paste Qn:/A)–D)/Answer: LMS blocks via «لصق نصي سريع»; correct as option text
+      - Optional === Quiz Settings === previewed and applied per-field on same confirm-save
+      - Qn: starts new question without blank line; mixed Arabic+LMS per block
+      - Timer Yes without duration skips timer; valid questions still import
+      - LaTeX delimiters preserved; TEACH-013 Arabic paste unchanged
+    spekit:
+      [
+        quick-text-paste-open,
+        quick-text-paste-dialog,
+        quick-text-paste-submit,
+        quick-text-paste-settings,
+      ]
+    notes: Extends TEACH-013; see specs/023-lms-quiz-text-import/
+
   - id: TEACH-011
     name: Quiz Soft Delete and Trash
     status: implemented

@@ -7,14 +7,18 @@ import {
   ClipboardCopy,
   ClipboardPaste,
   Loader2,
+  Settings2,
   XCircle,
 } from "lucide-react";
 import { importQuickPasteQuestions } from "@/actions/teacher";
 import {
-  parseQuickPasteText,
+  LMS_QUICK_PASTE_SAMPLE,
+  parseQuickPasteDocument,
   QUICK_PASTE_SAMPLE_FORMAT,
+  type ParsedQuizSettings,
   type QuickPasteDraft,
 } from "@/lib/import-text";
+import { ASSESSMENT_CATEGORY_LABELS } from "@/lib/quiz-attempts";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +39,76 @@ interface QuickTextPasteDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function SettingsPreviewCard({ settings }: { settings: ParsedQuizSettings }) {
+  const typeLabel = settings.assessment_category
+    ? ASSESSMENT_CATEGORY_LABELS[settings.assessment_category]
+    : settings.assessment_category_error
+      ? "—"
+      : "بدون تغيير";
+
+  const attemptsLabel =
+    settings.max_attempts === null
+      ? settings.max_attempts_error
+        ? "—"
+        : "بدون تغيير"
+      : settings.max_attempts === 0
+        ? "غير محدود"
+        : String(settings.max_attempts);
+
+  const timerLabel =
+    settings.is_timed === null
+      ? settings.timer_error
+        ? "—"
+        : "بدون تغيير"
+      : settings.is_timed
+        ? `مفعّل · ${settings.duration_minutes} د`
+        : "متوقف";
+
+  return (
+    <div
+      className="shrink-0 space-y-2 rounded-xl border border-emerald-200/70 bg-background p-3 text-xs shadow-sm"
+      data-spekit={SPEKIT.quickTextPasteSettings}
+    >
+      <div className="flex items-center gap-2 font-bold text-foreground">
+        <Settings2 className="size-3.5 text-emerald-700" />
+        إعدادات الاختبار (من النص)
+      </div>
+      <dl className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+        <div>
+          <dt className="text-muted-foreground">النوع</dt>
+          <dd className="font-semibold">{typeLabel}</dd>
+          {settings.assessment_category_error ? (
+            <p className="text-[10px] font-medium text-destructive">
+              {settings.assessment_category_error}
+            </p>
+          ) : null}
+        </div>
+        <div>
+          <dt className="text-muted-foreground">المحاولات</dt>
+          <dd className="font-semibold">{attemptsLabel}</dd>
+          {settings.max_attempts_error ? (
+            <p className="text-[10px] font-medium text-destructive">
+              {settings.max_attempts_error}
+            </p>
+          ) : null}
+        </div>
+        <div className="sm:col-span-2">
+          <dt className="text-muted-foreground">التوقيت</dt>
+          <dd className="font-semibold">{timerLabel}</dd>
+          {settings.timer_error ? (
+            <p className="text-[10px] font-medium text-destructive">
+              {settings.timer_error}
+            </p>
+          ) : null}
+        </div>
+      </dl>
+      <p className="text-[10px] text-muted-foreground">
+        تُطبَّق الحقول الصالحة عند حفظ سؤال واحد على الأقل
+      </p>
+    </div>
+  );
+}
+
 export function QuickTextPasteDialog({
   quizId,
   open,
@@ -48,10 +122,9 @@ export function QuickTextPasteDialog({
   const [copyHint, setCopyHint] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const drafts: QuickPasteDraft[] = useMemo(
-    () => parseQuickPasteText(text),
-    [text]
-  );
+  const document = useMemo(() => parseQuickPasteDocument(text), [text]);
+  const drafts: QuickPasteDraft[] = document.drafts;
+  const settings = document.settings;
   const validCount = drafts.filter((d) => d.valid).length;
   const invalidCount = drafts.length - validCount;
 
@@ -68,10 +141,10 @@ export function QuickTextPasteDialog({
     onOpenChange(next);
   };
 
-  const handleCopyExample = async () => {
+  const copyText = async (value: string, okMsg: string) => {
     try {
-      await navigator.clipboard.writeText(QUICK_PASTE_SAMPLE_FORMAT);
-      setCopyHint("تم نسخ نموذج التنسيق");
+      await navigator.clipboard.writeText(value);
+      setCopyHint(okMsg);
       window.setTimeout(() => setCopyHint(null), 2000);
     } catch {
       setCopyHint("تعذّر النسخ — انسخ من المربع يدوياً");
@@ -99,6 +172,12 @@ export function QuickTextPasteDialog({
         }
         if (result.capped) {
           parts.push("(حد أقصى 50 لكل عملية)");
+        }
+        if (result.settingsApplied?.length) {
+          parts.push(`إعدادات: ${result.settingsApplied.join("، ")}`);
+        }
+        if (result.settingsSkipped?.length) {
+          parts.push(`تخطي إعدادات: ${result.settingsSkipped.join("، ")}`);
         }
         setToast(parts.join(" — "));
         setToastTone("success");
@@ -139,30 +218,30 @@ export function QuickTextPasteDialog({
                   لصق نصي سريع
                 </DialogTitle>
                 <DialogDescription className="max-w-3xl text-start text-xs leading-relaxed sm:text-sm">
-                  يبدأ كل سؤال بسطر فارغ أو بترقيم{" "}
-                  <kbd className="rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground">
+                  عربي:{" "}
+                  <kbd className="rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold">
                     (1)
+                  </kbd>{" "}
+                  /{" "}
+                  <kbd className="rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold">
+                    *ب)
                   </kbd>
                   {" · "}
-                  <kbd className="rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground">
-                    (2)
-                  </kbd>
-                  . حدّد الجواب بـ{" "}
-                  <kbd className="rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground">
-                    *ب)
+                  إنجليزي:{" "}
+                  <kbd className="rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold">
+                    Q1:
                   </kbd>{" "}
-                  أو{" "}
-                  <kbd className="rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground">
-                    الجواب: ب
+                  /{" "}
+                  <kbd className="rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold">
+                    Answer: B
                   </kbd>
-                  . يُحفظ حتى 50 سؤالاً صالحاً في كل مرة.
+                  . إعدادات اختيارية أعلى النص. حتى 50 سؤالاً لكل حفظ.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
           <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2 md:divide-x md:divide-x-reverse md:divide-border/60">
-            {/* Paste pane */}
             <section className="flex min-h-0 flex-col gap-3 overflow-hidden p-4 sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-bold text-foreground">النص</h3>
@@ -176,11 +255,25 @@ export function QuickTextPasteDialog({
                     type="button"
                     variant="outline"
                     className="h-10 gap-2 rounded-xl text-xs"
-                    onClick={handleCopyExample}
+                    onClick={() =>
+                      copyText(QUICK_PASTE_SAMPLE_FORMAT, "تم نسخ النموذج العربي")
+                    }
                     disabled={pending}
                   >
                     <ClipboardCopy className="size-3.5" />
-                    نسخ نموذج التنسيق
+                    نسخ نموذج عربي
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 gap-2 rounded-xl text-xs"
+                    onClick={() =>
+                      copyText(LMS_QUICK_PASTE_SAMPLE, "تم نسخ نموذج LMS")
+                    }
+                    disabled={pending}
+                  >
+                    <ClipboardCopy className="size-3.5" />
+                    نسخ نموذج LMS
                   </Button>
                 </div>
               </div>
@@ -208,7 +301,6 @@ export function QuickTextPasteDialog({
               ) : null}
             </section>
 
-            {/* Preview pane */}
             <section className="flex min-h-0 flex-col gap-3 overflow-hidden border-t border-border/60 bg-muted/10 p-4 md:border-t-0 sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-bold text-foreground">المعاينة</h3>
@@ -226,6 +318,10 @@ export function QuickTextPasteDialog({
                 </div>
               </div>
 
+              {settings?.present ? (
+                <SettingsPreviewCard settings={settings} />
+              ) : null}
+
               {drafts.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/80 bg-background/60 px-6 py-10 text-center">
                   <ClipboardPaste
@@ -236,8 +332,7 @@ export function QuickTextPasteDialog({
                     المعاينة تظهر هنا أثناء الكتابة
                   </p>
                   <p className="max-w-xs text-xs leading-relaxed text-muted-foreground">
-                    الصق النص أو انسخ النموذج ثم عدّل. الأسئلة الصالحة فقط
-                    تُحفظ.
+                    الصق نصاً عربياً أو نموذج LMS. الأسئلة الصالحة فقط تُحفظ.
                   </p>
                 </div>
               ) : (
@@ -268,12 +363,24 @@ export function QuickTextPasteDialog({
                           )}
                         </span>
                         <div className="min-w-0 flex-1 space-y-1">
-                          <p className="font-bold leading-snug text-foreground">
-                            <span className="me-1.5 text-muted-foreground">
-                              {draft.index + 1}.
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span
+                              className={cn(
+                                "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
+                                draft.format === "lms"
+                                  ? "bg-sky-100 text-sky-800"
+                                  : "bg-amber-100 text-amber-900"
+                              )}
+                            >
+                              {draft.format === "lms" ? "LMS" : "عربي"}
                             </span>
-                            {draft.question_text || "(بدون نص سؤال)"}
-                          </p>
+                            <p className="font-bold leading-snug text-foreground">
+                              <span className="me-1.5 text-muted-foreground">
+                                {draft.index + 1}.
+                              </span>
+                              {draft.question_text || "(بدون نص سؤال)"}
+                            </p>
+                          </div>
                           {draft.valid ? (
                             <p className="text-muted-foreground">
                               الجواب{" "}
