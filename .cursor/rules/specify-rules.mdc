@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/021-excel-docx-import/plan.md`
+**Active plan**: `specs/023-lms-quiz-text-import/plan.md`
 
 Related artifacts:
-- Spec: `specs/021-excel-docx-import/spec.md`
-- Research: `specs/021-excel-docx-import/research.md`
-- Data model: `specs/021-excel-docx-import/data-model.md`
-- Contracts: `specs/021-excel-docx-import/contracts/`
-- Quickstart: `specs/021-excel-docx-import/quickstart.md`
+- Spec: `specs/023-lms-quiz-text-import/spec.md`
+- Research: `specs/023-lms-quiz-text-import/research.md`
+- Data model: `specs/023-lms-quiz-text-import/data-model.md`
+- Contracts: `specs/023-lms-quiz-text-import/contracts/`
+- Quickstart: `specs/023-lms-quiz-text-import/quickstart.md`
 <!-- SPECKIT END -->
