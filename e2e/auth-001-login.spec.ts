@@ -31,7 +31,9 @@ test.describe(`${AUTH} WhatsApp Login Session Flow (public)`, () => {
 
   test("demo student shortcut is present", async ({ page }) => {
     await page.goto("/login");
-    await page.getByRole("tab", { name: "حساب تجريبي" }).click();
+    const demoTab = page.getByRole("tab", { name: "حساب تجريبي" });
+    await expect(demoTab).toBeVisible({ timeout: 15_000 });
+    await demoTab.click();
     await expect(
       page.locator('[data-spekit="login-demo-student"]')
     ).toBeVisible();

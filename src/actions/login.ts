@@ -11,7 +11,7 @@ import {
   getPendingTeacherLinkSession,
 } from "@/lib/auth-session";
 import { assertCanEstablishSession } from "@/lib/account-access";
-import { isAuthDemoBypassEnabled } from "@/lib/admin-fallback";
+import { isDemoModeEnabled } from "@/lib/platform-settings";
 import { startBiteonSwitchOtp } from "@/actions/biteonswitch";
 import {
   DEMO_STUDENT,
@@ -140,6 +140,9 @@ export async function registerStudentAndRequestOTP(
     if (otp.status === "redirect") {
       return { status: "redirect", redirectUrl: otp.redirectUrl };
     }
+    if (otp.status === "fixed_otp_required") {
+      return { status: "fixed_otp_required", stateId: otp.stateId };
+    }
     return authError(otp.code);
   } catch (error) {
     logAuthFailure("REGISTER_AND_OTP_UNEXPECTED", error);
@@ -240,7 +243,7 @@ export async function loginDemoAccount(
   formData: FormData
 ): Promise<LoginState> {
   try {
-    if (!isAuthDemoBypassEnabled()) {
+    if (!(await isDemoModeEnabled())) {
       return authError(AuthErrorCode.DEMO_BYPASS_DISABLED);
     }
 
@@ -304,7 +307,7 @@ export async function loginWithWhatsApp(
     typeof rawNumber === "string" ? normalizeWhatsAppNumber(rawNumber) : "";
 
   if (
-    isAuthDemoBypassEnabled() &&
+    (await isDemoModeEnabled()) &&
     !teacherCode &&
     (whatsappNumber === DEMO_STUDENT.whatsapp_number ||
       whatsappNumber === DEMO_TEACHER.whatsapp_number)

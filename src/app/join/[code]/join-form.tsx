@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { joinTrialStudent, type JoinState } from "@/actions/join";
+import { FixedOtpStep } from "@/components/login/FixedOtpStep";
 import { AuthField, AuthInputShell } from "@/components/login/AuthField";
 import { LoginPageShell } from "@/app/login/login-page-shell";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,19 @@ export function JoinForm({ teacherCode, teacherName }: JoinFormProps) {
   return (
     <LoginPageShell>
       <div className="flex flex-1 flex-col justify-center px-4 py-8 sm:px-8">
+        {state?.status === "fixed_otp_required" ? (
+          <div className="mx-auto w-full max-w-md space-y-5">
+            <h1 className="text-xl font-bold">تأكيد رقم واتساب</h1>
+            <FixedOtpStep
+              stateId={state.stateId}
+              whatsapp={state.whatsapp}
+              onSuccess={() => {
+                router.replace("/dashboard");
+                router.refresh();
+              }}
+            />
+          </div>
+        ) : (
         <form
           action={formAction}
           className="mx-auto w-full max-w-md space-y-5"
@@ -219,6 +233,7 @@ export function JoinForm({ teacherCode, teacherName }: JoinFormProps) {
 
           <JoinSubmitButton />
         </form>
+        )}
       </div>
     </LoginPageShell>
   );

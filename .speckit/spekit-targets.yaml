@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 86
+  total_targets: 93
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -266,6 +266,15 @@ ADMIN-001:
   admin-impersonation-exit: "Exit impersonation control"
   admin-login-form: "Super Admin email login form"
   teacher-email-login-form: "Teacher email/password login form"
+
+ADMIN-002:
+  admin-nav-settings: "Admin nav link — platform settings"
+  admin-platform-settings: "Super Admin platform settings panel"
+  admin-demo-mode-switch: "Demo Mode toggle"
+  admin-fixed-otp-switch: "Fixed OTP toggle"
+  admin-fixed-otp-code: "Fixed OTP code input"
+  admin-settings-save: "Save fixed OTP code"
+  login-fixed-otp-field: "In-app fixed OTP input on login"
 
 # ── Navigation progress ─────────────────────────────────────────
 UI-006:

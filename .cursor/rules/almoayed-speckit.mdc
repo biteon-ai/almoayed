@@ -33,6 +33,8 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **UI-007** — Results card score badge + action layout
 - **UI-009** — Quiz timer settings card (presets, status badge, Switch, HubToast save)
 - **UI-010** — Login PWA install CTAs (Android beforeinstallprompt + iOS/Android guide modal)
+- **ADMIN-001/002** — Super Admin dashboard + runtime platform settings (Demo Mode, Fixed OTP)
+- **AUTH-008 / TEACH-015** — Trial join link + teacher invite
 - **ENABLE-001** — `data-spekit` hooks via `src/lib/spekit-targets.ts`
 
 ## Code rules

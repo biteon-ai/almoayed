@@ -9,6 +9,7 @@ import {
   linkTeacherCodeAction,
 } from "@/actions/login";
 import { startBiteonSwitchOtp } from "@/actions/biteonswitch";
+import { FixedOtpStep } from "@/components/login/FixedOtpStep";
 import type { LoginState } from "@/types/auth";
 import type { StartOtpState } from "@/actions/biteonswitch";
 import {
@@ -232,6 +233,7 @@ function DemoQuickLoginButton({
 
 type LoginFormProps = {
   demoEnabled: boolean;
+  fixedOtpEnabled: boolean;
   needsTeacherLink: boolean;
   pendingWhatsapp: string;
   biteonHostedLoginHref: string;
@@ -239,6 +241,7 @@ type LoginFormProps = {
 
 export function LoginForm({
   demoEnabled,
+  fixedOtpEnabled,
   needsTeacherLink,
   pendingWhatsapp,
   biteonHostedLoginHref,
@@ -266,6 +269,10 @@ export function LoginForm({
   const [demoPending, setDemoPending] = useState<"student" | "teacher" | null>(
     null
   );
+  const [fixedOtp, setFixedOtp] = useState<{
+    stateId: string;
+    whatsapp: string;
+  } | null>(null);
   const [banner, setBanner] = useState<string | null>(
     needsTeacherLink || needsTeacherQuery
       ? "تم التحقق من واتساب. أدخل رمز الأستاذ لإكمال الدخول."
@@ -283,7 +290,7 @@ export function LoginForm({
     registerStudentAndRequestOTP,
     initialLogin
   );
-  const [otpState] = useFormState(startBiteonSwitchOtp, initialOtp);
+  const [otpState, otpAction] = useFormState(startBiteonSwitchOtp, initialOtp);
   const [demoState, demoAction] = useFormState(loginDemoAccount, initialLogin);
   const [linkState, linkAction] = useFormState(
     linkTeacherCodeAction,
@@ -335,12 +342,23 @@ export function LoginForm({
       setOverlay(true);
       window.location.assign(otpState.redirectUrl);
     }
-  }, [otpState]);
+    if (otpState?.status === "fixed_otp_required") {
+      setBusy(false);
+      setOverlay(false);
+      setFixedOtp({ stateId: otpState.stateId, whatsapp });
+    }
+  }, [otpState, whatsapp]);
 
   useEffect(() => {
     if (registerState?.status === "redirect") {
       setOverlay(true);
       window.location.assign(registerState.redirectUrl);
+      return;
+    }
+    if (registerState?.status === "fixed_otp_required") {
+      setBusy(false);
+      setOverlay(false);
+      setFixedOtp({ stateId: registerState.stateId, whatsapp });
       return;
     }
     if (registerState?.status === "already_registered") {
@@ -356,7 +374,7 @@ export function LoginForm({
       setOverlay(false);
       setDemoPending(null);
     }
-  }, [registerState]);
+  }, [registerState, whatsapp]);
 
   useEffect(() => {
     const success =
@@ -495,6 +513,19 @@ export function LoginForm({
                       جاري التحميل…
                     </p>
                   </div>
+                ) : fixedOtp ? (
+                  <FixedOtpStep
+                    stateId={fixedOtp.stateId}
+                    whatsapp={fixedOtp.whatsapp}
+                    onSuccess={(role) => {
+                      setOverlay(true);
+                      window.location.assign(
+                        role === "TEACHER"
+                          ? "/teacher/dashboard"
+                          : "/dashboard"
+                      );
+                    }}
+                  />
                 ) : showLinkPanel ? (
                   <form
                     action={linkAction}
@@ -596,6 +627,32 @@ export function LoginForm({
                       value="login"
                       className="mt-0 data-[hidden]:hidden"
                     >
+                      {fixedOtpEnabled ? (
+                        <form
+                          action={otpAction}
+                          className={fieldGap}
+                          onSubmit={() => {
+                            startTopNavLoader();
+                            setBusy(true);
+                            setOverlay(true);
+                          }}
+                        >
+                          <PendingWatcher onPendingChange={markPending} />
+                          <WhatsAppField
+                            id="login_whatsapp"
+                            value={whatsapp}
+                            onChange={setWhatsapp}
+                            spekitProps={spekit(SPEKIT.loginWhatsappField)}
+                          />
+                          <SubmitButton
+                            label="إرسال رمز التحقق"
+                            pendingLabel="جاري الإرسال..."
+                            icon={LogIn}
+                            spekitId={SPEKIT.loginOtpCta}
+                            forceDisabled={isBusy}
+                          />
+                        </form>
+                      ) : (
                       <div className={fieldGap}>
                         <p className="text-sm leading-relaxed text-muted-foreground">
                           سجّل الدخول عبر واتساب على صفحة التحقق — ثم نعيدك
@@ -619,6 +676,7 @@ export function LoginForm({
                           تسجيل الدخول عبر واتساب
                         </a>
                       </div>
+                      )}
                     </TabsContent>
 
                     <TabsContent

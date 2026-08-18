@@ -89,4 +89,5 @@ jobs:
         env:
           PLAYWRIGHT_PORT: "3099"
           AUTH_DEMO_BYPASS: "true"
+          E2E_FORCE_DEMO_MODE: "true"
           E2E_SKIP_AUTHED: "true"
