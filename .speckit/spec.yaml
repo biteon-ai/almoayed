@@ -169,6 +169,43 @@ features:
       FIX-AUTH-002 alias for closing prior gaps (email already checked inactive; OTP/demo/emergency did not).
     spekit: [login-form]
 
+  - id: AUTH-008
+    name: Fast Student Trial Join (OTP skip for new WhatsApp)
+    status: implemented
+    persona: [STUDENT, PUBLIC]
+    routes: ["/join/[code]", "/api/auth/biteonswitch/callback"]
+    extends: [AUTH-001, AUTH-003, AUTH-004, AUTH-007, MT-001, MT-002, PROFILE-002, TIER-001]
+    files:
+      - src/lib/trial-join.ts
+      - src/lib/trial-join-messages.ts
+      - src/lib/trial-join-link.ts
+      - src/lib/trial-join-server.ts
+      - src/actions/join.ts
+      - src/actions/biteonswitch.ts
+      - src/app/join/[code]/page.tsx
+      - src/app/join/[code]/join-form.tsx
+      - src/app/api/auth/biteonswitch/callback/route.ts
+      - supabase/migrations/016_trial_join_otp_code.sql
+      - tests/features/auth-008-trial-join.test.ts
+      - e2e/auth-008-join.spec.ts
+    acceptance:
+      - Public /join/[teacherCode] shows RTL Arabic form (first/last name, education stage, birth date, WhatsApp)
+      - New WhatsApp with no profile creates student + active/free student_teachers link + iron-session without OTP
+      - Sets onboarding_completed true and profile_completed false (PROFILE-002 gate preserved)
+      - Existing student WhatsApp on join form does not mint session; starts BiteonSwitch OTP with join_teacher_code
+      - OTP callback upserts active link to referring teacher and sets currentTeacherId
+      - Teacher WhatsApp on join form refused with Arabic guidance
+      - Inactive teacher join address refused (AUTH-007)
+      - AUTH-002 /login registration unchanged (still requires OTP)
+    spekit:
+      - join-form
+      - join-first-name
+      - join-last-name
+      - join-class-level
+      - join-birth-date
+      - join-whatsapp
+      - join-submit
+
   - id: ADMIN-001
     name: Super Admin Dashboard
     status: implemented
@@ -678,6 +715,29 @@ features:
       - TXT and CSV import remain unchanged (TEACH-004)
     spekit: [import-excel-template-download, import-docx-template-download]
     notes: Extends TEACH-004; Word primary CTA was previously a .txt download
+
+  - id: TEACH-015
+    name: Teacher Trial Onboarding Invite Link
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/dashboard", "/teacher/students"]
+    extends: [TEACH-005]
+    files:
+      - src/components/teacher/TrialInviteCard.tsx
+      - src/lib/trial-join.ts
+      - src/app/teacher/(portal)/dashboard/page.tsx
+      - src/app/teacher/(portal)/students/page.tsx
+      - tests/features/teach-015-invite-link.test.ts
+    acceptance:
+      - Dashboard teacher-code-card shows full /join/[teacherCode] URL
+      - Copy places full URL on clipboard with Arabic confirmation
+      - WhatsApp share opens preset Arabic text with join link (api.whatsapp.com)
+      - Compact invite card on /teacher/students
+      - Distinct join URL per teacher classroom code
+    spekit:
+      - teacher-code-card
+      - trial-invite-copy
+      - trial-invite-whatsapp
 
   - id: TEACH-013
     name: Quick Text Paste Bulk Question Import

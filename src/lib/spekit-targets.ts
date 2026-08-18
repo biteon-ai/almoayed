@@ -19,6 +19,17 @@ export const SPEKIT = {
   activeLoginLoader: "active-login-loader",
   adminLoginForm: "admin-login-form",
 
+  // ── AUTH-008 / TEACH-015 trial join ──────────────────────────
+  joinForm: "join-form",
+  joinFirstName: "join-first-name",
+  joinLastName: "join-last-name",
+  joinClassLevel: "join-class-level",
+  joinBirthDate: "join-birth-date",
+  joinWhatsapp: "join-whatsapp",
+  joinSubmit: "join-submit",
+  trialInviteCopy: "trial-invite-copy",
+  trialInviteWhatsapp: "trial-invite-whatsapp",
+
   // ── UI-010 PWA install ───────────────────────────────────────
   pwaInstallButtons: "pwa-install-buttons",
   pwaInstallAndroid: "pwa-install-android",

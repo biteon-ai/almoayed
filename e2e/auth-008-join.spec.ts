@@ -1,0 +1,30 @@
+import { expect, test } from "@playwright/test";
+
+const AUTH = "[AUTH-008]";
+
+test.describe(`${AUTH} public trial join page`, () => {
+  test("join page renders Arabic form for demo teacher code", async ({
+    page,
+  }) => {
+    await page.goto("/join/AlMoayed-DEMO");
+
+    await expect(page.locator('[data-spekit="join-form"]')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText("الاسم الأول")).toBeVisible();
+    await expect(page.getByText("الكنية")).toBeVisible();
+    await expect(page.getByText("المرحلة الدراسية")).toBeVisible();
+    await expect(page.locator('[data-spekit="join-submit"]')).toBeVisible();
+
+    const dir = await page.locator("html").getAttribute("dir");
+    expect(dir).toBe("rtl");
+  });
+
+  test("invalid join code shows Arabic error", async ({ page }) => {
+    await page.goto("/join/not-a-valid-code-xyz");
+
+    await expect(page.getByText("الرابط غير صالح")).toBeVisible({
+      timeout: 15000,
+    });
+  });
+});

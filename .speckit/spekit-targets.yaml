@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 76
+  total_targets: 86
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -60,6 +60,19 @@ AUTH-005:
 AUTH-006:
   login-loading: "Full-screen login / redirect loading overlay + top progress cue"
   active-login-loader: "Active trickle progress bar during login Server Actions"
+
+AUTH-008:
+  join-form: "Public trial join form at /join/[code]"
+  join-first-name: "Trial join — first name field"
+  join-last-name: "Trial join — last name field"
+  join-class-level: "Trial join — education stage selector"
+  join-birth-date: "Trial join — birth date field"
+  join-whatsapp: "Trial join — WhatsApp field"
+  join-submit: "Trial join — submit button"
+
+TEACH-015:
+  trial-invite-copy: "Teacher invite card — copy join URL"
+  trial-invite-whatsapp: "Teacher invite card — WhatsApp share CTA"
 
 # ── Multi-tenant ────────────────────────────────────────────────
 MT-002:
