@@ -1,163 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isOtpStateExpired,
-  roleHomePath,
   verifyCallbackToken,
   whatsappFromBiteonToken,
 } from "@/lib/biteonswitch/client";
+import { getAuthSupabaseClient } from "@/lib/auth-session";
+import { logAuthFailure } from "@/lib/auth-error-codes";
 import {
-  establishSession,
-  getAuthSupabaseClient,
-  savePendingTeacherLinkSession,
-} from "@/lib/auth-session";
-import { AuthErrorCode, logAuthFailure } from "@/lib/auth-error-codes";
-import { assertCanEstablishSession } from "@/lib/account-access";
-import { resolveTeacherForJoinCode } from "@/lib/trial-join-server";
-import { upsertActiveStudentTeacherLink } from "@/lib/trial-join-link";
-import { isJoinTeacherActive } from "@/lib/trial-join";
-import type { Profile } from "@/types/database";
+  completeWhatsAppLogin,
+  completeWhatsAppLoginRedirect,
+} from "@/lib/auth-otp-complete";
 
 function loginErrorRedirect(request: NextRequest, error: string) {
   const url = new URL("/login", request.url);
   url.searchParams.set("error", error);
   url.searchParams.set("tab", "login");
   return NextResponse.redirect(url);
-}
-
-async function finishLogin(
-  request: NextRequest,
-  whatsappNumber: string,
-  joinTeacherCode?: string | null
-) {
-  const supabase = getAuthSupabaseClient();
-  if (!supabase) {
-    return loginErrorRedirect(request, "otp_unavailable");
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("whatsapp_number", whatsappNumber)
-    .maybeSingle<Profile>();
-
-  if (profileError) {
-    logAuthFailure("OTP_PROFILE_FETCH_FAILED", profileError);
-    return loginErrorRedirect(request, "otp_unavailable");
-  }
-
-  if (!profile) {
-    return loginErrorRedirect(request, "register_required");
-  }
-
-  let teacherId: string | null = null;
-  if (profile.role === "STUDENT") {
-    const { data: links, error: linksError } = await supabase
-      .from("student_teachers")
-      .select("teacher_id, status, created_at")
-      .eq("student_id", profile.id)
-      .order("created_at", { ascending: true });
-
-    if (linksError) {
-      logAuthFailure("OTP_LINKS_FETCH_FAILED", linksError);
-      return loginErrorRedirect(request, "otp_unavailable");
-    }
-
-    if (!links || links.length === 0) {
-      if (joinTeacherCode) {
-        const referring = await resolveTeacherForJoinCode(
-          joinTeacherCode,
-          supabase
-        );
-        if (referring && isJoinTeacherActive(referring)) {
-          const linkResult = await upsertActiveStudentTeacherLink(
-            supabase,
-            profile.id,
-            referring.id,
-            { preserveProTier: true }
-          );
-          if (linkResult.ok) {
-            teacherId = referring.id;
-          }
-        }
-      }
-
-      if (!teacherId) {
-        // AUTH-002: limited pending-teacher session — not AUTH-007 inactive.
-        const pending = await savePendingTeacherLinkSession(profile);
-        if ("status" in pending && pending.status === "error") {
-          return loginErrorRedirect(request, "otp_unavailable");
-        }
-        const url = new URL("/login", request.url);
-        url.searchParams.set("tab", "login");
-        url.searchParams.set("needs_teacher", "1");
-        return NextResponse.redirect(url);
-      }
-    } else {
-      const access = await assertCanEstablishSession(
-        profile.id,
-        profile.role,
-        supabase
-      );
-      if (!access.ok) {
-        return loginErrorRedirect(request, "account_inactive");
-      }
-
-      const active = links.find((l) => l.status === "active");
-      let referringTeacherId: string | null =
-        access.teacherId ?? active?.teacher_id ?? links[0]?.teacher_id ?? null;
-
-      if (joinTeacherCode) {
-        const referring = await resolveTeacherForJoinCode(
-          joinTeacherCode,
-          supabase
-        );
-        if (referring && isJoinTeacherActive(referring)) {
-          const linkResult = await upsertActiveStudentTeacherLink(
-            supabase,
-            profile.id,
-            referring.id,
-            { preserveProTier: true }
-          );
-          if (linkResult.ok) {
-            referringTeacherId = referring.id;
-          }
-        }
-      }
-
-      teacherId = referringTeacherId;
-    }
-
-    if (teacherId) {
-      const access = await assertCanEstablishSession(
-        profile.id,
-        profile.role,
-        supabase
-      );
-      if (!access.ok) {
-        return loginErrorRedirect(request, "account_inactive");
-      }
-    }
-  } else if (profile.role === "TEACHER") {
-    const access = await assertCanEstablishSession(
-      profile.id,
-      profile.role,
-      supabase
-    );
-    if (!access.ok) {
-      return loginErrorRedirect(request, "account_inactive");
-    }
-  }
-
-  const sessionResult = await establishSession(profile, teacherId, supabase);
-  if ("status" in sessionResult && sessionResult.status === "error") {
-    if (sessionResult.code === AuthErrorCode.ACCOUNT_INACTIVE) {
-      return loginErrorRedirect(request, "account_inactive");
-    }
-    return loginErrorRedirect(request, "otp_unavailable");
-  }
-
-  const { role } = sessionResult as { role: "TEACHER" | "STUDENT" };
-  return NextResponse.redirect(new URL(roleHomePath(role), request.url));
 }
 
 /**
@@ -173,13 +31,13 @@ export async function GET(request: NextRequest) {
     return loginErrorRedirect(request, "otp_invalid");
   }
 
-  // Hosted Login return: JWT in query (forwarded from #access_token on /login).
   if (!state) {
     const phone = whatsappFromBiteonToken(token);
     if (!phone) {
       return loginErrorRedirect(request, "otp_invalid");
     }
-    return finishLogin(request, phone);
+    const result = await completeWhatsAppLogin(phone);
+    return completeWhatsAppLoginRedirect(request.url, result);
   }
 
   const supabase = getAuthSupabaseClient();
@@ -212,7 +70,6 @@ export async function GET(request: NextRequest) {
 
   const verified = await verifyCallbackToken({ token, state });
   if (!verified.ok) {
-    // Prefer JWT phone if legacy verify API is not configured.
     const fromJwt = whatsappFromBiteonToken(token);
     if (fromJwt) {
       const { data: consumed } = await supabase
@@ -228,7 +85,11 @@ export async function GET(request: NextRequest) {
       if (!consumed) {
         return loginErrorRedirect(request, "otp_replay");
       }
-      return finishLogin(request, fromJwt, stateRow.join_teacher_code);
+      const result = await completeWhatsAppLogin(
+        fromJwt,
+        stateRow.join_teacher_code
+      );
+      return completeWhatsAppLoginRedirect(request.url, result);
     }
     return loginErrorRedirect(
       request,
@@ -256,9 +117,9 @@ export async function GET(request: NextRequest) {
     return loginErrorRedirect(request, "otp_replay");
   }
 
-  return finishLogin(
-    request,
+  const result = await completeWhatsAppLogin(
     verified.whatsappNumber,
     stateRow.join_teacher_code
   );
+  return completeWhatsAppLoginRedirect(request.url, result);
 }

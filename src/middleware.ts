@@ -20,8 +20,21 @@ function matchesPrefix(pathname: string, prefixes: string[]) {
   );
 }
 
+function isNextServerAction(request: NextRequest): boolean {
+  // Next.js Server Actions POST to the current page. A middleware redirect
+  // (307) cannot be forwarded as an action result — the client gets undefined.
+  return (
+    request.method === "POST" &&
+    (request.headers.has("next-action") || request.headers.has("Next-Action"))
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (isNextServerAction(request)) {
+    return NextResponse.next();
+  }
 
   const isSettingsRoute =
     pathname === "/settings" || pathname.startsWith("/settings/");

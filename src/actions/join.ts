@@ -28,6 +28,7 @@ import type { Profile } from "@/types/database";
 export type JoinState =
   | { status: "success"; role: "STUDENT" }
   | { status: "redirect"; redirectUrl: string }
+  | { status: "fixed_otp_required"; stateId: string; whatsapp: string }
   | { status: "error"; code: AuthErrorCode; message?: string };
 
 function joinFieldsFromFormData(formData: FormData): {
@@ -58,6 +59,13 @@ async function startJoinOtpRedirect(
   const otp = await startBiteonSwitchOtp(null, fd);
   if (otp.status === "redirect") {
     return { status: "redirect", redirectUrl: otp.redirectUrl };
+  }
+  if (otp.status === "fixed_otp_required") {
+    return {
+      status: "fixed_otp_required",
+      stateId: otp.stateId,
+      whatsapp,
+    };
   }
   return authError(
     otp.status === "error" ? otp.code : AuthErrorCode.OTP_UNAVAILABLE

@@ -8,6 +8,7 @@ export type LoginState =
   | { status: "registered"; next: "otp" }
   | { status: "already_registered" }
   | { status: "redirect"; redirectUrl: string }
+  | { status: "fixed_otp_required"; stateId: string }
   | { status: "needs_teacher_link" }
   | {
       status: "needs_verification";

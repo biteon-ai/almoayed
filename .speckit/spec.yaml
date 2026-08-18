@@ -245,6 +245,41 @@ features:
       - admin-impersonation-banner
       - teacher-email-login-form
 
+  - id: ADMIN-002
+    name: Admin Global Platform Settings
+    status: implemented
+    persona: [SUPER_ADMIN]
+    routes: ["/admin/settings"]
+    files:
+      - supabase/migrations/018_platform_settings.sql
+      - src/lib/platform-settings.ts
+      - src/lib/platform-settings-messages.ts
+      - src/lib/auth-otp-complete.ts
+      - src/actions/platform-settings.ts
+      - src/actions/auth-otp.ts
+      - src/actions/biteonswitch.ts
+      - src/actions/login.ts
+      - src/app/admin/(portal)/settings/page.tsx
+      - src/components/admin/PlatformSettingsForm.tsx
+      - src/app/login/page.tsx
+      - src/app/login/login-form.tsx
+      - src/components/login/FixedOtpStep.tsx
+      - src/app/join/[code]/join-form.tsx
+      - tests/features/admin-002-platform-settings.test.ts
+      - e2e/admin-002-settings.spec.ts
+    acceptance:
+      - Super Admin views and toggles demo_mode_enabled and fixed_otp_enabled at /admin/settings
+      - Demo Mode off hides تجربة and refuses demo shortcut login
+      - Fixed OTP on accepts the configured test code without BiteonSwitch dispatch
+      - Fixed OTP off requires real WhatsApp verification
+      - Non-admins cannot read or update platform settings
+    spekit:
+      - admin-platform-settings
+      - admin-demo-mode-switch
+      - admin-fixed-otp-switch
+      - admin-fixed-otp-code
+      - login-fixed-otp-field
+
   - id: PROFILE-001
     name: User Profile & Settings
     status: implemented

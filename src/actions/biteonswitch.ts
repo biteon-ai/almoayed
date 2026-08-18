@@ -15,9 +15,14 @@ import {
 } from "@/lib/biteonswitch/config";
 import { getAuthSupabaseClient } from "@/lib/auth-session";
 import { normalizeWhatsAppNumber } from "@/lib/constants";
+import {
+  getPlatformSettings,
+  isFixedOtpUsableFromSettings,
+} from "@/lib/platform-settings";
 
 export type StartOtpState =
   | { status: "redirect"; redirectUrl: string }
+  | { status: "fixed_otp_required"; stateId: string }
   | { status: "error"; code: typeof AuthErrorCode.OTP_UNAVAILABLE | typeof AuthErrorCode.MISSING_WHATSAPP | typeof AuthErrorCode.INVALID_WHATSAPP | typeof AuthErrorCode.LOGIN_UNEXPECTED };
 
 /** AUTH-001: create otp state and return hosted BiteonSwitch URL (mock or live). */
@@ -26,11 +31,6 @@ export async function startBiteonSwitchOtp(
   formData: FormData
 ): Promise<StartOtpState> {
   try {
-    const config = getBiteonSwitchConfig();
-    if (!isBiteonSwitchConfigured(config)) {
-      return authError(AuthErrorCode.OTP_UNAVAILABLE) as StartOtpState;
-    }
-
     const rawNumber = formData.get("whatsapp_number");
     let whatsappHint: string | undefined;
 
@@ -41,8 +41,22 @@ export async function startBiteonSwitchOtp(
       }
     }
 
-    // Mock mode requires a WhatsApp hint to complete the bounce callback
-    if (config.mock && !whatsappHint) {
+    const settings = await getPlatformSettings();
+    const fixedOtpOn = settings.fixedOtpEnabled;
+    if (fixedOtpOn && !isFixedOtpUsableFromSettings(settings)) {
+      return authError(AuthErrorCode.OTP_UNAVAILABLE) as StartOtpState;
+    }
+
+    const config = getBiteonSwitchConfig();
+    if (!fixedOtpOn && !isBiteonSwitchConfigured(config)) {
+      return authError(AuthErrorCode.OTP_UNAVAILABLE) as StartOtpState;
+    }
+
+    if (!fixedOtpOn && config.mock && !whatsappHint) {
+      return authError(AuthErrorCode.MISSING_WHATSAPP) as StartOtpState;
+    }
+
+    if (fixedOtpOn && !whatsappHint) {
       return authError(AuthErrorCode.MISSING_WHATSAPP) as StartOtpState;
     }
 
@@ -69,6 +83,10 @@ export async function startBiteonSwitchOtp(
     if (insertError || !stateRow) {
       logAuthFailure("OTP_STATE_INSERT_FAILED", insertError);
       return authError(AuthErrorCode.OTP_UNAVAILABLE) as StartOtpState;
+    }
+
+    if (isFixedOtpUsableFromSettings(settings)) {
+      return { status: "fixed_otp_required", stateId: stateRow.id };
     }
 
     const redirectUrl = buildHostedLoginUrl({

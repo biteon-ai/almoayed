@@ -203,6 +203,15 @@ export const SPEKIT = {
   adminImpersonationExit: "admin-impersonation-exit",
   teacherEmailLoginForm: "teacher-email-login-form",
 
+  // ── ADMIN-002 ────────────────────────────────────────────────
+  adminNavSettings: "admin-nav-settings",
+  adminPlatformSettings: "admin-platform-settings",
+  adminDemoModeSwitch: "admin-demo-mode-switch",
+  adminFixedOtpSwitch: "admin-fixed-otp-switch",
+  adminFixedOtpCode: "admin-fixed-otp-code",
+  adminSettingsSave: "admin-settings-save",
+  loginFixedOtpField: "login-fixed-otp-field",
+
   // ── MT-003 ───────────────────────────────────────────────────
   unlinkStudentAction: "unlink-student-action",
   adminNavStudents: "admin-nav-students",

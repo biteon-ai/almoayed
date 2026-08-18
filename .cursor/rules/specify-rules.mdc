@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/024-trial-onboarding-link/plan.md`
+**Active plan**: `specs/025-admin-platform-settings/plan.md`
 
 Related artifacts:
-- Spec: `specs/024-trial-onboarding-link/spec.md`
-- Research: `specs/024-trial-onboarding-link/research.md`
-- Data model: `specs/024-trial-onboarding-link/data-model.md`
-- Contracts: `specs/024-trial-onboarding-link/contracts/`
-- Quickstart: `specs/024-trial-onboarding-link/quickstart.md`
+- Spec: `specs/025-admin-platform-settings/spec.md`
+- Research: `specs/025-admin-platform-settings/research.md`
+- Data model: `specs/025-admin-platform-settings/data-model.md`
+- Contracts: `specs/025-admin-platform-settings/contracts/`
+- Quickstart: `specs/025-admin-platform-settings/quickstart.md`
 <!-- SPECKIT END -->
