@@ -12,6 +12,9 @@ import {
 } from "@/lib/auth-session";
 import { AuthErrorCode, logAuthFailure } from "@/lib/auth-error-codes";
 import { assertCanEstablishSession } from "@/lib/account-access";
+import { resolveTeacherForJoinCode } from "@/lib/trial-join-server";
+import { upsertActiveStudentTeacherLink } from "@/lib/trial-join-link";
+import { isJoinTeacherActive } from "@/lib/trial-join";
 import type { Profile } from "@/types/database";
 
 function loginErrorRedirect(request: NextRequest, error: string) {
@@ -23,7 +26,8 @@ function loginErrorRedirect(request: NextRequest, error: string) {
 
 async function finishLogin(
   request: NextRequest,
-  whatsappNumber: string
+  whatsappNumber: string,
+  joinTeacherCode?: string | null
 ) {
   const supabase = getAuthSupabaseClient();
   if (!supabase) {
@@ -59,29 +63,80 @@ async function finishLogin(
     }
 
     if (!links || links.length === 0) {
-      // AUTH-002: limited pending-teacher session — not AUTH-007 inactive.
-      const pending = await savePendingTeacherLinkSession(profile);
-      if ("status" in pending && pending.status === "error") {
-        return loginErrorRedirect(request, "otp_unavailable");
+      if (joinTeacherCode) {
+        const referring = await resolveTeacherForJoinCode(
+          joinTeacherCode,
+          supabase
+        );
+        if (referring && isJoinTeacherActive(referring)) {
+          const linkResult = await upsertActiveStudentTeacherLink(
+            supabase,
+            profile.id,
+            referring.id,
+            { preserveProTier: true }
+          );
+          if (linkResult.ok) {
+            teacherId = referring.id;
+          }
+        }
       }
-      const url = new URL("/login", request.url);
-      url.searchParams.set("tab", "login");
-      url.searchParams.set("needs_teacher", "1");
-      return NextResponse.redirect(url);
+
+      if (!teacherId) {
+        // AUTH-002: limited pending-teacher session — not AUTH-007 inactive.
+        const pending = await savePendingTeacherLinkSession(profile);
+        if ("status" in pending && pending.status === "error") {
+          return loginErrorRedirect(request, "otp_unavailable");
+        }
+        const url = new URL("/login", request.url);
+        url.searchParams.set("tab", "login");
+        url.searchParams.set("needs_teacher", "1");
+        return NextResponse.redirect(url);
+      }
+    } else {
+      const access = await assertCanEstablishSession(
+        profile.id,
+        profile.role,
+        supabase
+      );
+      if (!access.ok) {
+        return loginErrorRedirect(request, "account_inactive");
+      }
+
+      const active = links.find((l) => l.status === "active");
+      let referringTeacherId: string | null =
+        access.teacherId ?? active?.teacher_id ?? links[0]?.teacher_id ?? null;
+
+      if (joinTeacherCode) {
+        const referring = await resolveTeacherForJoinCode(
+          joinTeacherCode,
+          supabase
+        );
+        if (referring && isJoinTeacherActive(referring)) {
+          const linkResult = await upsertActiveStudentTeacherLink(
+            supabase,
+            profile.id,
+            referring.id,
+            { preserveProTier: true }
+          );
+          if (linkResult.ok) {
+            referringTeacherId = referring.id;
+          }
+        }
+      }
+
+      teacherId = referringTeacherId;
     }
 
-    const access = await assertCanEstablishSession(
-      profile.id,
-      profile.role,
-      supabase
-    );
-    if (!access.ok) {
-      return loginErrorRedirect(request, "account_inactive");
+    if (teacherId) {
+      const access = await assertCanEstablishSession(
+        profile.id,
+        profile.role,
+        supabase
+      );
+      if (!access.ok) {
+        return loginErrorRedirect(request, "account_inactive");
+      }
     }
-
-    const active = links.find((l) => l.status === "active");
-    teacherId =
-      access.teacherId ?? active?.teacher_id ?? links[0]?.teacher_id ?? null;
   } else if (profile.role === "TEACHER") {
     const access = await assertCanEstablishSession(
       profile.id,
@@ -134,7 +189,7 @@ export async function GET(request: NextRequest) {
 
   const { data: stateRow, error: stateError } = await supabase
     .from("auth_otp_states")
-    .select("id, created_at, consumed_at, whatsapp_hint")
+    .select("id, created_at, consumed_at, whatsapp_hint, join_teacher_code")
     .eq("id", state)
     .maybeSingle();
 
@@ -173,7 +228,7 @@ export async function GET(request: NextRequest) {
       if (!consumed) {
         return loginErrorRedirect(request, "otp_replay");
       }
-      return finishLogin(request, fromJwt);
+      return finishLogin(request, fromJwt, stateRow.join_teacher_code);
     }
     return loginErrorRedirect(
       request,
@@ -201,5 +256,9 @@ export async function GET(request: NextRequest) {
     return loginErrorRedirect(request, "otp_replay");
   }
 
-  return finishLogin(request, verified.whatsappNumber);
+  return finishLogin(
+    request,
+    verified.whatsappNumber,
+    stateRow.join_teacher_code
+  );
 }

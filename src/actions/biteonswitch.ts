@@ -51,10 +51,17 @@ export async function startBiteonSwitchOtp(
       return authError(AuthErrorCode.OTP_UNAVAILABLE) as StartOtpState;
     }
 
+    const joinTeacherCodeRaw = formData.get("join_teacher_code");
+    const joinTeacherCode =
+      typeof joinTeacherCodeRaw === "string" && joinTeacherCodeRaw.trim()
+        ? joinTeacherCodeRaw.trim()
+        : null;
+
     const { data: stateRow, error: insertError } = await supabase
       .from("auth_otp_states")
       .insert({
         whatsapp_hint: whatsappHint ?? null,
+        join_teacher_code: joinTeacherCode,
       })
       .select("id")
       .single();
