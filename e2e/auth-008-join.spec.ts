@@ -1,12 +1,24 @@
 import { expect, test } from "@playwright/test";
+import {
+  resolveDemoTeacherJoinCode,
+  shouldSkipLiveSupabase,
+} from "./helpers/demo-login";
 
 const AUTH = "[AUTH-008]";
 
 test.describe(`${AUTH} public trial join page`, () => {
   test("join page renders Arabic form for demo teacher code", async ({
     page,
+    context,
   }) => {
-    await page.goto("/join/AlMoayed-DEMO");
+    test.skip(
+      shouldSkipLiveSupabase(),
+      "Needs live Supabase for demo teacher lookup"
+    );
+
+    const teacherCode = await resolveDemoTeacherJoinCode(page);
+    await context.clearCookies();
+    await page.goto(`/join/${teacherCode}`);
 
     await expect(page.locator('[data-spekit="join-form"]')).toBeVisible({
       timeout: 15000,

@@ -198,6 +198,17 @@ async function ensureDemoTeacher(
         error: authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED),
       };
     }
+
+    try {
+      await supabase
+        .from("profiles")
+        .update({ teacher_code: DEMO_TEACHER.teacher_code })
+        .eq("id", DEMO_TEACHER_ID)
+        .neq("teacher_code", DEMO_TEACHER.teacher_code);
+    } catch (error) {
+      logAuthFailure("DEMO_TEACHER_CODE_SYNC_FAILED", error);
+    }
+
     return { ok: true, profile: existing.profile };
   }
 

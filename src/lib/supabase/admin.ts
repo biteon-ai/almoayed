@@ -21,7 +21,11 @@ function fetchWithTimeout(
     }
   }
 
-  return fetch(input, { ...init, signal: controller.signal }).finally(() => {
+  return fetch(input, {
+    ...init,
+    signal: controller.signal,
+    cache: "no-store",
+  }).finally(() => {
     clearTimeout(timeoutId);
   });
 }
