@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   codesMatch,
+  isDemoModeEnabled,
   isFixedOtpUsableFromSettings,
   isValidFixedOtpCode,
   parseFixedOtpCode,
@@ -97,5 +98,19 @@ describe(`${FEATURE} platform settings helpers`, () => {
         fixedOtpCode: next,
       })
     ).toBe(false);
+  });
+
+  it("honors E2E_FORCE_DEMO_MODE without reading the store", async () => {
+    const previous = process.env.E2E_FORCE_DEMO_MODE;
+    process.env.E2E_FORCE_DEMO_MODE = "true";
+    try {
+      await expect(isDemoModeEnabled()).resolves.toBe(true);
+    } finally {
+      if (previous === undefined) {
+        delete process.env.E2E_FORCE_DEMO_MODE;
+      } else {
+        process.env.E2E_FORCE_DEMO_MODE = previous;
+      }
+    }
   });
 });

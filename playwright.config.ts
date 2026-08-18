@@ -29,12 +29,15 @@ export default defineConfig({
     : {
         command: `npm run build && npm run start -- -p ${PORT}`,
         url: BASE_URL,
-        reuseExistingServer: !process.env.CI,
+        // Always start this process so E2E_FORCE_DEMO_MODE is set. Reusing a
+        // leftover :3099 from `next dev` (Demo Mode off) hides «حساب تجريبي».
+        reuseExistingServer: false,
         timeout: 120_000,
         env: {
           ...process.env,
           // next start is NODE_ENV=production; keep demo shortcuts for e2e QA
           AUTH_DEMO_BYPASS: "true",
+          E2E_FORCE_DEMO_MODE: "true",
         },
       },
 });

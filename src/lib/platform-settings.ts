@@ -129,6 +129,9 @@ export async function refreshPlatformSettings(): Promise<PlatformSettings> {
 }
 
 export async function isDemoModeEnabled(): Promise<boolean> {
+  // Playwright webServer only — AUTH-001/FIX-AUTH-001 demo shortcuts stay
+  // available even when the live platform_settings row is off.
+  if (process.env.E2E_FORCE_DEMO_MODE === "true") return true;
   const settings = await getPlatformSettings();
   return settings.demoModeEnabled;
 }

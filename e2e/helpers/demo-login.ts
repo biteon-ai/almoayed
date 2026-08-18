@@ -9,18 +9,23 @@ export function shouldSkipLiveSupabase(): boolean {
   return isCi && (!url || url.includes("example.supabase.co"));
 }
 
+async function openDemoTab(page: Page): Promise<void> {
+  await page.goto("/login");
+  const tab = page.getByRole("tab", { name: "حساب تجريبي" });
+  await expect(tab).toBeVisible({ timeout: 15_000 });
+  await tab.click();
+}
+
 /** Shared demo-student login for authed e2e (FIX-AUTH-001). */
 export async function loginAsDemoStudent(page: Page): Promise<void> {
-  await page.goto("/login");
-  await page.getByRole("tab", { name: "حساب تجريبي" }).click();
+  await openDemoTab(page);
   await page.locator('[data-spekit="login-demo-student"]').click();
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
   await expect(page).toHaveURL(/\/dashboard/);
 }
 
 export async function loginAsDemoTeacher(page: Page): Promise<void> {
-  await page.goto("/login");
-  await page.getByRole("tab", { name: "حساب تجريبي" }).click();
+  await openDemoTab(page);
   await page.locator('[data-spekit="login-demo-teacher"]').click();
   await page.waitForURL(/\/teacher\/dashboard/, { timeout: 20_000 });
   await expect(page).toHaveURL(/\/teacher\/dashboard/);
