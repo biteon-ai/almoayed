@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ClipboardCopy,
   ClipboardPaste,
+  Info,
   Loader2,
   Settings2,
   XCircle,
@@ -17,6 +18,7 @@ import {
   QUICK_PASTE_SAMPLE_FORMAT,
   type ParsedQuizSettings,
   type QuickPasteDraft,
+  type QuickPasteMathNotice,
 } from "@/lib/import-text";
 import { ASSESSMENT_CATEGORY_LABELS } from "@/lib/quiz-attempts";
 import { SPEKIT } from "@/lib/spekit-targets";
@@ -109,6 +111,27 @@ function SettingsPreviewCard({ settings }: { settings: ParsedQuizSettings }) {
   );
 }
 
+function MathNoticeBanner({ notice }: { notice: QuickPasteMathNotice }) {
+  if (!notice.hadLatexInput && !notice.residualLatex) return null;
+
+  const message = notice.residualLatex
+    ? "تم تبسيط الرموز الرياضية الشائعة. أي أوامر LaTeX متبقية ستظهر كنص عادي."
+    : "تم تحويل الرموز الرياضية إلى نص مقروء.";
+
+  return (
+    <div
+      className="shrink-0 rounded-xl border border-sky-200/80 bg-sky-50/90 px-3 py-2.5 text-xs leading-relaxed text-sky-950 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-100"
+      data-spekit={SPEKIT.quickTextPasteMathNotice}
+      role="status"
+    >
+      <div className="flex items-start gap-2">
+        <Info className="mt-0.5 size-3.5 shrink-0 text-sky-700 dark:text-sky-300" />
+        <p className="font-medium">{message}</p>
+      </div>
+    </div>
+  );
+}
+
 export function QuickTextPasteDialog({
   quizId,
   open,
@@ -125,6 +148,7 @@ export function QuickTextPasteDialog({
   const document = useMemo(() => parseQuickPasteDocument(text), [text]);
   const drafts: QuickPasteDraft[] = document.drafts;
   const settings = document.settings;
+  const mathNotice = document.mathNotice;
   const validCount = drafts.filter((d) => d.valid).length;
   const invalidCount = drafts.length - validCount;
 
@@ -321,6 +345,8 @@ export function QuickTextPasteDialog({
               {settings?.present ? (
                 <SettingsPreviewCard settings={settings} />
               ) : null}
+
+              <MathNoticeBanner notice={mathNotice} />
 
               {drafts.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/80 bg-background/60 px-6 py-10 text-center">
