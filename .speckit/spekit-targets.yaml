@@ -231,6 +231,7 @@ TEACH-014:
 
 TEACH-016:
   quick-text-paste-math-notice: "Plain-math / residual LaTeX notice in paste dialog"
+  quick-text-paste-llm-prompt: "Copy LLM formatting prompt for Gemini/ChatGPT paste"
 
 # ── Profile & settings ──────────────────────────────────────────
 PROFILE-001:

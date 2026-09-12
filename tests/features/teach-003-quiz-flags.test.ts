@@ -44,7 +44,7 @@ describe(`${FEATURE} Quiz activation flags`, () => {
       }
     );
     resolveTableQuery(quizzesTable, {
-      data: { id: "quiz-new-001" },
+      data: { id: "quiz-new-001", slug: "اختبار-تجريبي-quiznew0" },
       error: null,
     });
 
@@ -54,8 +54,11 @@ describe(`${FEATURE} Quiz activation flags`, () => {
     formData.set("is_active", "on");
     formData.set("is_free", "on");
 
-    const id = await createQuiz(formData);
-    expect(id).toBe("quiz-new-001");
+    const created = await createQuiz(formData);
+    expect(created).toEqual({
+      id: "quiz-new-001",
+      slug: "اختبار-تجريبي-quiznew0",
+    });
     expect(inserted?.is_active).toBe(false);
   });
 

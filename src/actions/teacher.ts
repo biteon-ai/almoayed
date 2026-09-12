@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  buildQuizSlug,
+  isQuizUuidParam,
+  teacherQuizHref,
+} from "@/lib/teacher-quiz-path";
 import { requireTeacher } from "@/lib/auth";
 import {
   decodeImportTextBuffer,
@@ -60,6 +65,10 @@ import { QUIZ_PAGE_SIZE, STUDENT_PAGE_SIZE } from "@/lib/paginate-students";
 
 function teacherId(session: { profileId: string }) {
   return session.profileId;
+}
+
+function revalidateTeacherQuizDetail(slug: string) {
+  revalidatePath(teacherQuizHref(slug));
 }
 
 export async function getTeacherProfile() {
@@ -657,7 +666,7 @@ export async function updateQuizGroupAssignments(
 
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("id, created_by")
+    .select("id, slug, created_by")
     .eq("id", quizId)
     .eq("created_by", session.profileId)
     .maybeSingle();
@@ -720,7 +729,7 @@ export async function updateQuizGroupAssignments(
   }
 
   revalidatePath("/teacher/quizzes");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(quiz.slug as string);
   revalidatePath("/quizzes");
   return { ok: true };
 }
@@ -1305,6 +1314,54 @@ export async function getTeacherQuizById(
   };
 }
 
+export async function resolveTeacherQuizParam(
+  param: string
+): Promise<TeacherQuiz | null> {
+  let trimmed = param.trim();
+  if (!trimmed) return null;
+  try {
+    trimmed = decodeURIComponent(trimmed);
+  } catch {
+    // already decoded or malformed — use trimmed as-is
+  }
+  trimmed = trimmed.normalize("NFC");
+  if (isQuizUuidParam(trimmed)) {
+    return getTeacherQuizById(trimmed);
+  }
+
+  const session = await requireTeacher();
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("quizzes")
+    .select(`${QUIZ_LIST_SELECT}, questions(count)`)
+    .eq("created_by", session.profileId)
+    .eq("slug", trimmed)
+    .maybeSingle();
+
+  if (!data) return null;
+  const { questions, ...quiz } = data as Quiz & {
+    questions: { count: number }[];
+  };
+
+  const { data: assignmentRows } = await supabase
+    .from("quiz_groups")
+    .select("group_id, teacher_groups(group_name)")
+    .eq("quiz_id", quiz.id);
+
+  const assigned_groups = (assignmentRows ?? []).map((row) => ({
+    id: row.group_id as string,
+    name:
+      (row.teacher_groups as { group_name?: string } | null)?.group_name ??
+      "مجموعة",
+  }));
+
+  return {
+    ...(quiz as Quiz),
+    question_count: questions?.[0]?.count ?? 0,
+    assigned_groups,
+  };
+}
+
 export type QuizTrashActionResult =
   | { ok: true }
   | { ok: false; error: string };
@@ -1317,7 +1374,7 @@ export async function softDeleteQuiz(
 
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("id, deleted_at")
+    .select("id, slug, deleted_at")
     .eq("id", quizId)
     .eq("created_by", session.profileId)
     .maybeSingle();
@@ -1341,7 +1398,7 @@ export async function softDeleteQuiz(
   }
 
   revalidatePath("/teacher/quizzes");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(quiz.slug as string);
   return { ok: true };
 }
 
@@ -1353,7 +1410,7 @@ export async function restoreQuiz(
 
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("id, deleted_at")
+    .select("id, slug, deleted_at")
     .eq("id", quizId)
     .eq("created_by", session.profileId)
     .maybeSingle();
@@ -1377,7 +1434,7 @@ export async function restoreQuiz(
   }
 
   revalidatePath("/teacher/quizzes");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(quiz.slug as string);
   return { ok: true };
 }
 
@@ -1389,7 +1446,7 @@ export async function permanentlyDeleteQuiz(
 
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("id, deleted_at")
+    .select("id, slug, deleted_at")
     .eq("id", quizId)
     .eq("created_by", session.profileId)
     .maybeSingle();
@@ -1404,6 +1461,7 @@ export async function permanentlyDeleteQuiz(
     };
   }
 
+  const slug = quiz.slug as string;
   const { error } = await supabase
     .from("quizzes")
     .delete()
@@ -1416,7 +1474,7 @@ export async function permanentlyDeleteQuiz(
   }
 
   revalidatePath("/teacher/quizzes");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(slug);
   return { ok: true };
 }
 
@@ -1468,12 +1526,14 @@ export async function createQuiz(formData: FormData) {
       assessment_category: attemptFields.assessment_category,
       max_attempts: attemptFields.max_attempts,
     })
-    .select()
+    .select("id, slug")
     .single();
 
   if (error || !data) throw new Error("فشل إنشاء الاختبار.");
+  const id = data.id as string;
+  const slug = (data.slug as string | null) || buildQuizSlug(title, id);
   revalidatePath("/teacher/quizzes");
-  return data.id as string;
+  return { id, slug };
 }
 
 export async function updateQuizFlags(
@@ -1539,14 +1599,18 @@ export async function updateQuizFlags(
     }
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("quizzes")
     .update(flags)
     .eq("id", quizId)
-    .eq("created_by", session.profileId);
+    .eq("created_by", session.profileId)
+    .select("slug")
+    .maybeSingle();
   if (error) throw new Error("فشل تحديث الاختبار.");
   revalidatePath("/teacher/quizzes");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  if (updated?.slug) {
+    revalidateTeacherQuizDetail(updated.slug as string);
+  }
 }
 
 export async function updateQuizTimerSettings(
@@ -1635,7 +1699,7 @@ export async function addQuestion(quizId: string, formData: FormData) {
 
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("id")
+    .select("id, slug")
     .eq("id", quizId)
     .eq("created_by", session.profileId)
     .single();
@@ -1681,7 +1745,7 @@ export async function addQuestion(quizId: string, formData: FormData) {
   });
 
   if (error) throw new Error("فشل إضافة السؤال.");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(quiz.slug as string);
 }
 
 export async function updateQuestion(
@@ -1690,7 +1754,7 @@ export async function updateQuestion(
   formData: FormData
 ) {
   const session = await requireTeacher();
-  await assertQuizOwnedByTeacher(quizId, session.profileId);
+  const owned = await assertQuizOwnedByTeacher(quizId, session.profileId);
 
   const supabase = createAdminClient();
 
@@ -1734,19 +1798,23 @@ export async function updateQuestion(
     .eq("quiz_id", quizId);
 
   if (error) throw new Error("فشل تحديث السؤال.");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(owned.slug);
 }
 
-async function assertQuizOwnedByTeacher(quizId: string, profileId: string) {
+async function assertQuizOwnedByTeacher(
+  quizId: string,
+  profileId: string
+): Promise<{ id: string; slug: string }> {
   const supabase = createAdminClient();
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("id")
+    .select("id, slug")
     .eq("id", quizId)
     .eq("created_by", profileId)
     .single();
 
   if (!quiz) throw new Error("الاختبار غير موجود.");
+  return { id: quiz.id as string, slug: quiz.slug as string };
 }
 
 /**
@@ -1763,7 +1831,7 @@ export async function importQuestionRows(
   options?: { mode?: "append" | "replace" }
 ) {
   const session = await requireTeacher();
-  await assertQuizOwnedByTeacher(quizId, session.profileId);
+  const owned = await assertQuizOwnedByTeacher(quizId, session.profileId);
 
   const validRows = rows.filter(
     (row) =>
@@ -1795,7 +1863,7 @@ export async function importQuestionRows(
 
   const { error } = await supabase.from("questions").insert(inserts);
   if (error) throw new Error("فشل استيراد الأسئلة.");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(owned.slug);
   return { imported: inserts.length };
 }
 
@@ -1897,7 +1965,7 @@ export async function deleteQuestion(quizId: string, questionId: string) {
 
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("id")
+    .select("id, slug")
     .eq("id", quizId)
     .eq("created_by", session.profileId)
     .single();
@@ -1905,12 +1973,12 @@ export async function deleteQuestion(quizId: string, questionId: string) {
   if (!quiz) throw new Error("غير مصرح.");
 
   await supabase.from("questions").delete().eq("id", questionId).eq("quiz_id", quizId);
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(quiz.slug as string);
 }
 
 export async function duplicateQuestion(quizId: string, questionId: string) {
   const session = await requireTeacher();
-  await assertQuizOwnedByTeacher(quizId, session.profileId);
+  const owned = await assertQuizOwnedByTeacher(quizId, session.profileId);
   const supabase = createAdminClient();
 
   const { data: source } = await supabase
@@ -1945,5 +2013,5 @@ export async function duplicateQuestion(quizId: string, questionId: string) {
   });
 
   if (error) throw new Error("فشل تكرار السؤال.");
-  revalidatePath(`/teacher/quizzes/${quizId}`);
+  revalidateTeacherQuizDetail(owned.slug);
 }

@@ -15,6 +15,7 @@ import { importQuickPasteQuestions } from "@/actions/teacher";
 import {
   LMS_QUICK_PASTE_SAMPLE,
   parseQuickPasteDocument,
+  QUICK_PASTE_LLM_PROMPT,
   QUICK_PASTE_SAMPLE_FORMAT,
   type ParsedQuizSettings,
   type QuickPasteDraft,
@@ -142,7 +143,6 @@ export function QuickTextPasteDialog({
   const [formError, setFormError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "error">("success");
-  const [copyHint, setCopyHint] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const document = useMemo(() => parseQuickPasteDocument(text), [text]);
@@ -155,7 +155,6 @@ export function QuickTextPasteDialog({
   const resetDraft = () => {
     setText("");
     setFormError(null);
-    setCopyHint(null);
   };
 
   const handleOpenChange = (next: boolean) => {
@@ -168,10 +167,11 @@ export function QuickTextPasteDialog({
   const copyText = async (value: string, okMsg: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      setCopyHint(okMsg);
-      window.setTimeout(() => setCopyHint(null), 2000);
+      setToastTone("success");
+      setToast(okMsg);
     } catch {
-      setCopyHint("تعذّر النسخ — انسخ من المربع يدوياً");
+      setToastTone("error");
+      setToast("تعذّر النسخ — انسخ من المربع يدوياً");
     }
   };
 
@@ -270,11 +270,6 @@ export function QuickTextPasteDialog({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-bold text-foreground">النص</h3>
                 <div className="flex flex-wrap items-center gap-2">
-                  {copyHint ? (
-                    <span className="text-xs font-medium text-emerald-700">
-                      {copyHint}
-                    </span>
-                  ) : null}
                   <Button
                     type="button"
                     variant="outline"
@@ -298,6 +293,22 @@ export function QuickTextPasteDialog({
                   >
                     <ClipboardCopy className="size-3.5" />
                     نسخ نموذج LMS
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 gap-2 rounded-xl border-sky-200 text-xs text-sky-900 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-100 dark:hover:bg-sky-950/40"
+                    onClick={() =>
+                      copyText(
+                        QUICK_PASTE_LLM_PROMPT,
+                        "تم نسخ برومبت الذكاء الاصطناعي"
+                      )
+                    }
+                    disabled={pending}
+                    data-spekit={SPEKIT.quickTextPasteLlmPrompt}
+                  >
+                    <ClipboardCopy className="size-3.5" />
+                    نسخ برومبت LLM
                   </Button>
                 </div>
               </div>

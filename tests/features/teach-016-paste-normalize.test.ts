@@ -3,9 +3,19 @@ import {
   LMS_QUICK_PASTE_SAMPLE,
   parseQuickPasteDocument,
   parseQuickPasteText,
+  QUICK_PASTE_LLM_PROMPT,
 } from "@/lib/import-text";
 
 describe("[TEACH-016] paste normalize integration", () => {
+  it("LLM prompt forbids LaTeX and requires LMS structure + BiDi spaces", () => {
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Q1:/);
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Answer:/);
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Never use \$/i);
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/SPACE between every Arabic/i);
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Un = 2n - 3/);
+    expect(QUICK_PASTE_LLM_PROMPT).not.toMatch(/\\frac\{/);
+  });
+
   it("keeps plain Unicode LMS blocks valid and unchanged", () => {
     const text = `Q1: إن cos(AB, AC) يساوي:
 A) 1/3

@@ -1,24 +1,49 @@
-import { getQuizQuestions, getTeacherQuizById } from "@/actions/teacher";
+import { getQuizQuestions, resolveTeacherQuizParam } from "@/actions/teacher";
 import { QuizQuestionsDashboard } from "@/components/teacher/QuizQuestionsDashboard";
 import { QuizEditSettingsPanel } from "@/components/teacher/QuizEditSettingsPanel";
 import { QuizTrashBanner } from "@/components/teacher/QuizTrashBanner";
 import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
 import { SPEKIT } from "@/lib/spekit-targets";
-import { notFound } from "next/navigation";
+import { isQuizUuidParam, teacherQuizHref } from "@/lib/teacher-quiz-path";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 
 export const metadata = { title: "تحرير الاختبار | المؤيد" };
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function EditQuizPage({ params }: PageProps) {
-  const { id } = await params;
-  const quiz = await getTeacherQuizById(id);
+function queryStringFromSearchParams(
+  searchParams: Record<string, string | string[] | undefined>
+): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (typeof value === "string" && value.length > 0) {
+      qs.set(key, value);
+    } else if (Array.isArray(value) && value[0]) {
+      qs.set(key, value[0]);
+    }
+  }
+  const serialized = qs.toString();
+  return serialized ? `?${serialized}` : "";
+}
+
+export default async function EditQuizPage({ params, searchParams }: PageProps) {
+  const { slug: rawParam } = await params;
+  const param = rawParam.trim();
+  const quiz = await resolveTeacherQuizParam(param);
   if (!quiz) notFound();
 
-  const questions = await getQuizQuestions(id);
+  if (isQuizUuidParam(param) && param.toLowerCase() !== quiz.slug.toLowerCase()) {
+    const sp = await searchParams;
+    permanentRedirect(
+      `${teacherQuizHref(quiz.slug)}${queryStringFromSearchParams(sp)}`
+    );
+  }
+
+  const questions = await getQuizQuestions(quiz.id);
 
   return (
     <div
@@ -52,7 +77,8 @@ export default async function EditQuizPage({ params }: PageProps) {
         }
       >
         <QuizQuestionsDashboard
-          quizId={id}
+          quizId={quiz.id}
+          quizSlug={quiz.slug}
           quizTitle={quiz.title}
           questions={questions}
         />

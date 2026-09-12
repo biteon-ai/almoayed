@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { TeacherQuiz } from "@/types/database";
+import { teacherQuizHref } from "@/lib/teacher-quiz-path";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,7 +58,7 @@ export function QuizListItem({
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null);
   const canActivate = quiz.question_count > 0;
   const isBusy = pending && pendingQuizId === quiz.id;
-  const editHref = `/teacher/quizzes/${quiz.id}`;
+  const editHref = teacherQuizHref(quiz.slug);
   const isTrash = mode === "trash";
 
   const navigateTo = (href: string) => {
@@ -72,12 +73,19 @@ export function QuizListItem({
 
   return (
     <Card
-      className="rounded-xl border bg-card p-0 transition-all hover:shadow-md"
+      className={cn(
+        "relative rounded-xl border bg-card p-0 transition-all hover:shadow-md",
+        "before:absolute before:inset-y-3 before:start-0 before:w-1 before:rounded-full",
+        quiz.is_active
+          ? "border-emerald-200/80 before:bg-emerald-500 shadow-sm ring-1 ring-emerald-500/10"
+          : "border-border/70 bg-muted/15 before:bg-slate-300 opacity-[0.96]",
+        !quiz.is_free && quiz.is_active && "bg-gradient-to-l from-amber-50/40 to-card"
+      )}
       {...spekit(SPEKIT.quizListItem)}
     >
       <CardContent className="p-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0 flex-1 space-y-2.5 text-start">
+          <div className="min-w-0 flex-1 space-y-2.5 ps-2 text-start">
             <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
               <FileText className="size-5 shrink-0 text-brand-600" />
               <span className="truncate">{quiz.title}</span>
@@ -88,31 +96,28 @@ export function QuizListItem({
             >
               <StatusBadge
                 tone={quiz.is_active ? "active" : "hidden"}
-                className="inline-flex items-center gap-1"
               >
                 {quiz.is_active ? (
-                  <CheckCircle2 className="size-3.5" />
+                  <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
                 ) : (
-                  <EyeOff className="size-3.5" />
+                  <EyeOff className="size-3.5 shrink-0" aria-hidden />
                 )}
                 {quiz.is_active ? "نشط" : "مخفي"}
               </StatusBadge>
               <StatusBadge
                 tone={quiz.is_free ? "free" : "pro"}
-                className="inline-flex items-center gap-1"
               >
                 {quiz.is_free ? (
-                  <Sparkles className="size-3.5" />
+                  <Sparkles className="size-3.5 shrink-0" aria-hidden />
                 ) : (
-                  <Crown className="size-3.5" />
+                  <Crown className="size-3.5 shrink-0" aria-hidden />
                 )}
                 {quiz.is_free ? "مجاني" : "Pro"}
               </StatusBadge>
               <StatusBadge
                 tone={quiz.assigned_groups.length > 0 ? "group" : "regular"}
-                className="inline-flex items-center gap-1"
               >
-                <Users className="size-3.5" />
+                <Users className="size-3.5 shrink-0" aria-hidden />
                 {quiz.assigned_groups.length > 0 ? "مجموعة" : "عادي"}
               </StatusBadge>
               <span className="text-xs text-muted-foreground">
@@ -206,12 +211,19 @@ export function QuizListItem({
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="h-10 gap-1.5 px-3"
+                  className={cn(
+                    "h-10 gap-1.5 rounded-xl px-3 text-xs font-bold",
+                    quiz.is_active
+                      ? "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
+                      : "border-emerald-300 bg-emerald-50 text-emerald-800 hover:border-emerald-400 hover:bg-emerald-100 shadow-sm shadow-emerald-600/10"
+                  )}
                   disabled={pending || (!quiz.is_active && !canActivate)}
                   title={
                     !quiz.is_active && !canActivate
                       ? "أضف سؤالاً واحداً على الأقل قبل التفعيل"
-                      : undefined
+                      : quiz.is_active
+                        ? "إخفاء الاختبار عن الطلاب"
+                        : "إظهار الاختبار للطلاب"
                   }
                   onClick={() => onRequestToggleActive?.(quiz)}
                 >
@@ -233,17 +245,34 @@ export function QuizListItem({
                 <Button
                   type="button"
                   size="sm"
-                  variant="ghost"
-                  className="h-10 gap-1.5 px-3"
+                  variant="outline"
+                  className={cn(
+                    "h-10 gap-1.5 rounded-xl px-3 text-xs font-bold",
+                    quiz.is_free
+                      ? "border-amber-300 bg-amber-50 text-amber-800 hover:border-amber-400 hover:bg-amber-100 shadow-sm shadow-amber-600/10"
+                      : "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
+                  )}
                   disabled={pending}
+                  title={
+                    quiz.is_free
+                      ? "جعله متاحاً لطلاب Pro فقط"
+                      : "جعله مجانياً لكل الطلاب"
+                  }
                   onClick={() => onToggleFree?.(quiz)}
                 >
                   {isBusy ? (
                     <Loader2 className="size-3.5 animate-spin" />
+                  ) : quiz.is_free ? (
+                    <>
+                      <Crown className="size-3.5" />
+                      تحويل لـ Pro
+                    </>
                   ) : (
-                    <Crown className="size-3.5" />
+                    <>
+                      <Sparkles className="size-3.5" />
+                      تحويل لمجاني
+                    </>
                   )}
-                  {quiz.is_free ? "تحويل لـ Pro" : "تحويل لمجاني"}
                 </Button>
 
                 <Button

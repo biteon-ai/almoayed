@@ -101,6 +101,70 @@ D) non-existent
 Answer: C
 Explanation: Midpoint uses (x1+x2)/2 ; example √2 stays plain.`;
 
+/**
+ * Prompt teachers copy into Gemini / ChatGPT / etc. so image→text or rewrite
+ * output pastes cleanly into «لصق نصي سريع» (TEACH-013/014/016).
+ */
+export const QUICK_PASTE_LLM_PROMPT = `You convert quiz images or messy quiz text into Al-Moayed (المؤيد) paste format for «لصق نصي سريع».
+
+OUTPUT RULES (mandatory):
+1) Prefer ENGLISH LMS format (best for mixed Arabic + math):
+=== Quiz Settings ===
+Quiz Type: Practice / Homework
+Number of Attempts: Unlimited
+Enable Timer: No
+Quiz Duration: 30
+
+=== Quiz Questions ===
+
+Q1: [Arabic or English stem here]
+A) ...
+B) ...
+C) ...
+D) ...
+Answer: B
+Explanation: ...
+
+Q2: ...
+(blank line between questions)
+
+Alternative ARABIC format (also accepted):
+(1) س: ...
+أ) ...
+*ب) ...
+ج) ...
+د) ...
+الشرح: ...
+التصنيف: ...
+
+(2) س: ...
+أ) ...
+ب) ...
+الجواب: ب
+ج) ...
+د) ...
+
+2) MATH — plain Unicode ONLY. Never use $, $$, \\( \\), \\frac, \\vec, \\sum, or any LaTeX.
+   - Fractions: 1/2 , (2n-3)/5
+   - Powers / indices: n^2 , Un or U_n
+   - Roots: √2
+   - Sequences example: Un = 2n - 3
+   - Vectors / segments: AB , [AB] , BM - MA = 0
+
+3) BiDi / Arabic safety (critical — prevents digit scrambling like 32n instead of 2n - 3):
+   - Always put a SPACE between every Arabic word and any Latin/math token.
+   - Keep operators in logical LTR order: Un = 2n - 3  (never 32n - Un =).
+   - Prefer: لدينا المتتالية Un معرفة بـ : Un = 2n - 3 .
+   - Never glue: قيمةU0  → write: قيمة U0
+
+4) Preserve mathematical meaning exactly from the image/source. If unclear, write [غير واضح] instead of guessing.
+
+5) Exactly 4 choices for LMS (A–D). Answer must be the letter. Explanation optional but recommended.
+
+6) Output plain text only — no markdown code fences, no commentary before/after the quiz text.
+
+After you finish, I will copy your entire output into Al-Moayed «لصق نصي سريع».`;
+
 const LETTERS: ArabicOptionLetter[] = ["أ", "ب", "ج", "د"];
 
 const QN_START = /^Q(\d+):\s*/i;

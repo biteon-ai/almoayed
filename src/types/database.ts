@@ -113,6 +113,8 @@ export interface Topic {
 export interface Quiz {
   id: string;
   title: string;
+  /** TEACH-017 — canonical teacher path segment (`{titleSlug}-{id8}`) */
+  slug: string;
   created_by: string;
   category_id: string | null;
   topic_id: string | null;

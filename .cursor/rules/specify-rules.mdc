@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/026-plain-math-paste/plan.md`
+**Active plan**: `specs/027-quiz-slug-urls/plan.md`
 
 Related artifacts:
-- Spec: `specs/026-plain-math-paste/spec.md`
-- Research: `specs/026-plain-math-paste/research.md`
-- Data model: `specs/026-plain-math-paste/data-model.md`
-- Contracts: `specs/026-plain-math-paste/contracts/`
-- Quickstart: `specs/026-plain-math-paste/quickstart.md`
+- Spec: `specs/027-quiz-slug-urls/spec.md`
+- Research: `specs/027-quiz-slug-urls/research.md`
+- Data model: `specs/027-quiz-slug-urls/data-model.md`
+- Contracts: `specs/027-quiz-slug-urls/contracts/`
+- Quickstart: `specs/027-quiz-slug-urls/quickstart.md`
 <!-- SPECKIT END -->
