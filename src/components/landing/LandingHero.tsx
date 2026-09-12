@@ -27,7 +27,7 @@ export function LandingHero() {
             {LANDING_HERO.subtitle}
           </p>
 
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+          <div className="flex scroll-mt-20 flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <Link
               href={LANDING_HERO.primaryCta.href}
               className={cn(

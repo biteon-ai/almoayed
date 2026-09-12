@@ -163,6 +163,7 @@ export const SPEKIT = {
   quickTextPasteSubmit: "quick-text-paste-submit",
   quickTextPasteSettings: "quick-text-paste-settings",
   quickTextPasteMathNotice: "quick-text-paste-math-notice",
+  quickTextPasteLlmPrompt: "quick-text-paste-llm-prompt",
   manualQuestionForm: "manual-question-form",
   teacherQuestionsList: "teacher-questions-list",
   questionEditButton: "question-edit-button",

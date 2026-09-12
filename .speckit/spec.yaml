@@ -124,6 +124,7 @@ features:
     files:
       - src/lib/demo-accounts.ts
       - src/lib/supabase/admin.ts
+      - src/lib/auth-session.ts
       - src/actions/login.ts
       - src/actions/auth.ts
       - src/app/login/login-form.tsx
@@ -133,6 +134,7 @@ features:
       - Missing demo profiles (963912345678 / 963987654321) are auto-upserted with seed UUIDs + active student_teachers link
       - Supabase fetch/upsert errors and aborted timeouts map to LoginState errors (no unhandled throws)
       - Admin client fetch timeout 8s to avoid hung demo login
+      - Placeholder host example.supabase.co does not create a live admin client (CI fail-fast; no DNS hang on /login)
       - Demo buttons show instant spinner + disabled state via useTransition (AUTH-006)
       - Success redirects to /dashboard (student) or /teacher/dashboard (teacher) with iron-session
       - When AUTH_DEMO_BYPASS is on, AUTH-003 device lock is skipped for demo WhatsApps (parallel e2e / multi-tab)
@@ -1011,6 +1013,7 @@ features:
       - src/components/landing/LandingAudience.tsx
       - src/components/landing/LandingFooter.tsx
       - src/components/landing/DashboardPreviewMockup.tsx
+      - e2e/landing-page.spec.ts
     acceptance:
       - Logged-out visitors see full Arabic RTL landing at /
       - Logged-in users redirect to role dashboard
