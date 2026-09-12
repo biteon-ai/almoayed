@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createQuiz } from "@/actions/teacher";
-import { teacherQuizHref } from "@/lib/teacher-quiz-path";
 import type { Category, TeacherGroup } from "@/types/database";
 import { QuizCreateForm } from "@/components/teacher/QuizCreateForm";
 import {
@@ -27,10 +26,8 @@ export function QuizCreateWizard({ categories, groups }: QuizCreateWizardProps) 
     setCreateError(null);
     startCreateTransition(async () => {
       try {
-        const created = await createQuiz(formData);
-        router.push(
-          teacherQuizHref(created.slug, { query: { setup: "import" } })
-        );
+        const id = await createQuiz(formData);
+        router.push(`/teacher/quizzes/${id}?setup=import`);
       } catch (cause) {
         setCreateError(
           cause instanceof Error

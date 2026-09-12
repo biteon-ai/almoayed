@@ -25,7 +25,7 @@ const NAV_ITEMS: {
 
 function isTeacherNavActive(pathname: string, href: string): boolean {
   if (pathname === href) return true;
-  // Nested routes (e.g. /teacher/quizzes/[slug]) keep the parent item active
+  // Nested routes (e.g. /teacher/quizzes/[id]) keep the parent item active
   return pathname.startsWith(`${href}/`);
 }
 

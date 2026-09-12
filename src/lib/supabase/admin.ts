@@ -3,6 +3,25 @@ import { createClient } from "@supabase/supabase-js";
 /** Cap hung Supabase requests so auth actions fail fast (FIX-AUTH-001). */
 const ADMIN_FETCH_TIMEOUT_MS = 8_000;
 
+/**
+ * CI / docs placeholder hosts must not open a real client — Node `fetch` DNS
+ * lookup is not aborted by AbortController, so `/login` RSC can hang past
+ * Playwright's default 5s `toHaveURL` (LAND-001).
+ */
+export function isPlaceholderSupabaseUrl(
+  url: string | undefined | null
+): boolean {
+  if (!url?.trim()) return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return (
+      host === "example.supabase.co" || host.endsWith(".example.supabase.co")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function fetchWithTimeout(
   input: RequestInfo | URL,
   init?: RequestInit
@@ -34,7 +53,7 @@ export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !key) {
+  if (!url || !key || isPlaceholderSupabaseUrl(url)) {
     throw new Error("Missing Supabase environment variables");
   }
 

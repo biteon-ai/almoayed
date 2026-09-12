@@ -4,7 +4,6 @@ export function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
   return {
     id: "quiz-001",
     title: "اختبار تجريبي",
-    slug: "اختبار-تجريبي-quiz001",
     created_by: "teacher-profile-001",
     category_id: null,
     topic_id: null,

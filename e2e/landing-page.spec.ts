@@ -33,7 +33,12 @@ test.describe(`${FEATURE} Marketing landing (logged out)`, () => {
 
   test("primary CTA links to login", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: "تجربة المنصة مجاناً" }).click();
+    const cta = page.getByRole("link", { name: "تجربة المنصة مجاناً" });
+    await expect(cta).toHaveAttribute("href", "/login");
+    await Promise.all([
+      page.waitForURL(/\/login/, { timeout: 15_000 }),
+      cta.click(),
+    ]);
     await expect(page).toHaveURL(/\/login/);
   });
 });

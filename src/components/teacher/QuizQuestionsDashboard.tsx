@@ -11,7 +11,6 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
-import { teacherQuizHref } from "@/lib/teacher-quiz-path";
 import { cn } from "@/lib/utils";
 import {
   ArrowRight,
@@ -24,14 +23,12 @@ type DashboardTab = "questions" | "import";
 
 interface QuizQuestionsDashboardProps {
   quizId: string;
-  quizSlug: string;
   quizTitle: string;
   questions: Question[];
 }
 
 export function QuizQuestionsDashboard({
   quizId,
-  quizSlug,
   quizTitle,
   questions,
 }: QuizQuestionsDashboardProps) {
@@ -46,14 +43,12 @@ export function QuizQuestionsDashboard({
   const [tab, setTab] = useState<DashboardTab>(initialTab);
 
   const finishSetup = () => {
-    router.replace(teacherQuizHref(quizSlug));
+    router.replace(`/teacher/quizzes/${quizId}`);
     setTab("questions");
   };
 
   const handleImportSuccess = (count: number) => {
-    router.replace(
-      teacherQuizHref(quizSlug, { query: { imported: String(count) } })
-    );
+    router.replace(`/teacher/quizzes/${quizId}?imported=${count}`);
     router.refresh();
     setTab("questions");
   };

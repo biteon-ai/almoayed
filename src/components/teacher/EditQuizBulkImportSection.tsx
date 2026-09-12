@@ -6,17 +6,14 @@ import { ImportSectionHeader } from "@/components/teacher/import/ImportSectionHe
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
-import { teacherQuizHref } from "@/lib/teacher-quiz-path";
 
 interface EditQuizBulkImportSectionProps {
   quizId: string;
-  quizSlug: string;
   quizTitle: string;
 }
 
 export function EditQuizBulkImportSection({
   quizId,
-  quizSlug,
   quizTitle,
 }: EditQuizBulkImportSectionProps) {
   const router = useRouter();
@@ -24,13 +21,11 @@ export function EditQuizBulkImportSection({
   const isSetup = searchParams.get("setup") === "import";
 
   const finishSetup = () => {
-    router.replace(teacherQuizHref(quizSlug));
+    router.replace(`/teacher/quizzes/${quizId}`);
   };
 
   const handleSuccess = (count: number) => {
-    router.replace(
-      teacherQuizHref(quizSlug, { query: { imported: String(count) } })
-    );
+    router.replace(`/teacher/quizzes/${quizId}?imported=${count}`);
     router.refresh();
   };
 
@@ -57,7 +52,7 @@ export function EditQuizBulkImportSection({
         <CardContent className="p-5 md:p-6 lg:p-8">
           <ImportSectionHeader
             quizTitle={quizTitle}
-            backHref={teacherQuizHref(quizSlug, { hash: "quiz-questions" })}
+            backHref={`/teacher/quizzes/${quizId}#quiz-questions`}
           />
           <BulkQuestionUpload
             quizId={quizId}

@@ -124,6 +124,7 @@ features:
     files:
       - src/lib/demo-accounts.ts
       - src/lib/supabase/admin.ts
+      - src/lib/auth-session.ts
       - src/actions/login.ts
       - src/actions/auth.ts
       - src/app/login/login-form.tsx
@@ -133,6 +134,7 @@ features:
       - Missing demo profiles (963912345678 / 963987654321) are auto-upserted with seed UUIDs + active student_teachers link
       - Supabase fetch/upsert errors and aborted timeouts map to LoginState errors (no unhandled throws)
       - Admin client fetch timeout 8s to avoid hung demo login
+      - Placeholder host example.supabase.co does not create a live admin client (CI fail-fast; no DNS hang on /login)
       - Demo buttons show instant spinner + disabled state via useTransition (AUTH-006)
       - Success redirects to /dashboard (student) or /teacher/dashboard (teacher) with iron-session
       - When AUTH_DEMO_BYPASS is on, AUTH-003 device lock is skipped for demo WhatsApps (parallel e2e / multi-tab)
@@ -669,21 +671,19 @@ features:
     name: Quiz CRUD and Flags
     status: implemented
     persona: [TEACHER]
-    routes: ["/teacher/quizzes", "/teacher/quizzes/new", "/teacher/quizzes/[slug]"]
+    routes: ["/teacher/quizzes", "/teacher/quizzes/new", "/teacher/quizzes/[id]"]
     files:
       - src/app/teacher/quizzes/page.tsx
       - src/app/teacher/quizzes/new/page.tsx
-      - src/app/teacher/(portal)/quizzes/[slug]/page.tsx
       - src/components/teacher/QuizListItem.tsx
       - src/components/teacher/QuizCreateForm.tsx
       - src/components/teacher/QuizCreateWizard.tsx
       - src/actions/teacher.ts
-      - src/lib/teacher-quiz-path.ts
       - tests/features/teach-003-quiz-flags.test.ts
       - e2e/teach-003-quiz-create.spec.ts
     acceptance:
       - Create quiz with title, category, type, group, is_free (starts inactive until ≥1 question)
-      - After create, redirect to /teacher/quizzes/[slug]?setup=import (durable URL; legacy /teacher/quizzes/[uuid] 308-redirects)
+      - After create, redirect to /teacher/quizzes/[id]?setup=import (durable URL; no in-memory wizard step)
       - Toggle active, free/pro, regular/group on list; block activation when question_count is 0
       - Edit quiz and manage questions
     spekit: [quiz-list-item, quiz-status-badges, quiz-toggle-actions, teacher-quiz-create-form, quiz-setup-import-banner]
@@ -843,35 +843,10 @@ features:
       - Common inline LaTeX in paste fields normalizes to plain Unicode on preview/save
       - Residual LaTeX shows non-blocking Arabic notice; structure validity unchanged
       - Arabic–Latin/math spaces preserved; soft insert at abutting boundaries
-      - «نسخ برومبت LLM» copies Gemini/ChatGPT formatting prompt for clean paste
       - TEACH-013/014 structure, settings header, and gatekeeper unchanged
     spekit:
-      [quick-text-paste-math-notice, quick-text-paste-llm-prompt]
+      [quick-text-paste-math-notice]
     notes: Extends TEACH-013/014; see specs/026-plain-math-paste/
-
-  - id: TEACH-017
-    name: Friendly Teacher Quiz URLs
-    status: implemented
-    persona: [TEACHER]
-    routes: ["/teacher/quizzes", "/teacher/quizzes/new", "/teacher/quizzes/[slug]"]
-    files:
-      - supabase/migrations/019_quiz_friendly_slug.sql
-      - src/lib/teacher-quiz-path.ts
-      - src/lib/perf-selects.ts
-      - src/types/database.ts
-      - src/actions/teacher.ts
-      - src/app/teacher/(portal)/quizzes/[slug]/page.tsx
-      - src/components/teacher/QuizListItem.tsx
-      - src/components/teacher/QuizCreateWizard.tsx
-      - src/components/teacher/QuizQuestionsDashboard.tsx
-      - src/components/teacher/EditQuizBulkImportSection.tsx
-      - tests/features/teach-017-quiz-slug.test.ts
-    acceptance:
-      - Teacher quiz editor URL is /teacher/quizzes/{title-slug}-{id8} (Arabic allowed)
-      - List, post-create ?setup=import, import return, and Trash/edit use slug hrefs
-      - Legacy /teacher/quizzes/{uuid} 308-redirects to slug (query preserved)
-      - Lookup scoped to created_by; student /quiz/[id] unchanged
-    notes: Extends TEACH-003/011; see specs/027-quiz-slug-urls/
 
   - id: TEACH-011
     name: Quiz Soft Delete and Trash
@@ -1038,6 +1013,7 @@ features:
       - src/components/landing/LandingAudience.tsx
       - src/components/landing/LandingFooter.tsx
       - src/components/landing/DashboardPreviewMockup.tsx
+      - e2e/landing-page.spec.ts
     acceptance:
       - Logged-out visitors see full Arabic RTL landing at /
       - Logged-in users redirect to role dashboard

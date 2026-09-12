@@ -7,7 +7,10 @@ import {
 } from "@/lib/auth-error-codes";
 import { generateSessionToken } from "@/lib/session-token";
 import { sessionOptions, type SessionData } from "@/lib/session";
-import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  createAdminClient,
+  isPlaceholderSupabaseUrl,
+} from "@/lib/supabase/admin";
 import type { Profile } from "@/types/database";
 import type { LoginState } from "@/types/auth";
 
@@ -20,6 +23,9 @@ export type SessionProfile = Pick<
 export type AuthSupabaseClient = ReturnType<typeof createAdminClient>;
 
 export function getAuthSupabaseClient(): AuthSupabaseClient | null {
+  if (isPlaceholderSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL)) {
+    return null;
+  }
   try {
     return createAdminClient();
   } catch (error) {

@@ -9,7 +9,7 @@ import type { MouseEvent } from "react";
 
 interface ImportSectionHeaderProps {
   quizTitle: string;
-  /** Prefer `/teacher/quizzes/{slug}#quiz-questions` for «العودة للاختبار». */
+  /** Prefer `/teacher/quizzes/{id}#quiz-questions` for «العودة للاختبار». */
   backHref?: string;
   backLabel?: string;
 }
