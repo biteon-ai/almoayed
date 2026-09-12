@@ -77,7 +77,7 @@ D) d`;
     expect(draft?.error_reason).toMatch(/Answer/i);
   });
 
-  it("preserves LaTeX in stem", () => {
+  it("normalizes common LaTeX in stem to plain math (TEACH-016)", () => {
     const text = `Q1: Compute $x^2$ and $$\\frac{1}{2}$$
 A) 1
 B) 2
@@ -87,8 +87,9 @@ Answer: A`;
 
     const [draft] = parseQuickPasteText(text);
     expect(draft?.valid).toBe(true);
-    expect(draft?.question_text).toContain("$x^2$");
-    expect(draft?.question_text).toContain("$$\\frac{1}{2}$$");
+    expect(draft?.question_text).toContain("x^2");
+    expect(draft?.question_text).toContain("1/2");
+    expect(draft?.question_text).not.toMatch(/\$|\\frac/);
   });
 
   it("allows mixed LMS and Arabic blocks in one paste", () => {

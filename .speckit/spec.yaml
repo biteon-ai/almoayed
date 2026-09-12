@@ -814,7 +814,7 @@ features:
       - Optional === Quiz Settings === previewed and applied per-field on same confirm-save
       - Qn: starts new question without blank line; mixed Arabic+LMS per block
       - Timer Yes without duration skips timer; valid questions still import
-      - LaTeX delimiters preserved; TEACH-013 Arabic paste unchanged
+      - Unrecognized LaTeX preserved; common patterns normalized (see TEACH-016); TEACH-013 Arabic paste unchanged
     spekit:
       [
         quick-text-paste-open,
@@ -823,6 +823,28 @@ features:
         quick-text-paste-settings,
       ]
     notes: Extends TEACH-013; see specs/023-lms-quiz-text-import/
+
+  - id: TEACH-016
+    name: Plain Unicode Math for Quick-Paste Quizzes
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/quizzes/[id]"]
+    files:
+      - src/lib/plain-math.ts
+      - src/lib/import-text.ts
+      - src/components/teacher/QuickTextPasteDialog.tsx
+      - src/lib/spekit-targets.ts
+      - tests/features/teach-016-plain-math.test.ts
+      - tests/features/teach-016-paste-normalize.test.ts
+    acceptance:
+      - Official LMS sample uses plain Unicode math (no $...$ / \frac / \vec)
+      - Common inline LaTeX in paste fields normalizes to plain Unicode on preview/save
+      - Residual LaTeX shows non-blocking Arabic notice; structure validity unchanged
+      - Arabic–Latin/math spaces preserved; soft insert at abutting boundaries
+      - TEACH-013/014 structure, settings header, and gatekeeper unchanged
+    spekit:
+      [quick-text-paste-math-notice]
+    notes: Extends TEACH-013/014; see specs/026-plain-math-paste/
 
   - id: TEACH-011
     name: Quiz Soft Delete and Trash

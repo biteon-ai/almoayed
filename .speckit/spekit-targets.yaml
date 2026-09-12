@@ -229,6 +229,9 @@ TEACH-013:
 TEACH-014:
   quick-text-paste-settings: "LMS quiz settings preview in paste dialog"
 
+TEACH-016:
+  quick-text-paste-math-notice: "Plain-math / residual LaTeX notice in paste dialog"
+
 # ── Profile & settings ──────────────────────────────────────────
 PROFILE-001:
   profile-tier-info: "Student settings — Free/Pro tier badge"

@@ -1,7 +1,8 @@
 /**
- * TEACH-013 / TEACH-014 — Quick text paste parser.
+ * TEACH-013 / TEACH-014 / TEACH-016 — Quick text paste parser.
  * Supports Arabic MCQ blocks and English LMS (`Qn:` / `Answer:`) plus optional
- * `=== Quiz Settings ===` header. Does not alter TEACH-004 file import paths.
+ * `=== Quiz Settings ===` header. TEACH-016 normalizes common LaTeX in field text
+ * to plain Unicode. Does not alter TEACH-004 file import paths.
  */
 import type { AssessmentCategory, ImportQuestionRow } from "@/types/database";
 import {
@@ -14,6 +15,15 @@ import {
   QUIZ_TIMER_MIN_MINUTES,
   validateDurationMinutes,
 } from "@/lib/quiz-timer";
+import {
+  EMPTY_MATH_NOTICE,
+  looksLikeLatex,
+  mergeMathNotices,
+  normalizeFieldMath,
+  type QuickPasteMathNotice,
+} from "@/lib/plain-math";
+
+export type { QuickPasteMathNotice } from "@/lib/plain-math";
 
 export type QuickPasteFormat = "lms" | "arabic";
 
@@ -48,6 +58,7 @@ export type ParsedQuizSettings = {
 export type QuickPasteDocument = {
   settings: ParsedQuizSettings | null;
   drafts: QuickPasteDraft[];
+  mathNotice: QuickPasteMathNotice;
 };
 
 export const QUICK_PASTE_MAX_IMPORT = 50;
@@ -74,7 +85,7 @@ Quiz Duration: 30
 
 === Quiz Questions ===
 
-Q1: What is $2+2$?
+Q1: What is 2 + 2?
 A) 3
 B) 4
 C) 5
@@ -82,12 +93,13 @@ D) 6
 Answer: B
 Explanation: Basic arithmetic
 
-Q2: Capital of Syria?
-A) Aleppo
-B) Damascus
-C) Homs
-D) Latakia
-Answer: B`;
+Q2: If M is the midpoint of [AB], then M equals:
+A) (1, 0, 1/2)
+B) (-1, -1/2, -1)
+C) (1/2, 0, 1)
+D) non-existent
+Answer: C
+Explanation: Midpoint uses (x1+x2)/2 ; example √2 stays plain.`;
 
 const LETTERS: ArabicOptionLetter[] = ["أ", "ب", "ج", "د"];
 
@@ -507,7 +519,54 @@ function validateDraft(
   return { valid: true, error_reason: null, correct_answer };
 }
 
-function parseBlock(block: string, index: number): QuickPasteDraft {
+function applyPlainMathToFields(fields: {
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  explanation_text: string;
+}): {
+  fields: typeof fields;
+  notice: QuickPasteMathNotice;
+} {
+  const keys = [
+    "question_text",
+    "option_a",
+    "option_b",
+    "option_c",
+    "option_d",
+    "explanation_text",
+  ] as const;
+
+  let notice: QuickPasteMathNotice = { ...EMPTY_MATH_NOTICE };
+  const next = { ...fields };
+
+  for (const key of keys) {
+    const raw = fields[key];
+    if (looksLikeLatex(raw)) {
+      notice = mergeMathNotices(notice, {
+        convertedCount: 0,
+        residualLatex: false,
+        hadLatexInput: true,
+      });
+    }
+    const result = normalizeFieldMath(raw);
+    next[key] = result.text;
+    notice = mergeMathNotices(notice, {
+      convertedCount: result.convertedCount,
+      residualLatex: result.residualLatex,
+      hadLatexInput: false,
+    });
+  }
+
+  return { fields: next, notice };
+}
+
+function parseBlock(block: string, index: number): {
+  draft: QuickPasteDraft;
+  notice: QuickPasteMathNotice;
+} {
   const lines = block
     .split(/\n/)
     .map((l) => l.trim())
@@ -590,35 +649,53 @@ function parseBlock(block: string, index: number): QuickPasteDraft {
   const correct_letter: ArabicOptionLetter | "" =
     answerLineLetter || asteriskLetter || "";
 
-  const base = {
-    index,
+  const { fields: mathFields, notice } = applyPlainMathToFields({
     question_text,
     ...options,
-    correct_letter,
     explanation_text,
+  });
+
+  const base = {
+    index,
+    question_text: mathFields.question_text,
+    option_a: mathFields.option_a,
+    option_b: mathFields.option_b,
+    option_c: mathFields.option_c,
+    option_d: mathFields.option_d,
+    correct_letter,
+    explanation_text: mathFields.explanation_text,
     category_tag,
     format,
   };
 
   const validated = validateDraft(base);
-  return { ...base, ...validated };
+  return { draft: { ...base, ...validated }, notice };
 }
 
-/** Full document parse: optional settings + drafts. */
+/** Full document parse: optional settings + drafts + math notice. */
 export function parseQuickPasteDocument(text: string): QuickPasteDocument {
   const normalized = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
   if (!normalized.trim()) {
-    return { settings: null, drafts: [] };
+    return { settings: null, drafts: [], mathNotice: { ...EMPTY_MATH_NOTICE } };
   }
 
   const { settings, body } = extractQuizSettingsHeader(normalized);
   if (!body.trim()) {
-    return { settings, drafts: [] };
+    return {
+      settings,
+      drafts: [],
+      mathNotice: { ...EMPTY_MATH_NOTICE },
+    };
   }
 
   const blocks = splitQuickPasteBlocks(body);
-  const drafts = blocks.map((block, index) => parseBlock(block, index));
-  return { settings, drafts };
+  let mathNotice: QuickPasteMathNotice = { ...EMPTY_MATH_NOTICE };
+  const drafts = blocks.map((block, index) => {
+    const { draft, notice } = parseBlock(block, index);
+    mathNotice = mergeMathNotices(mathNotice, notice);
+    return draft;
+  });
+  return { settings, drafts, mathNotice };
 }
 
 /** Parse pasted MCQ text into drafts (valid and invalid). */

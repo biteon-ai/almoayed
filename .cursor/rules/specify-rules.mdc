@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/025-admin-platform-settings/plan.md`
+**Active plan**: `specs/026-plain-math-paste/plan.md`
 
 Related artifacts:
-- Spec: `specs/025-admin-platform-settings/spec.md`
-- Research: `specs/025-admin-platform-settings/research.md`
-- Data model: `specs/025-admin-platform-settings/data-model.md`
-- Contracts: `specs/025-admin-platform-settings/contracts/`
-- Quickstart: `specs/025-admin-platform-settings/quickstart.md`
+- Spec: `specs/026-plain-math-paste/spec.md`
+- Research: `specs/026-plain-math-paste/research.md`
+- Data model: `specs/026-plain-math-paste/data-model.md`
+- Contracts: `specs/026-plain-math-paste/contracts/`
+- Quickstart: `specs/026-plain-math-paste/quickstart.md`
 <!-- SPECKIT END -->
