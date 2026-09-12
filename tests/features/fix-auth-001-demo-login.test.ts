@@ -4,7 +4,10 @@ import {
   DEMO_TEACHER_ID,
 } from "@/lib/demo-accounts";
 import { DEMO_STUDENT, DEMO_TEACHER } from "@/lib/constants";
-import { isPlaceholderSupabaseUrl } from "@/lib/supabase/admin";
+import {
+  createAdminClient,
+  isPlaceholderSupabaseUrl,
+} from "@/lib/supabase/admin";
 
 const FEATURE = "[FIX-AUTH-001]";
 
@@ -29,8 +32,7 @@ describe(`${FEATURE} placeholder Supabase host`, () => {
     expect(isPlaceholderSupabaseUrl(undefined)).toBe(false);
   });
 
-  it("createAdminClient throws for the CI placeholder host instead of hanging DNS", async () => {
-    const { createAdminClient } = await import("@/lib/supabase/admin");
+  it("createAdminClient throws for the CI placeholder host instead of hanging DNS", () => {
     const prevUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const prevKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
