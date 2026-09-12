@@ -675,6 +675,7 @@ features:
     files:
       - src/app/teacher/quizzes/page.tsx
       - src/app/teacher/quizzes/new/page.tsx
+      - src/app/teacher/quizzes/[id]/page.tsx
       - src/components/teacher/QuizListItem.tsx
       - src/components/teacher/QuizCreateForm.tsx
       - src/components/teacher/QuizCreateWizard.tsx
