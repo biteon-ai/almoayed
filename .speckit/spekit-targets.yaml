@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 93
+  total_targets: 105
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -270,6 +270,20 @@ ADMIN-001:
   admin-impersonation-exit: "Exit impersonation control"
   admin-login-form: "Super Admin email login form"
   teacher-email-login-form: "Teacher email/password login form"
+
+AUTH-009:
+  teacher-login-back: "Teacher login — back to main platform login"
+  teacher-forgot-password-link: "Forgot password link under password field"
+  teacher-forgot-password-form: "Forgot-password email request form"
+  teacher-forgot-password-submit: "Send password-reset email button"
+  teacher-magic-link-cta: "Request one-time magic login link"
+  teacher-magic-link-form: "Magic-link email request form"
+  teacher-magic-link-submit: "Send magic-link email button"
+  teacher-reset-form: "Set new password after reset link"
+  teacher-reset-password: "New password field on reset page"
+  teacher-reset-password-confirm: "Confirm password field on reset page"
+  teacher-reset-submit: "Save new password button"
+  teacher-magic-consume: "Magic-link consume result card"
 
 ADMIN-002:
   admin-nav-settings: "Admin nav link — platform settings"
