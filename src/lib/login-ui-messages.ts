@@ -43,6 +43,18 @@ const LOGIN_UI_AR: Record<AuthErrorCode, string> = {
     "الحسابات التجريبية غير مفعّلة في هالبيئة.",
   [AuthErrorCode.ACCOUNT_INACTIVE]:
     "عذراً، هذا الحساب غير فعال. يرجى التواصل مع الإدارة",
+  [AuthErrorCode.INVALID_EMAIL]: "البريد الإلكتروني غير صالح.",
+  [AuthErrorCode.TEACHER_NOT_FOUND]: "لا يوجد حساب مدرس بهذا البريد.",
+  [AuthErrorCode.RECOVERY_RATE_LIMITED]:
+    "وصلت للحد المسموح. جرّب بعد ربع ساعة.",
+  [AuthErrorCode.MAIL_SEND_FAILED]: "ما قدرنا نرسل الرسالة. جرّب مرة تانية.",
+  [AuthErrorCode.RESET_INVALID]:
+    "رابط إعادة التعيين غير صالح أو منتهٍ. اطلب رابطاً جديداً من صفحة دخول المدرس.",
+  [AuthErrorCode.MAGIC_INVALID]:
+    "رابط الدخول غير صالح أو منتهٍ. اطلب رابطاً جديداً من صفحة دخول المدرس.",
+  [AuthErrorCode.PASSWORD_TOO_SHORT]:
+    "كلمة المرور يجب أن تكون 8 أحرف على الأقل.",
+  [AuthErrorCode.PASSWORD_MISMATCH]: "تأكيد كلمة المرور غير مطابق.",
 };
 
 /** Map callback/query `error` param → AuthErrorCode */

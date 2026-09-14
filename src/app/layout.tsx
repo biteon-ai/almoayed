@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { APP_DESCRIPTION, APP_NAME, APP_THEME_COLOR } from "@/lib/constants";
+import { APP_DESCRIPTION, APP_NAME, APP_THEME_COLOR, APP_URL } from "@/lib/constants";
 import { TopLoaderProvider } from "@/components/providers/top-loader-provider";
 import "./globals.css";
 
@@ -14,11 +14,13 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: {
     default: APP_NAME,
     template: `%s | ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
+  alternates: { canonical: "/" },
   manifest: "/manifest.json",
   icons: {
     icon: [

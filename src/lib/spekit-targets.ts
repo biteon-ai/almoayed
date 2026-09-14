@@ -205,6 +205,20 @@ export const SPEKIT = {
   adminImpersonationExit: "admin-impersonation-exit",
   teacherEmailLoginForm: "teacher-email-login-form",
 
+  // ── AUTH-009 ─────────────────────────────────────────────────
+  teacherLoginBack: "teacher-login-back",
+  teacherForgotPasswordLink: "teacher-forgot-password-link",
+  teacherForgotPasswordForm: "teacher-forgot-password-form",
+  teacherForgotPasswordSubmit: "teacher-forgot-password-submit",
+  teacherMagicLinkCta: "teacher-magic-link-cta",
+  teacherMagicLinkForm: "teacher-magic-link-form",
+  teacherMagicLinkSubmit: "teacher-magic-link-submit",
+  teacherResetForm: "teacher-reset-form",
+  teacherResetPassword: "teacher-reset-password",
+  teacherResetPasswordConfirm: "teacher-reset-password-confirm",
+  teacherResetSubmit: "teacher-reset-submit",
+  teacherMagicConsume: "teacher-magic-consume",
+
   // ── ADMIN-002 ────────────────────────────────────────────────
   adminNavSettings: "admin-nav-settings",
   adminPlatformSettings: "admin-platform-settings",

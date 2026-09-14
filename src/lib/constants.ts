@@ -1,3 +1,5 @@
+import { getAppUrl } from "@/lib/app-origin";
+
 export const APP_NAME = "المؤيد";
 export const APP_SLOGAN = "حلّ بإيدك، ما حدا بيفيدك.";
 export const APP_TAGLINE = "منصة التقييم والاختبارات الذكية";
@@ -10,8 +12,8 @@ export const APP_THEME_COLOR = "#0d9488";
 export const TEACHER_WHATSAPP =
   process.env.NEXT_PUBLIC_TEACHER_WHATSAPP ?? "963999999999";
 
-export const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+/** Public origin (no trailing slash). Local default; set per env in Vercel. */
+export const APP_URL = getAppUrl();
 
 /** Demo student — matches supabase seed */
 export const DEMO_STUDENT = {

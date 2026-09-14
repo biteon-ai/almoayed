@@ -12,6 +12,11 @@ const studentPaths = [
   "/profile",
 ];
 const teacherPaths = ["/teacher"];
+const teacherAuthPublicPaths = [
+  "/teacher/login",
+  "/teacher/reset",
+  "/teacher/magic",
+];
 const adminPublicPaths = ["/admin/login", "/admin/emergency"];
 
 function matchesPrefix(pathname: string, prefixes: string[]) {
@@ -46,10 +51,12 @@ export async function middleware(request: NextRequest) {
   );
   const isAdminProtected = isAdminRoute && !isAdminPublic;
 
-  const isTeacherLogin = pathname === "/teacher/login";
+  const isTeacherAuthPublic = teacherAuthPublicPaths.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
   const isStudentRoute = matchesPrefix(pathname, studentPaths);
   const isTeacherRoute =
-    matchesPrefix(pathname, teacherPaths) && !isTeacherLogin;
+    matchesPrefix(pathname, teacherPaths) && !isTeacherAuthPublic;
 
   // PERF-001: Session cookie decrypt only — never add Supabase/DB here.
   // Device lock (AUTH-003) runs once per RSC request via cached require* in lib/auth.ts.

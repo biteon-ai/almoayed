@@ -12,6 +12,23 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    // Keep hostnames in sync with src/lib/app-origin.ts
+    return [
+      {
+        source: "/",
+        has: [{ type: "host", value: "www.almoayed.app" }],
+        destination: "https://almoayed.app",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.almoayed.app" }],
+        destination: "https://almoayed.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

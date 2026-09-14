@@ -504,3 +504,16 @@ export interface GamificationTierSaveInput {
   minAvgScore: number;
   iconType: GamificationIconType;
 }
+
+/** [AUTH-009] One-time teacher password-reset or magic-link grant */
+export type TeacherLoginTokenPurpose = "password_reset" | "magic_link";
+
+export interface TeacherLoginToken {
+  id: string;
+  profile_id: string;
+  purpose: TeacherLoginTokenPurpose;
+  token_hash: string;
+  expires_at: string;
+  consumed_at: string | null;
+  created_at: string;
+}
