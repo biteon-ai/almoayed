@@ -225,8 +225,11 @@ features:
       - src/app/teacher/reset/page.tsx
       - src/app/teacher/reset/reset-form.tsx
       - src/app/teacher/magic/page.tsx
+      - src/app/teacher/magic/consume/route.ts
       - src/actions/teacher-login-recovery.ts
       - src/lib/teacher-login-recovery.ts
+      - src/lib/email-template.ts
+      - src/lib/email-brand.ts
       - src/lib/teacher-login-messages.ts
       - src/lib/login-ui-messages.ts
       - src/middleware.ts

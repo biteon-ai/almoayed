@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { consumeTeacherMagicLink } from "@/actions/teacher-login-recovery";
+import { AuthErrorCode } from "@/lib/auth-error-codes";
 import { loginMessageForCode } from "@/lib/login-ui-messages";
 import { TEACHER_LOGIN_MESSAGES } from "@/lib/teacher-login-messages";
 import { MobileShell } from "@/components/layout/MobileShell";
@@ -9,19 +9,24 @@ import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 export const dynamic = "force-dynamic";
 
-export default async function TeacherMagicPage({
+function errorCode(raw: string | undefined): AuthErrorCode {
+  if (raw && raw in AuthErrorCode) return raw as AuthErrorCode;
+  return AuthErrorCode.MAGIC_INVALID;
+}
+
+export default function TeacherMagicPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: { token?: string; code?: string };
 }) {
   const token = searchParams.token?.trim() ?? "";
-  const result = token
-    ? await consumeTeacherMagicLink(token)
-    : { status: "error" as const, code: "MAGIC_INVALID" as const };
-
-  if (result.status === "success") {
-    redirect("/teacher/dashboard");
+  if (token) {
+    redirect(
+      `/teacher/magic/consume?token=${encodeURIComponent(token)}`
+    );
   }
+
+  const code = errorCode(searchParams.code);
 
   return (
     <MobileShell className="min-h-dvh bg-gradient-to-b from-brand-50/40 via-background to-background">
@@ -33,7 +38,7 @@ export default async function TeacherMagicPage({
         {...spekit(SPEKIT.teacherMagicConsume)}
       >
         <p className="text-sm font-medium text-destructive">
-          {loginMessageForCode(result.code)}
+          {loginMessageForCode(code)}
         </p>
         <Link
           href="/teacher/login"

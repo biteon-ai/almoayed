@@ -3,6 +3,7 @@ import { AuthErrorCode } from "@/lib/auth-error-codes";
 import { getAppUrl } from "@/lib/app-origin";
 import { isValidEmail } from "@/lib/admin/passwords";
 import { sendEmail } from "@/lib/resend";
+import { renderTransactionalEmail } from "@/lib/email-template";
 import { TEACHER_LOGIN_MESSAGES } from "@/lib/teacher-login-messages";
 import type { AuthSupabaseClient } from "@/lib/auth-session";
 import type {
@@ -71,22 +72,46 @@ export function buildMagicUrl(origin: string, secret: string): string {
   return `${origin.replace(/\/+$/, "")}/teacher/magic?token=${encodeURIComponent(secret)}`;
 }
 
-export function resetEmailHtml(fullName: string, url: string): string {
-  const name = fullName.trim() || "أستاذ";
-  return `<p>مرحباً ${escapeHtml(name)}،</p><p>اضغط الرابط التالي لتعيين كلمة مرور جديدة (صالح لمدة 60 دقيقة، لمرة واحدة):</p><p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`;
+export function resetEmailHtml(
+  fullName: string,
+  url: string,
+  origin?: string
+): string {
+  return renderTransactionalEmail({
+    origin,
+    preheader: TEACHER_LOGIN_MESSAGES.resetEmailPreheader,
+    heading: TEACHER_LOGIN_MESSAGES.resetTitle,
+    greetingName: fullName,
+    paragraphs: [
+      TEACHER_LOGIN_MESSAGES.resetEmailP1,
+      TEACHER_LOGIN_MESSAGES.resetEmailP2,
+    ],
+    ctaLabel: TEACHER_LOGIN_MESSAGES.resetEmailCta,
+    ctaUrl: url,
+    fallbackHint: TEACHER_LOGIN_MESSAGES.emailFallbackHint,
+    footerNote: TEACHER_LOGIN_MESSAGES.resetEmailFooter,
+  });
 }
 
-export function magicEmailHtml(fullName: string, url: string): string {
-  const name = fullName.trim() || "أستاذ";
-  return `<p>مرحباً ${escapeHtml(name)}،</p><p>اضغط الرابط التالي للدخول دون كلمة مرور (صالح لمدة 15 دقيقة، لمرة واحدة):</p><p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+export function magicEmailHtml(
+  fullName: string,
+  url: string,
+  origin?: string
+): string {
+  return renderTransactionalEmail({
+    origin,
+    preheader: TEACHER_LOGIN_MESSAGES.magicEmailPreheader,
+    heading: TEACHER_LOGIN_MESSAGES.magicEmailHeading,
+    greetingName: fullName,
+    paragraphs: [
+      TEACHER_LOGIN_MESSAGES.magicEmailP1,
+      TEACHER_LOGIN_MESSAGES.magicEmailP2,
+    ],
+    ctaLabel: TEACHER_LOGIN_MESSAGES.magicEmailCta,
+    ctaUrl: url,
+    fallbackHint: TEACHER_LOGIN_MESSAGES.emailFallbackHint,
+    footerNote: TEACHER_LOGIN_MESSAGES.magicEmailFooter,
+  });
 }
 
 export async function lookupTeacherByEmail(
@@ -183,8 +208,8 @@ export async function issueAndSendRecovery(
       : buildMagicUrl(origin, secret);
   const html =
     purpose === "password_reset"
-      ? resetEmailHtml(lookup.fullName, url)
-      : magicEmailHtml(lookup.fullName, url);
+      ? resetEmailHtml(lookup.fullName, url, origin)
+      : magicEmailHtml(lookup.fullName, url, origin);
   const subject =
     purpose === "password_reset"
       ? TEACHER_LOGIN_MESSAGES.resetSubject
