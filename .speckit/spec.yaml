@@ -8,6 +8,11 @@ product:
   locale: ar-SY
   direction: rtl
   stack: Next.js 14 · Supabase · iron-session · Tailwind · Shadcn
+  origins:
+    production: https://almoayed.app
+    production_www: https://www.almoayed.app
+    development: https://dev.almoayed.app
+    local: http://localhost:3000
 
 status_legend:
   implemented: Shipped and in production codebase
@@ -208,6 +213,44 @@ features:
       - join-whatsapp
       - join-submit
 
+  - id: AUTH-009
+    name: Teacher Login Recovery
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/login", "/teacher/reset", "/teacher/magic"]
+    extends: [ADMIN-001, AUTH-003, AUTH-007]
+    files:
+      - specs/028-teacher-login-recovery/
+      - src/app/teacher/login/page.tsx
+      - src/app/teacher/reset/page.tsx
+      - src/app/teacher/reset/reset-form.tsx
+      - src/app/teacher/magic/page.tsx
+      - src/actions/teacher-login-recovery.ts
+      - src/lib/teacher-login-recovery.ts
+      - src/lib/teacher-login-messages.ts
+      - src/lib/login-ui-messages.ts
+      - src/middleware.ts
+      - supabase/migrations/020_teacher_login_tokens.sql
+      - tests/features/auth-009-teacher-login-recovery.test.ts
+      - tests/features/auth-009-recovery-actions.test.ts
+      - e2e/auth-009-teacher-login.spec.ts
+    acceptance:
+      - Back control on /teacher/login navigates to /login without submitting the form
+      - Forgot-password sends a 60-minute single-use reset mail only for active teachers
+      - Unknown/non-teacher emails get Arabic not-found and no mail
+      - Inactive teachers get AUTH-007 copy and no mail
+      - Magic link is 15-minute single-use and mints a teacher session via AUTH-003
+      - Rate limit 3 successful sends per teacher per 15 minutes
+    spekit:
+      - teacher-email-login-form
+      - teacher-login-back
+      - teacher-forgot-password-link
+      - teacher-forgot-password-form
+      - teacher-magic-link-cta
+      - teacher-reset-form
+      - teacher-magic-consume
+    notes: Extends ADMIN-001 teacher email login; students remain WhatsApp-only.
+
   - id: ADMIN-001
     name: Super Admin Dashboard
     status: implemented
@@ -281,6 +324,25 @@ features:
       - admin-fixed-otp-switch
       - admin-fixed-otp-code
       - login-fixed-otp-field
+
+  - id: EMAIL-001
+    name: Resend transactional email
+    status: partial
+    persona: [SUPER_ADMIN]
+    routes: ["/api/email/send"]
+    files:
+      - src/lib/resend.ts
+      - src/lib/app-origin.ts
+      - src/app/api/email/send/route.ts
+      - tests/features/email-resend.test.ts
+      - tests/features/app-origin.test.ts
+    acceptance:
+      - RESEND_API_KEY is read from env; the dashboard placeholder re_xxxxxxxxx is treated as unconfigured
+      - Super Admin POST /api/email/send sends the Hello World test email via Resend
+      - Default from is onboarding@resend.dev and default to is almoayed@biteon.nl
+      - Production public origin is https://almoayed.app (www redirects there); dev/test is https://dev.almoayed.app
+      - API key is never returned to the client
+    spekit: []
 
   - id: PROFILE-001
     name: User Profile & Settings

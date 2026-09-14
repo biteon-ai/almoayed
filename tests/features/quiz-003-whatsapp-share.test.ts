@@ -9,7 +9,7 @@ const FEATURE = "[QUIZ-003]";
 
 describe(`${FEATURE} result share payload`, () => {
   const quizUrl =
-    "https://app.almoayed.edu/quiz/dd000001-0000-4000-8000-000000000001";
+    "https://almoayed.app/quiz/dd000001-0000-4000-8000-000000000001";
 
   it("keeps Arabic text and URL as separate fields", () => {
     const payload = buildResultSharePayload(85, quizUrl);

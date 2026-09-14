@@ -53,7 +53,13 @@ cp .env.example .env
 
 - `NEXT_PUBLIC_SUPABASE_URL` و `SUPABASE_SERVICE_ROLE_KEY`
 - `SESSION_SECRET` (32+ حرف)
-- `NEXT_PUBLIC_APP_URL` (مثال: `http://localhost:3000`)
+- `NEXT_PUBLIC_APP_URL` (محلي: `http://localhost:3000` · إنتاج: `https://almoayed.app` · تجربة: `https://dev.almoayed.app`)
+
+| البيئة | الأصل |
+|--------|--------|
+| إنتاج | [https://almoayed.app](https://almoayed.app) — [www.almoayed.app](https://www.almoayed.app) يعيد التوجيه إلى الأصل بدون www |
+| تطوير / اختبار | [https://dev.almoayed.app](https://dev.almoayed.app) |
+| محلي | [http://localhost:3000](http://localhost:3000) |
 
 راجع [`.env.example`](.env.example) لخيارات BiteonSwitch و Admin fallback.
 

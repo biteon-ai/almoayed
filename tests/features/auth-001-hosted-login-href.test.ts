@@ -8,12 +8,12 @@ describe("[AUTH-001] getBiteonHostedLoginHref", () => {
 
   it("[AUTH-001] builds href from BITEONSWITCH_HOSTED_LOGIN_URL in env", () => {
     vi.stubEnv("BITEONSWITCH_HOSTED_LOGIN_URL", "https://auth.example.com/almoayed-edu");
-    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://almoayed-edu.vercel.app");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://almoayed.app");
 
     const href = getBiteonHostedLoginHref();
 
     expect(href).toBe(
-      "https://auth.example.com/almoayed-edu?return=https%3A%2F%2Falmoayed-edu.vercel.app%2Flogin"
+      "https://auth.example.com/almoayed-edu?return=https%3A%2F%2Falmoayed.app%2Flogin"
     );
   });
 

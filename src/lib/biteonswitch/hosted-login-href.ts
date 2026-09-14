@@ -1,6 +1,7 @@
+import { getAppUrl, LOCAL_ORIGIN } from "@/lib/app-origin";
 import { getBiteonSwitchConfig } from "@/lib/biteonswitch/config";
 
-const LOCAL_HOSTED_LOGIN_FALLBACK = "http://localhost:3000/almoayed-edu";
+const LOCAL_HOSTED_LOGIN_FALLBACK = `${LOCAL_ORIGIN}/almoayed-edu`;
 
 /**
  * AUTH-001: Hosted BiteonSwitch login URL for «تسجيل الدخول عبر واتساب».
@@ -15,8 +16,6 @@ const LOCAL_HOSTED_LOGIN_FALLBACK = "http://localhost:3000/almoayed-edu";
 export function getBiteonHostedLoginHref(): string {
   const { hostedLoginUrl } = getBiteonSwitchConfig();
   const hosted = hostedLoginUrl || LOCAL_HOSTED_LOGIN_FALLBACK;
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
-  const returnUrl = `${appUrl.replace(/\/$/, "")}/login`;
+  const returnUrl = `${getAppUrl()}/login`;
   return `${hosted}?return=${encodeURIComponent(returnUrl)}`;
 }
