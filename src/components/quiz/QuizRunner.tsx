@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { submitQuiz } from "@/actions/quiz";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
-import { QuizTimerBadge } from "@/components/quiz/QuizTimerBadge";
+import { QuizPlayerHeader } from "@/components/quiz/QuizPlayerHeader";
+import { QuizExitDialog } from "@/components/quiz/QuizExitDialog";
+import { QuestionPager } from "@/components/quiz/QuestionPager";
+import { QuestionJumpSheet } from "@/components/quiz/QuestionJumpSheet";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
-import { QuizSidebar } from "@/components/quiz/QuizSidebar";
 import { WhatsAppShare } from "@/components/quiz/WhatsAppShare";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,14 +22,20 @@ import {
   ChevronRight,
   CloudUpload,
   HelpCircle,
+  LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toUserMessage, uiMessage, ErrorCode } from "@/lib/app-errors";
 import { useOnlineStatus } from "@/lib/offline/connectivity";
 import {
   getInProgress,
+  saveInProgress,
   saveInProgressDebounced,
 } from "@/lib/offline/in-progress";
+import {
+  answeredProgress,
+  shouldConfirmQuizExit,
+} from "@/lib/quiz-player";
 import {
   enqueuePendingSubmission,
   getPendingForQuiz,
@@ -37,6 +46,7 @@ import {
   remainingSecondsFromEndsAt,
   type TimedQuizSessionView,
 } from "@/lib/quiz-timer";
+import { hapticPulse } from "@/lib/haptic";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 const TIME_EXPIRED_NOTICE =
@@ -70,8 +80,11 @@ export function QuizRunner({
     timer ? remainingSecondsFromEndsAt(timer.endsAt) : 0
   );
   const [draftReady, setDraftReady] = useState(false);
+  const [exitOpen, setExitOpen] = useState(false);
+  const [jumpOpen, setJumpOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   useStudentLoadingBarSync(isPending);
+  const router = useRouter();
 
   const autoSubmitStarted = useRef(false);
   const answersRef = useRef(answers);
@@ -128,10 +141,17 @@ export function QuizRunner({
   const isSubmitted = results !== null;
   const timeLocked = Boolean(timer) && remainingSeconds <= 0 && !isSubmitted;
   const answeredCount = Object.keys(answers).length;
-  const progress = questions.length
-    ? (answeredCount / questions.length) * 100
-    : 0;
+  const { percent: progressPercent, label: progressLabel } = answeredProgress(
+    answeredCount,
+    questions.length
+  );
   const questionIds = questions.map((q) => q.id);
+  const confirmExit = shouldConfirmQuizExit({
+    isSubmitted,
+    pendingSync,
+    questionCount: questions.length,
+    timeExpiredNotice,
+  });
 
   const activeQuestion = questions[activeIndex];
   const activeResult = results?.answers.find(
@@ -141,6 +161,7 @@ export function QuizRunner({
   const handleAnswer = (questionId: string, value: string) => {
     if (isSubmitted || pendingSync || timeLocked) return;
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
+    hapticPulse(10);
   };
 
   const submitAttempt = (opts: { forceTimedExpiry: boolean }) => {
@@ -210,6 +231,7 @@ export function QuizRunner({
   ]);
 
   const handleSubmit = () => {
+    hapticPulse(20);
     submitAttempt({ forceTimedExpiry: false });
   };
 
@@ -234,18 +256,66 @@ export function QuizRunner({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  useEffect(() => {
+    if (!confirmExit) return;
+    const url = `${window.location.pathname}${window.location.search}`;
+    window.history.pushState({ quizPlayerGuard: true }, "", url);
+    const onPop = () => {
+      window.history.pushState({ quizPlayerGuard: true }, "", url);
+      setExitOpen(true);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [confirmExit, quiz.id]);
+
+  const handleExitRequest = () => {
+    if (confirmExit) {
+      setExitOpen(true);
+      return;
+    }
+    router.replace("/quizzes");
+  };
+
+  const handleExitConfirm = () => {
+    void saveInProgress(quiz.id, {
+      answers: answersRef.current,
+      activeIndex,
+    }).finally(() => {
+      setExitOpen(false);
+      router.replace("/quizzes");
+    });
+  };
+
   const wrongAnswersCount = results
     ? results.totalQuestions - results.correctCount
     : 0;
 
   return (
     <div
-      className="mx-auto max-w-7xl px-4 py-6 pb-36 md:py-8 md:pb-24"
+      className="mx-auto max-w-3xl px-4 py-4 pb-44 md:py-6 md:pb-28"
       {...spekit(SPEKIT.quizPage)}
     >
-      {timer && !isSubmitted ? (
-        <QuizTimerBadge remainingSeconds={remainingSeconds} />
-      ) : null}
+      <QuizPlayerHeader
+        showTimer={Boolean(timer) && !isSubmitted}
+        remainingSeconds={remainingSeconds}
+        onExit={handleExitRequest}
+      />
+      <QuizExitDialog
+        open={exitOpen}
+        onOpenChange={setExitOpen}
+        onConfirm={handleExitConfirm}
+      />
+      <QuestionJumpSheet
+        open={jumpOpen}
+        onOpenChange={setJumpOpen}
+        count={questions.length}
+        activeIndex={activeIndex}
+        isSubmitted={isSubmitted}
+        answers={answers}
+        questionIds={questionIds}
+        results={results}
+        onNavigate={goToQuestion}
+      />
 
       {!online && !isSubmitted && !pendingSync && <OfflineStatusBanner />}
 
@@ -258,11 +328,7 @@ export function QuizRunner({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
-        <main
-          className="order-2 space-y-6 md:order-1 md:col-span-8 lg:col-span-8"
-          {...spekit(SPEKIT.quizQuestionList)}
-        >
+      <main className="space-y-5" {...spekit(SPEKIT.quizQuestionList)}>
           {pendingSync && !isSubmitted && (
             <Card
               className="border-teal-200 bg-teal-50/80"
@@ -295,15 +361,15 @@ export function QuizRunner({
 
           {questions.length === 0 ? (
             <Card
-              className="border-dashed border-slate-200"
+              className="border-dashed border-border"
               {...spekit(SPEKIT.quizEmptyState)}
             >
               <CardContent className="space-y-3 p-8 text-center">
-                <AlertCircle className="mx-auto size-8 text-slate-400" />
-                <p className="text-sm font-semibold text-slate-800">
+                <AlertCircle className="mx-auto size-8 text-muted-foreground" />
+                <p className="text-sm font-semibold text-foreground">
                   هذا الاختبار فاضي — ما في أسئلة بعد
                 </p>
-                <p className="text-xs leading-relaxed text-slate-500">
+                <p className="text-xs leading-relaxed text-muted-foreground">
                   الأستاذ لسه ما أضاف أسئلة. ارجع للوحة التحكم وجرب لاحقاً.
                 </p>
                 <Link href="/dashboard">
@@ -316,10 +382,12 @@ export function QuizRunner({
           ) : (
             !pendingSync && (
               <>
-                <div className="mx-auto w-full max-w-3xl">
-                  {activeQuestion && (
+                {activeQuestion ? (
+                  <div
+                    key={activeQuestion.id}
+                    className="quiz-question-enter w-full"
+                  >
                     <QuestionCard
-                      key={activeQuestion.id}
                       question={activeQuestion}
                       index={activeIndex}
                       value={
@@ -330,34 +398,42 @@ export function QuizRunner({
                       onChange={(v) => handleAnswer(activeQuestion.id, v)}
                       disabled={isSubmitted || timeLocked}
                       showResult={isSubmitted}
-                      correctAnswer={activeResult?.correctAnswer}
-                      categoryTag={activeResult?.categoryTag}
-                      explanationText={activeResult?.explanationText}
-                      explanationMediaUrl={activeResult?.explanationMediaUrl}
+                      correctAnswer={
+                        isSubmitted ? activeResult?.correctAnswer : undefined
+                      }
+                      categoryTag={
+                        isSubmitted ? activeResult?.categoryTag : undefined
+                      }
+                      explanationText={
+                        isSubmitted ? activeResult?.explanationText : undefined
+                      }
+                      explanationMediaUrl={
+                        isSubmitted
+                          ? activeResult?.explanationMediaUrl
+                          : undefined
+                      }
                     />
-                  )}
-                </div>
+                  </div>
+                ) : null}
 
-                <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="h-10 gap-1 rounded-xl font-bold"
+                    className="min-h-11 gap-1 rounded-xl font-bold"
                     disabled={activeIndex === 0}
                     onClick={() => goToQuestion(activeIndex - 1)}
                   >
                     <ChevronRight className="size-4" />
                     السابق
                   </Button>
-                  <span className="text-xs font-bold tabular-nums text-slate-500">
+                  <span className="text-xs font-bold tabular-nums text-muted-foreground">
                     {activeIndex + 1} / {questions.length}
                   </span>
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="h-10 gap-1 rounded-xl font-bold"
+                    className="min-h-11 gap-1 rounded-xl font-bold"
                     disabled={activeIndex >= questions.length - 1}
                     onClick={() => goToQuestion(activeIndex + 1)}
                   >
@@ -365,13 +441,36 @@ export function QuizRunner({
                     <ChevronLeft className="size-4" />
                   </Button>
                 </div>
+
+                {isSubmitted ? (
+                  <div className="flex items-center gap-2">
+                    <QuestionPager
+                      className="min-w-0 flex-1"
+                      count={questions.length}
+                      activeIndex={activeIndex}
+                      isSubmitted={isSubmitted}
+                      answers={answers}
+                      questionIds={questionIds}
+                      results={results}
+                      onNavigate={goToQuestion}
+                    />
+                    <button
+                      type="button"
+                      className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl border border-border px-3 text-xs font-bold"
+                      onClick={() => setJumpOpen(true)}
+                    >
+                      <LayoutGrid className="size-4" aria-hidden />
+                      كل الأسئلة
+                    </button>
+                  </div>
+                ) : null}
               </>
             )
           )}
 
           {isSubmitted && results && (
             <div
-              className="mx-auto max-w-3xl space-y-6 animate-slide-up"
+              className="space-y-6 animate-slide-up"
               {...spekit(SPEKIT.quizResultsReview)}
             >
               <WhatsAppShare
@@ -391,7 +490,7 @@ export function QuizRunner({
                         راجع تفاصيل الأخطاء
                       </h3>
                       <p className="mt-1 text-xs leading-relaxed text-amber-800/90">
-                        استخدم شبكة التنقل لمراجعة الأسئلة الخاطئة — الشروحات
+                        استخدم أرقام الأسئلة لمراجعة الإجابات الخاطئة — الشروحات
                         مفتوحة لكل سؤال.
                       </p>
                     </div>
@@ -425,26 +524,38 @@ export function QuizRunner({
               </Link>
             </div>
           )}
-        </main>
-
-        <QuizSidebar
-          className="order-1 md:order-2 md:col-span-4 lg:col-span-4"
-          quiz={quiz}
-          questionCount={questions.length}
-          questionIds={questionIds}
-          answeredCount={answeredCount}
-          progress={progress}
-          isSubmitted={isSubmitted || pendingSync || timeLocked}
-          activeIndex={activeIndex}
-          answers={answers}
-          results={results}
-          onNavigate={goToQuestion}
-        />
-      </div>
+      </main>
 
       {!isSubmitted && !pendingSync && !timeLocked && questions.length > 0 && (
-        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-slate-100 bg-white/90 p-4 shadow-lg backdrop-blur-md safe-bottom md:bottom-0 md:z-30">
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-background/90 p-3 shadow-lg backdrop-blur-md safe-bottom md:bottom-0 md:z-30">
           <div className="mx-auto max-w-3xl space-y-3">
+            <div className="flex items-center gap-2">
+              <QuestionPager
+                className="min-w-0 flex-1"
+                count={questions.length}
+                activeIndex={activeIndex}
+                isSubmitted={isSubmitted}
+                answers={answers}
+                questionIds={questionIds}
+                results={results}
+                onNavigate={goToQuestion}
+              />
+              <button
+                type="button"
+                className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl border border-border bg-card px-3 text-xs font-bold"
+                onClick={() => setJumpOpen(true)}
+              >
+                <LayoutGrid className="size-4" aria-hidden />
+                كل الأسئلة
+              </button>
+            </div>
+            <p
+              className="text-start text-xs font-bold text-muted-foreground"
+              {...spekit(SPEKIT.quizProgress)}
+            >
+              {progressLabel}
+              {questions.length > 0 ? ` · ${progressPercent}%` : ""}
+            </p>
             {error && (
               <div
                 role="alert"
@@ -457,7 +568,7 @@ export function QuizRunner({
             <Button
               size="lg"
               className={cn(
-                "h-12 w-full rounded-xl text-base font-extrabold",
+                "min-h-12 w-full rounded-xl text-base font-extrabold",
                 "bg-brand-600 text-white shadow-md transition-all hover:bg-brand-700",
                 "hover:scale-[1.01] active:scale-[0.99]",
                 "disabled:opacity-50 disabled:hover:scale-100"

@@ -261,6 +261,36 @@ export const SPEKIT = {
   gamifRewardsExpand: "gamif-rewards-expand",
   gamifRewardsTrack: "gamif-rewards-track",
   gamifResultsSummary: "gamif-results-summary",
+
+  // ── UI-012 / UI-013 native shell + drawer ────────────────────
+  nativeProfileDrawer: "native-profile-drawer",
+  nativeDrawerClose: "native-drawer-close",
+  nativeThemeSwitcher: "native-theme-switcher",
+  nativeOfflineList: "native-offline-list",
+  nativeDrawerSettings: "native-drawer-settings",
+  nativeShareApp: "native-share-app",
+  nativeContactUs: "native-contact-us",
+  nativeAppVersion: "native-app-version",
+
+  // ── DASH-002 action tiles ────────────────────────────────────
+  dashboardActionTiles: "dashboard-action-tiles",
+  dashboardTileProgress: "dashboard-tile-progress",
+  dashboardTileQuizzes: "dashboard-tile-quizzes",
+  dashboardTileResults: "dashboard-tile-results",
+  dashboardTileContinue: "dashboard-tile-continue",
+
+  // ── UI-015 in-app A2HS sheet ─────────────────────────────────
+  pwaInstallSheet: "pwa-install-sheet",
+  pwaInstallSheetAndroid: "pwa-install-sheet-android",
+  pwaInstallSheetGuide: "pwa-install-sheet-guide",
+  pwaInstallSheetDismiss: "pwa-install-sheet-dismiss",
+
+  // ── UI-016 quiz player ───────────────────────────────────────
+  quizPlayerHeader: "quiz-player-header",
+  quizExitButton: "quiz-exit-button",
+  quizExitDialog: "quiz-exit-dialog",
+  quizQuestionPager: "quiz-question-pager",
+  quizJumpSheet: "quiz-jump-sheet",
 } as const;
 
 export type SpekitTarget = (typeof SPEKIT)[keyof typeof SPEKIT];

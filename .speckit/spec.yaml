@@ -1131,8 +1131,8 @@ partial_features:
 
   - id: UI-003
     name: PWA Icons
-    status: partial
-    notes: manifest.json icons array empty
+    status: implemented
+    notes: 192/512 any+maskable plus apple-touch-icon 180 via generate:brand
 
   - id: UI-006
     name: Navbar Route Progress
@@ -1278,6 +1278,146 @@ partial_features:
       - pwa-install-android
       - pwa-install-ios
       - pwa-install-modal
+
+  - id: UI-012
+    name: Native Standalone Home-Screen Shell
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    files:
+      - public/manifest.json
+      - public/sw.js
+      - src/app/layout.tsx
+      - src/app/(student)/layout.tsx
+      - src/lib/appearance.ts
+      - src/components/providers/appearance-provider.tsx
+      - src/components/layout/StudentHeader.tsx
+      - src/components/layout/StudentBottomNav.tsx
+      - tests/features/ui-012-native-shell.test.ts
+      - e2e/ui-012-native-pwa-shell.spec.ts
+    acceptance:
+      - Installed launch is display standalone with المؤيد icons (192/512 + Apple 180)
+      - theme_color teal and background_color match the light shell
+      - Viewport remains unscalable; OS text scaling still applies
+      - Student chrome uses semantic tokens for dark/light appearance
+    spekit: [native-app-version]
+
+  - id: UI-013
+    name: Native Student Profile Drawer
+    status: implemented
+    persona: [STUDENT]
+    files:
+      - src/components/student/StudentProfileDrawer.tsx
+      - src/components/student/OfflineSavedQuizzesList.tsx
+      - src/lib/native-share.ts
+      - src/lib/offline/quiz-cache.ts
+      - tests/features/ui-013-appearance-drawer.test.ts
+    acceptance:
+      - Header gear opens RTL start-side drawer without leaving the page
+      - Dark/Light/System appearance persists on the device
+      - Offline saved quizzes list is filtered by currentTeacherId
+      - Share, contact, settings/upgrade, and version footer are present
+      - Bottom-tab الإعدادات still opens PROFILE-001
+    spekit:
+      - native-profile-drawer
+      - native-drawer-close
+      - native-theme-switcher
+      - native-offline-list
+      - native-drawer-settings
+      - native-share-app
+      - native-contact-us
+
+  - id: DASH-002
+    name: Dashboard Native Action Tiles
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/dashboard"]
+    files:
+      - src/lib/dashboard-action-tiles.ts
+      - src/components/dashboard/DashboardActionTiles.tsx
+      - src/components/dashboard/StudentDashboardView.tsx
+      - src/components/dashboard/StudentDashboardHero.tsx
+      - tests/features/dash-002-action-tiles.test.ts
+    acceptance:
+      - Home shows a 2-column card-tile grid for progress, tests, results, continue
+      - Tiles map to existing student destinations with Arabic empty states
+      - DASH-001 hero/KPI/rewards/tabs remain
+    spekit:
+      - dashboard-action-tiles
+      - dashboard-tile-progress
+      - dashboard-tile-quizzes
+      - dashboard-tile-results
+      - dashboard-tile-continue
+
+  - id: UI-014
+    name: Native Tab Motion and Quiz Haptics
+    status: implemented
+    persona: [STUDENT]
+    files:
+      - src/app/(student)/template.tsx
+      - src/app/globals.css
+      - src/components/layout/StudentNavLink.tsx
+      - src/lib/haptic.ts
+      - src/components/quiz/QuizRunner.tsx
+      - tests/features/ui-014-haptic.test.ts
+    acceptance:
+      - Student tab switches use a short slide/fade; reduced-motion is instant
+      - Quiz submit bar stays pinned above the bottom nav
+      - Answer and submit taps pulse on vibration-capable devices without delaying selection
+    spekit: [quiz-submit-button]
+
+  - id: UI-015
+    name: In-App Add to Home Screen Sheet
+    status: implemented
+    persona: [STUDENT]
+    files:
+      - src/lib/a2hs-prompt.ts
+      - src/components/pwa/PwaInstallSheet.tsx
+      - src/app/(student)/layout.tsx
+      - tests/features/ui-015-a2hs-eligibility.test.ts
+    acceptance:
+      - Signed-in phone browser students see an Arabic install bottom sheet
+      - Hidden in standalone, on /quiz/*, after dismiss for the session, and for 24h
+      - Login UI-010 install CTAs remain
+    spekit:
+      - pwa-install-sheet
+      - pwa-install-sheet-android
+      - pwa-install-sheet-guide
+      - pwa-install-sheet-dismiss
+
+  - id: UI-016
+    name: Mobile Quiz Player Redesign
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/quiz/[id]"]
+    extends: [QUIZ-001, QUIZ-004, UI-001, UI-014, OFFLINE-001]
+    spec: specs/030-quiz-player-ui/
+    files:
+      - src/lib/quiz-player.ts
+      - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuestionCard.tsx
+      - src/components/quiz/QuizPlayerHeader.tsx
+      - src/components/quiz/QuizExitDialog.tsx
+      - src/components/quiz/QuestionPager.tsx
+      - src/components/quiz/QuestionJumpSheet.tsx
+      - src/components/quiz/QuizTimerBadge.tsx
+      - src/components/quiz/QuestionNavGrid.tsx
+      - tests/features/ui-016-quiz-player.test.ts
+      - e2e/ui-016-quiz-player.spec.ts
+    acceptance:
+      - Slim sticky header with Arabic exit confirm and MM:SS «الوقت المتبقي» for timed quizzes
+      - One immersive question card with A/B/C/D rows; selected state #065f46; no solutions until submit
+      - Horizontal pager + all-questions sheet replace the taking sidebar grid
+      - Sticky progress + «تسليم الإجابات وإنهاء الاختبار» above the student tab bar
+    spekit:
+      - quiz-player-header
+      - quiz-exit-button
+      - quiz-exit-dialog
+      - quiz-question-pager
+      - quiz-jump-sheet
+      - quiz-timer
+      - question-card
+      - quiz-submit-button
+      - quiz-progress
 
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel

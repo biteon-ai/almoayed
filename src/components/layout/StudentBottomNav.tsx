@@ -20,7 +20,7 @@ export function StudentBottomNav() {
   return (
     <nav
       aria-label="التنقل السفلي"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-100 bg-white/95 backdrop-blur-md md:hidden safe-bottom"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/95 backdrop-blur-md md:hidden safe-bottom"
     >
       <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 py-1.5">
         {items.map((item) => {
@@ -42,7 +42,7 @@ export function StudentBottomNav() {
               />
               <span className="truncate text-[10px] font-bold">{item.label}</span>
               {active && (
-                <span className="size-1 rounded-full bg-emerald-600" aria-hidden />
+                <span className="size-1 rounded-full bg-brand-600" aria-hidden />
               )}
             </StudentNavLink>
           );

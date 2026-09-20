@@ -9,6 +9,9 @@ export const APP_PLATFORM_BADGE = "منصة تعليمية متكاملة لجم
 export const APP_FOOTER_COPYRIGHT = `© ${new Date().getFullYear()} منصة المؤيد التعليمية — منصة اختبارات وتقييم شاملة لكافة المراحل.`;
 export const APP_THEME_COLOR = "#0d9488";
 
+/** Displayed in the student profile drawer. Keep in sync with package.json. */
+export const APP_VERSION = "0.1.0";
+
 export const TEACHER_WHATSAPP =
   process.env.NEXT_PUBLIC_TEACHER_WHATSAPP ?? "963999999999";
 

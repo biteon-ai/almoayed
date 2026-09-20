@@ -8,6 +8,7 @@ import type { ExamQuestion } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { MathText } from "@/components/ui/MathText";
 import { Check, HelpCircle, X } from "lucide-react";
+import { optionLetter, QUIZ_CHOICE_SELECTED } from "@/lib/quiz-player";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 interface QuestionCardProps {
@@ -66,23 +67,22 @@ export function QuestionCard({
 
   return (
     <article
-      className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm"
+      className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm"
       {...spekit(SPEKIT.questionCard)}
     >
-      {/* Meta badges */}
-      <div className="flex flex-wrap items-center justify-start gap-2 border-b border-slate-100 px-6 py-4 md:px-8">
-        <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-800">
+      <div className="flex flex-wrap items-center justify-start gap-2 border-b border-border px-6 py-4 md:px-8">
+        <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-800 dark:bg-brand-950/50 dark:text-brand-200">
           السؤال {index + 1}
         </span>
-        {categoryTag && (
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+        {showResult && categoryTag ? (
+          <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
             {categoryTag}
           </span>
-        )}
+        ) : null}
       </div>
 
       <div className="space-y-6 p-6 md:p-8">
-        <div className="text-start text-lg font-bold leading-relaxed text-slate-900 md:text-xl">
+        <div className="text-start text-lg font-bold leading-relaxed text-foreground md:text-xl">
           <MathText text={question.question_text} />
         </div>
 
@@ -106,26 +106,33 @@ export function QuestionCard({
           className="gap-3"
         >
           {question.options.map((option, optIdx) => {
-            const letter = String.fromCharCode(65 + optIdx);
+            const letter = optionLetter(optIdx);
             const isSelected = value === option;
             const isCorrect = showResult && option === correctAnswer;
             const isWrong = showResult && isSelected && option !== correctAnswer;
+            const takingSelected = isSelected && !showResult;
 
             return (
               <div
                 key={option}
                 className={cn(
-                  "flex cursor-pointer items-center justify-between gap-4 rounded-2xl border p-4 transition-all duration-200",
-                  "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
-                  isSelected &&
-                    !showResult &&
-                    "border-brand-300 bg-brand-50/50 hover:bg-brand-50/70",
+                  "flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-2xl border px-4 py-3 transition-all duration-200",
+                  "border-border bg-background hover:border-muted-foreground/30 hover:bg-muted/40",
+                  takingSelected && "text-white hover:text-white",
                   isCorrect &&
                     "border-green-200 bg-green-50/70 text-green-900 hover:bg-green-50/70",
                   isWrong &&
                     "border-red-200 bg-red-50/70 text-red-900 hover:bg-red-50/70",
-                  disabled && "cursor-default hover:border-slate-200 hover:bg-white"
+                  disabled && "cursor-default hover:border-border hover:bg-background"
                 )}
+                style={
+                  takingSelected
+                    ? {
+                        backgroundColor: QUIZ_CHOICE_SELECTED,
+                        borderColor: QUIZ_CHOICE_SELECTED,
+                      }
+                    : undefined
+                }
                 onClick={() => {
                   if (!disabled) onChange(option);
                 }}
@@ -141,14 +148,17 @@ export function QuestionCard({
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <div
                     className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors",
-                      "bg-slate-100 text-slate-600",
-                      isSelected &&
-                        !showResult &&
-                        "bg-brand-600 text-white",
+                      "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors",
+                      "bg-muted text-muted-foreground",
+                      takingSelected && "bg-white/15 text-white",
                       isCorrect && "bg-green-500 text-white",
                       isWrong && "bg-red-100 text-red-600"
                     )}
+                    style={
+                      takingSelected
+                        ? { backgroundColor: "rgba(255,255,255,0.18)" }
+                        : undefined
+                    }
                   >
                     {isCorrect ? (
                       <Check className="size-4 stroke-[3]" aria-hidden />
@@ -162,7 +172,8 @@ export function QuestionCard({
                   <Label
                     htmlFor={`q${question.id}-${optIdx}`}
                     className={cn(
-                      "flex-1 cursor-pointer text-start text-sm font-medium leading-relaxed text-slate-800 md:text-base",
+                      "flex-1 cursor-pointer text-start text-sm font-medium leading-relaxed md:text-base",
+                      takingSelected ? "text-white" : "text-foreground",
                       disabled && "cursor-default"
                     )}
                     onClick={(e) => e.preventDefault()}
