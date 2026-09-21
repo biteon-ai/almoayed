@@ -1,6 +1,8 @@
 import type { DashboardStats } from "@/types/database";
 import { Badge } from "@/components/ui/badge";
+import { PercentText } from "@/components/ui/rtl-num";
 import { cn } from "@/lib/utils";
+import { statIconBadgeClass } from "@/lib/ui-chrome";
 import { Crown, ClipboardCheck, TrendingUp } from "lucide-react";
 
 interface DashboardStatsRowProps {
@@ -24,41 +26,36 @@ function StatCard({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col rounded-2xl border border-slate-100 bg-white shadow-sm",
+        "flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white shadow-sm",
         "transition-shadow duration-200 hover:shadow-md",
-        compact ? "gap-1 px-2.5 py-2.5" : "gap-2 p-5"
+        compact ? "px-3 py-3" : "p-6"
       )}
     >
-      <div className="flex items-center gap-2 text-slate-500">
-        <div
-          className={cn(
-            "flex shrink-0 items-center justify-center rounded-lg bg-brand-50",
-            compact ? "size-7" : "size-9"
-          )}
-        >
-          <Icon
-            className={cn(
-              "text-brand-600",
-              compact ? "size-3.5" : "size-4"
-            )}
-          />
-        </div>
+      <div className="min-w-0 space-y-1 text-start">
         <span
           className={cn(
-            "font-bold leading-tight text-slate-600",
+            "block font-bold leading-tight text-slate-600",
             compact ? "text-[10px]" : "text-xs"
           )}
         >
           {label}
         </span>
+        <div
+          className={cn(
+            "font-black tabular-nums text-slate-800",
+            compact ? "text-base" : "text-2xl"
+          )}
+        >
+          {value}
+        </div>
       </div>
       <div
         className={cn(
-          "font-black tabular-nums text-slate-800",
-          compact ? "text-base" : "text-2xl"
+          statIconBadgeClass,
+          compact && "size-9 rounded-lg p-2"
         )}
       >
-        {value}
+        <Icon className={cn(compact ? "size-3.5" : "size-5")} />
       </div>
     </div>
   );
@@ -76,7 +73,7 @@ export function DashboardStatsRow({
     <Badge
       variant={isPro ? "default" : "secondary"}
       className={cn(
-        "font-bold",
+        "rounded-full px-3 py-1 font-medium",
         compact ? "text-[10px]" : "text-xs",
         isPro && "bg-brand-600 hover:bg-brand-600"
       )}
@@ -104,7 +101,7 @@ export function DashboardStatsRow({
       <StatCard
         icon={TrendingUp}
         label="المعدل العام"
-        value={`${stats.overallAverageScore}%`}
+        value={<PercentText value={stats.overallAverageScore} />}
         compact={compact}
       />
     </div>

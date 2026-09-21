@@ -78,7 +78,7 @@ export function AdminKpiCards({ kpis }: AdminKpiCardsProps) {
             className={`card-native overflow-hidden bg-gradient-to-br ${card.accent}`}
             {...spekit(card.spekit)}
           >
-            <div className="flex items-start justify-between gap-3 p-5">
+            <div className="flex items-start justify-between gap-4 p-6">
               <div>
                 <p className="text-xs font-bold text-muted-foreground">{card.label}</p>
                 <p className="mt-2 text-3xl font-extrabold tabular-nums text-foreground">
@@ -90,7 +90,7 @@ export function AdminKpiCards({ kpis }: AdminKpiCardsProps) {
                   </p>
                 ) : null}
               </div>
-              <div className="rounded-2xl bg-white/70 p-3 shadow-sm dark:bg-white/10">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 p-3 text-emerald-600 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-300">
                 <Icon className="size-6 text-brand-600" />
               </div>
             </div>

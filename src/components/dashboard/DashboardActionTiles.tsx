@@ -80,8 +80,8 @@ export function DashboardActionTiles({
             href={href}
             data-spekit={tile.spekit}
             className={cn(
-              "flex min-h-24 flex-col justify-between rounded-2xl border border-border/80",
-              "bg-card p-4 shadow-sm transition-transform active:scale-[0.99]",
+              "flex min-h-24 flex-col justify-between gap-3 rounded-2xl border border-border/80",
+              "bg-card p-5 shadow-sm transition-transform active:scale-[0.99]",
               "hover:border-brand-400/50 hover:shadow-md"
             )}
           >

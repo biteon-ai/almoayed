@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /** Shared chip chrome — icon + label vertically/horizontally centered (RTL-safe). */
 const baseClass =
-  "inline-flex h-6 min-h-6 w-fit items-center justify-center gap-1 rounded-full border px-2.5 py-0 text-xs font-semibold leading-none shadow-sm [&>svg]:!size-3.5 [&>svg]:shrink-0";
+  "inline-flex min-h-6 w-fit items-center justify-center gap-1 rounded-full border px-3 py-1 text-xs font-medium leading-none shadow-sm [&>svg]:!size-3.5 [&>svg]:shrink-0";
 
 /**
  * Semantic badge tones for quiz/student status chips.

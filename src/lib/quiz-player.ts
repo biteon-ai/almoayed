@@ -1,5 +1,7 @@
 /** UI-016 / UI-017 — pure quiz-player helpers (pager, progress, completeness, step nav). */
 
+import { formatCountOf } from "@/lib/ui-chrome";
+
 export type QuestionNavStatus =
   | "default"
   | "answered"
@@ -24,7 +26,7 @@ export function answeredProgress(
       : Math.min(100, Math.max(0, Math.round((100 * answeredCount) / total)));
   return {
     percent,
-    label: `${answeredCount} من ${total}`,
+          label: formatCountOf(answeredCount, total),
   };
 }
 

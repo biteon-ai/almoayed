@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
-import { cn } from "@/lib/utils";
+import { choiceChipClass } from "@/lib/ui-chrome";
 import { Loader2 } from "lucide-react";
 
 export function OnboardingWizard() {
@@ -71,17 +71,15 @@ export function OnboardingWizard() {
       {step === 0 ? (
         <div className="space-y-3">
           <p className="text-sm font-semibold">ما مرحلتك الدراسية؟</p>
-          <div className="grid gap-2">
+          <div className="grid gap-2.5">
             {ONBOARDING_STAGE_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setEducationStage(opt.value)}
-                className={cn(
-                  "h-12 rounded-xl border px-4 text-start text-sm font-semibold",
-                  educationStage === opt.value
-                    ? "border-emerald-600 bg-emerald-50 text-emerald-900"
-                    : "border-border"
+                className={choiceChipClass(
+                  educationStage === opt.value,
+                  "h-12 w-full px-4 text-start text-sm"
                 )}
               >
                 {opt.label}
@@ -94,17 +92,15 @@ export function OnboardingWizard() {
       {step === 1 ? (
         <div className="space-y-3">
           <p className="text-sm font-semibold">كيف حصلت على كود الأستاذ؟</p>
-          <div className="grid gap-2">
+          <div className="grid gap-2.5">
             {REFERRAL_SOURCES.map((src) => (
               <button
                 key={src}
                 type="button"
                 onClick={() => setReferralSource(src)}
-                className={cn(
-                  "h-12 rounded-xl border px-4 text-start text-sm font-semibold",
-                  referralSource === src
-                    ? "border-emerald-600 bg-emerald-50 text-emerald-900"
-                    : "border-border"
+                className={choiceChipClass(
+                  referralSource === src,
+                  "h-12 w-full px-4 text-start text-sm"
                 )}
               >
                 {REFERRAL_SOURCE_LABELS[src]}
@@ -117,17 +113,15 @@ export function OnboardingWizard() {
       {step === 2 ? (
         <div className="space-y-3">
           <p className="text-sm font-semibold">ما مادتك الرئيسية مع هذا الأستاذ؟</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             {PRIMARY_SUBJECT_PRESETS.map((subject) => (
               <button
                 key={subject}
                 type="button"
                 onClick={() => setPrimarySubject(subject)}
-                className={cn(
-                  "h-10 rounded-full border px-3 text-xs font-bold",
-                  primarySubject === subject
-                    ? "border-emerald-600 bg-emerald-50 text-emerald-900"
-                    : "border-border"
+                className={choiceChipClass(
+                  primarySubject === subject,
+                  "h-10 rounded-full px-3 text-xs font-bold"
                 )}
               >
                 {subject}

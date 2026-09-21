@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { choiceChipClass } from "@/lib/ui-chrome";
 import { cn } from "@/lib/utils";
 
 export type DemographicsFormValues = {
@@ -171,18 +172,13 @@ export function StudentDemographicsFields({
 
       <div className="space-y-1.5">
         <Label>المرحلة التعليمية</Label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           {EDUCATION_STAGES.map((stage) => (
             <button
               key={stage}
               type="button"
               onClick={() => set("educationStage", stage)}
-              className={cn(
-                "h-10 rounded-xl border px-3 text-xs font-semibold transition-colors",
-                values.educationStage === stage
-                  ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                  : "border-border bg-background text-muted-foreground"
-              )}
+              className={choiceChipClass(values.educationStage === stage)}
             >
               {EDUCATION_STAGE_LABELS[stage as EducationStage]}
             </button>
