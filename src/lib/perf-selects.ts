@@ -26,4 +26,4 @@ export const GAMIFICATION_TIER_SELECT =
 
 /** Submission result header fields after exam submit (QUIZ-001 post-submit only). */
 export const SUBMISSION_RESULT_SELECT =
-  "id, student_id, quiz_id, score, submitted_at" as const;
+  "id, student_id, quiz_id, score, submitted_at, question_order, option_orders" as const;

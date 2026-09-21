@@ -68,7 +68,7 @@ export function StudentDemographicsSettings({
 
   return (
     <div
-      className="space-y-4 rounded-2xl border bg-card p-4 shadow-xs"
+      className="space-y-4 rounded-2xl border bg-card p-6 shadow-xs"
       {...spekit(SPEKIT.studentDemographicsSettings)}
     >
       <div>

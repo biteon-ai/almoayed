@@ -589,6 +589,31 @@ features:
       - Gamification uses best score per quiz (no double-count)
     spekit: [quiz-attempt-settings, quiz-attempt-badge, challenge-leaderboard]
 
+  - id: QUIZ-006
+    name: Quiz Retake Reset & Shuffle
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/quiz/[id]", "/results"]
+    extends: [QUIZ-001, QUIZ-004, QUIZ-005, UI-016, UI-017, OFFLINE-001]
+    spec: specs/032-quiz-retake-shuffle/
+    files:
+      - supabase/migrations/021_quiz_attempt_presentation.sql
+      - src/lib/quiz-shuffle.ts
+      - src/lib/quiz-presentation.ts
+      - src/lib/quiz-player.ts
+      - src/actions/quiz.ts
+      - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuizRunnerContainer.tsx
+      - tests/features/quiz-006-retake-shuffle.test.ts
+      - e2e/quiz-006-retake-shuffle.spec.ts
+    acceptance:
+      - New attempt (including «إعادة المحاولة») starts with no leftover answers, empty progress, and a full timer when timed
+      - Each new attempt shuffles question order and MCQ options; letters A–D follow display order
+      - Scoring uses option text, not letter position; retake order differs from the previous attempt when another order exists
+      - In-progress resume keeps the same layout and answers; completed attempts keep a review snapshot
+      - Teacher authored order is unchanged; QUIZ-001 solutions stay hidden until that attempt is submitted
+    spekit: [quiz-retake-cta, question-card, quiz-progress, quiz-page]
+
   # ── Gamification ────────────────────────────────────────────────────────────
   - id: GAMIF-001
     name: Teacher-Driven Gamification & Ranking
@@ -1131,8 +1156,8 @@ partial_features:
 
   - id: UI-003
     name: PWA Icons
-    status: partial
-    notes: manifest.json icons array empty
+    status: implemented
+    notes: 192/512 any+maskable plus apple-touch-icon 180 via generate:brand
 
   - id: UI-006
     name: Navbar Route Progress
@@ -1223,21 +1248,24 @@ partial_features:
     name: Quiz Results Card Redesign
     status: done
     notes: |
-      Compact inline score badge (55%), semantic color bands (≥80 / 50–79 / <50),
-      review → /results/[submissionId] → quiz review (QUIZ-001), retake → /quiz/[id].
+      Compact score ring badge with semantic tints (≥80 emerald / 50–79 amber / <50 rose)
+      and an SVG progress arc matching the percent. Review → /results/[submissionId]
+      → quiz review (QUIZ-001), retake → /quiz/[id].
     acceptance:
-      - Score shows as single-line percent in circular badge
+      - Score shows as a fixed-size circular ring badge with percent + matching tint
       - Review and retake are equal-height grid actions
       - Cards in md:grid-cols-2 with hover lift
       - data-spekit=results-card-<submissionId> on each card
     files:
       - src/components/student/StudentResultsView.tsx
+      - src/components/ui/score-ring-badge.tsx
       - src/lib/student-quiz-ui.ts
       - src/types/database.ts
       - src/actions/quiz.ts
       - src/app/(student)/results/[submissionId]/page.tsx
     spekit:
       - results-card
+      - results-score-badge
 
   - id: UI-009
     name: Quiz Timer Settings Card Overhaul
@@ -1278,6 +1306,214 @@ partial_features:
       - pwa-install-android
       - pwa-install-ios
       - pwa-install-modal
+
+  - id: UI-012
+    name: Native Standalone Home-Screen Shell
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    files:
+      - public/manifest.json
+      - public/sw.js
+      - src/app/layout.tsx
+      - src/app/(student)/layout.tsx
+      - src/lib/appearance.ts
+      - src/components/providers/appearance-provider.tsx
+      - src/components/layout/StudentHeader.tsx
+      - src/components/layout/StudentBottomNav.tsx
+      - tests/features/ui-012-native-shell.test.ts
+      - e2e/ui-012-native-pwa-shell.spec.ts
+    acceptance:
+      - Installed launch is display standalone with المؤيد icons (192/512 + Apple 180)
+      - theme_color teal and background_color match the light shell
+      - Viewport remains unscalable; OS text scaling still applies
+      - Student chrome uses semantic tokens for dark/light appearance
+    spekit: [native-app-version]
+
+  - id: UI-013
+    name: Native Student Profile Drawer
+    status: implemented
+    persona: [STUDENT]
+    files:
+      - src/components/student/StudentProfileDrawer.tsx
+      - src/components/student/OfflineSavedQuizzesList.tsx
+      - src/lib/native-share.ts
+      - src/lib/offline/quiz-cache.ts
+      - tests/features/ui-013-appearance-drawer.test.ts
+    acceptance:
+      - Header gear opens RTL start-side drawer without leaving the page
+      - Dark/Light/System appearance persists on the device
+      - Offline saved quizzes list is filtered by currentTeacherId
+      - Share, contact, settings/upgrade, and version footer are present
+      - Bottom-tab الإعدادات still opens PROFILE-001
+    spekit:
+      - native-profile-drawer
+      - native-drawer-close
+      - native-theme-switcher
+      - native-offline-list
+      - native-drawer-settings
+      - native-share-app
+      - native-contact-us
+
+  - id: DASH-002
+    name: Dashboard Native Action Tiles
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/dashboard"]
+    files:
+      - src/lib/dashboard-action-tiles.ts
+      - src/components/dashboard/DashboardActionTiles.tsx
+      - src/components/dashboard/StudentDashboardView.tsx
+      - src/components/dashboard/StudentDashboardHero.tsx
+      - tests/features/dash-002-action-tiles.test.ts
+    acceptance:
+      - Home shows a 2-column card-tile grid for progress, tests, results, continue
+      - Tiles map to existing student destinations with Arabic empty states
+      - DASH-001 hero/KPI/rewards/tabs remain
+    spekit:
+      - dashboard-action-tiles
+      - dashboard-tile-progress
+      - dashboard-tile-quizzes
+      - dashboard-tile-results
+      - dashboard-tile-continue
+
+  - id: UI-014
+    name: Native Tab Motion and Quiz Haptics
+    status: implemented
+    persona: [STUDENT]
+    files:
+      - src/app/(student)/template.tsx
+      - src/app/globals.css
+      - src/components/layout/StudentNavLink.tsx
+      - src/lib/haptic.ts
+      - src/components/quiz/QuizRunner.tsx
+      - tests/features/ui-014-haptic.test.ts
+    acceptance:
+      - Student tab switches use a short slide/fade; reduced-motion is instant
+      - Quiz submit bar stays pinned above the bottom nav
+      - Answer and submit taps pulse on vibration-capable devices without delaying selection
+    spekit: [quiz-submit-button]
+
+  - id: UI-015
+    name: In-App Add to Home Screen Sheet
+    status: implemented
+    persona: [STUDENT]
+    files:
+      - src/lib/a2hs-prompt.ts
+      - src/components/pwa/PwaInstallSheet.tsx
+      - src/app/(student)/layout.tsx
+      - tests/features/ui-015-a2hs-eligibility.test.ts
+    acceptance:
+      - Signed-in phone browser students see an Arabic install bottom sheet
+      - Hidden in standalone, on /quiz/*, after dismiss for the session, and for 24h
+      - Login UI-010 install CTAs remain
+    spekit:
+      - pwa-install-sheet
+      - pwa-install-sheet-android
+      - pwa-install-sheet-guide
+      - pwa-install-sheet-dismiss
+
+  - id: UI-016
+    name: Mobile Quiz Player Redesign
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/quiz/[id]"]
+    extends: [QUIZ-001, QUIZ-004, UI-001, UI-014, OFFLINE-001]
+    spec: specs/030-quiz-player-ui/
+    files:
+      - src/lib/quiz-player.ts
+      - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuestionCard.tsx
+      - src/components/quiz/QuizPlayerHeader.tsx
+      - src/components/quiz/QuizExitDialog.tsx
+      - src/components/quiz/QuestionPager.tsx
+      - src/components/quiz/QuestionJumpSheet.tsx
+      - src/components/quiz/QuizTimerBadge.tsx
+      - src/components/quiz/QuestionNavGrid.tsx
+      - tests/features/ui-016-quiz-player.test.ts
+      - e2e/ui-016-quiz-player.spec.ts
+    acceptance:
+      - Slim sticky header with Arabic exit confirm and MM:SS «الوقت المتبقي» for timed quizzes
+      - One immersive question card with A/B/C/D rows; selected state #065f46; no solutions until submit
+      - Horizontal pager + all-questions sheet replace the taking sidebar grid
+      - Sticky progress + «تسليم الإجابات وإنهاء الاختبار» above the student tab bar
+    spekit:
+      - quiz-player-header
+      - quiz-exit-button
+      - quiz-exit-dialog
+      - quiz-question-pager
+      - quiz-jump-sheet
+      - quiz-timer
+      - question-card
+      - quiz-submit-button
+      - quiz-progress
+
+  - id: UI-017
+    name: Quiz Navigation and Safe Submit
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/quiz/[id]"]
+    extends: [UI-016, QUIZ-001, QUIZ-004]
+    spec: specs/031-quiz-nav-submit/
+    files:
+      - src/lib/quiz-player.ts
+      - src/components/quiz/QuestionStepNav.tsx
+      - src/components/quiz/QuizUnansweredDialog.tsx
+      - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuestionCard.tsx
+      - src/components/quiz/QuizPlayerHeader.tsx
+      - src/components/quiz/QuestionPager.tsx
+      - src/components/quiz/QuizProgressBar.tsx
+      - tests/features/ui-017-quiz-nav-submit.test.ts
+      - e2e/ui-017-quiz-nav-submit.spec.ts
+    acceptance:
+      - Card-header stepper is the only question pager (no bottom «التالي» / «السابق» row)
+      - Compact RTL 3-pill pager in the card header: next left, current middle, previous right
+      - «كل الأسئلة» lives in the player header beside the timer (visual left)
+      - Thin emerald progress bar under the card-header stepper (replaces «N من N • %» text)
+      - Compact submit sits left of the stepper while taking; UI-018 keeps it visible on every question and disabled until complete
+      - Timed auto-submit skips the new confirm dialog
+      - Selecting a choice auto-advances after a short delay
+    spekit:
+      - quiz-step-prev
+      - quiz-step-next
+      - quiz-submit-confirm
+      - quiz-unanswered-alert
+      - quiz-submit-button
+      - quiz-jump-sheet
+      - quiz-player-header
+      - question-card
+      - quiz-progress
+
+  - id: UI-018
+    name: Quiz Header Polish
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/quiz/[id]"]
+    extends: [UI-017, UI-016, QUIZ-001, QUIZ-004]
+    spec: specs/033-quiz-header-polish/
+    files:
+      - src/lib/quiz-timer.ts
+      - src/components/quiz/QuizTimerBadge.tsx
+      - src/components/quiz/QuizPlayerHeader.tsx
+      - src/components/quiz/QuizRunner.tsx
+      - src/lib/spekit-targets.ts
+      - tests/features/ui-018-quiz-header-polish.test.ts
+      - e2e/ui-018-quiz-header-polish.spec.ts
+    acceptance:
+      - Compact «تسليم» sits on the visual left of the card-header row for the whole taking session
+      - Submit stays disabled until every question is answered; tap does not grade while disabled
+      - Number stepper stays on the visual right of the card header
+      - Timed quizzes show a thin remaining-time bar under MM:SS «الوقت المتبقي»
+      - «كل الأسئلة» stays tappable and opens the jump sheet
+    spekit:
+      - quiz-submit-button
+      - quiz-question-pager
+      - quiz-timer
+      - quiz-timer-bar
+      - quiz-all-questions
+      - quiz-jump-sheet
+      - quiz-submit-confirm
+      - quiz-progress
 
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel

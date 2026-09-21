@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Tajawal } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { APP_DESCRIPTION, APP_NAME, APP_THEME_COLOR, APP_URL } from "@/lib/constants";
+import { APPEARANCE_FOUC_SCRIPT } from "@/lib/appearance";
+import { AppearanceProvider } from "@/components/providers/appearance-provider";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { TopLoaderProvider } from "@/components/providers/top-loader-provider";
 import "./globals.css";
 
@@ -65,7 +69,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={cn(tajawal.variable, "h-full")}>
+    <html
+      lang="ar"
+      dir="rtl"
+      className={cn(tajawal.variable, "h-full")}
+      suppressHydrationWarning
+    >
       <body
         className={cn(
           "min-h-dvh font-sans antialiased overscroll-y-none",
@@ -74,7 +83,15 @@ export default function RootLayout({
         )}
         style={{ fontFamily: "var(--font-arabic), system-ui, sans-serif" }}
       >
-        <TopLoaderProvider>{children}</TopLoaderProvider>
+        <Script
+          id="almoayed-appearance"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: APPEARANCE_FOUC_SCRIPT }}
+        />
+        <AppearanceProvider>
+          <ServiceWorkerRegister />
+          <TopLoaderProvider>{children}</TopLoaderProvider>
+        </AppearanceProvider>
       </body>
     </html>
   );

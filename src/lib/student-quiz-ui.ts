@@ -101,6 +101,12 @@ export function scoreBadgeClassName(tone: ScoreGradeTone): string {
   }
 }
 
+/** Circumference leftover for an SVG score ring (0% = full offset, 100% = 0). */
+export function scoreRingDashOffset(score: number, circumference: number): number {
+  const clamped = Math.min(100, Math.max(0, score));
+  return circumference * (1 - clamped / 100);
+}
+
 export function gradePillClassName(tone: ScoreGradeTone): string {
   switch (tone) {
     case "green":
