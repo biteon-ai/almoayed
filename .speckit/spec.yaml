@@ -1248,21 +1248,24 @@ partial_features:
     name: Quiz Results Card Redesign
     status: done
     notes: |
-      Compact inline score badge (55%), semantic color bands (≥80 / 50–79 / <50),
-      review → /results/[submissionId] → quiz review (QUIZ-001), retake → /quiz/[id].
+      Compact score ring badge with semantic tints (≥80 emerald / 50–79 amber / <50 rose)
+      and an SVG progress arc matching the percent. Review → /results/[submissionId]
+      → quiz review (QUIZ-001), retake → /quiz/[id].
     acceptance:
-      - Score shows as single-line percent in circular badge
+      - Score shows as a fixed-size circular ring badge with percent + matching tint
       - Review and retake are equal-height grid actions
       - Cards in md:grid-cols-2 with hover lift
       - data-spekit=results-card-<submissionId> on each card
     files:
       - src/components/student/StudentResultsView.tsx
+      - src/components/ui/score-ring-badge.tsx
       - src/lib/student-quiz-ui.ts
       - src/types/database.ts
       - src/actions/quiz.ts
       - src/app/(student)/results/[submissionId]/page.tsx
     spekit:
       - results-card
+      - results-score-badge
 
   - id: UI-009
     name: Quiz Timer Settings Card Overhaul

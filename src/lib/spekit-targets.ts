@@ -241,6 +241,7 @@ export const SPEKIT = {
 
   // ── UI-007 ───────────────────────────────────────────────────
   resultsCard: "results-card",
+  resultsScoreBadge: "results-score-badge",
 
   // ── UI-006 ───────────────────────────────────────────────────
   navbarProgress: "navbar-progress",

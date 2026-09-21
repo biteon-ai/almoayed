@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 134
+  total_targets: 135
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -303,6 +303,7 @@ UI-006:
 # ── Student results cards ───────────────────────────────────────
 UI-007:
   results-card: "Quiz result history card wrapper (suffix -<submissionId>)"
+  results-score-badge: "Circular score ring badge on results cards"
 
 # ── PWA install on login ────────────────────────────────────────
 UI-010:
