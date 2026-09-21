@@ -22,6 +22,7 @@ interface QuestionCardProps {
   categoryTag?: string;
   explanationText?: string;
   explanationMediaUrl?: string | null;
+  header?: React.ReactNode;
 }
 
 function WrongBadge() {
@@ -55,6 +56,7 @@ export function QuestionCard({
   categoryTag,
   explanationText,
   explanationMediaUrl,
+  header,
 }: QuestionCardProps) {
   const isQuestionWrong = showResult && value !== correctAnswer;
   const [isExpanded, setIsExpanded] = React.useState(false);
@@ -70,10 +72,12 @@ export function QuestionCard({
       className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm"
       {...spekit(SPEKIT.questionCard)}
     >
-      <div className="flex flex-wrap items-center justify-start gap-2 border-b border-border px-6 py-4 md:px-8">
-        <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-800 dark:bg-brand-950/50 dark:text-brand-200">
-          السؤال {index + 1}
-        </span>
+      <div className="flex flex-col items-center justify-center gap-2 border-b border-border bg-muted/20 px-3 py-2.5 md:px-6">
+        {header ?? (
+          <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-800 dark:bg-brand-950/50 dark:text-brand-200">
+            السؤال {index + 1}
+          </span>
+        )}
         {showResult && categoryTag ? (
           <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
             {categoryTag}
@@ -81,7 +85,7 @@ export function QuestionCard({
         ) : null}
       </div>
 
-      <div className="space-y-6 p-6 md:p-8">
+      <div className="space-y-5 p-4 md:space-y-6 md:p-8">
         <div className="text-start text-lg font-bold leading-relaxed text-foreground md:text-xl">
           <MathText text={question.question_text} />
         </div>

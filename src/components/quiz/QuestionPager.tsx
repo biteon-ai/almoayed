@@ -1,8 +1,10 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import {
+  rtlCompactPagerSlots,
   questionNavStatus,
   type QuestionNavStatus,
 } from "@/lib/quiz-player";
@@ -10,7 +12,7 @@ import type { QuizSubmitResult } from "@/types/database";
 
 const statusStyles: Record<QuestionNavStatus, string> = {
   default:
-    "border-border/70 bg-card text-muted-foreground hover:border-emerald-200 hover:bg-emerald-50/50",
+    "border-border/70 bg-background text-muted-foreground hover:border-emerald-200 hover:bg-emerald-50/50",
   answered:
     "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-200",
   active:
@@ -32,6 +34,7 @@ export function QuestionPager({
   results,
   onNavigate,
   className,
+  compact = false,
 }: {
   count: number;
   activeIndex: number;
@@ -41,44 +44,85 @@ export function QuestionPager({
   results: QuizSubmitResult | null;
   onNavigate: (index: number) => void;
   className?: string;
+  compact?: boolean;
 }) {
   if (count === 0) return null;
 
+  const slots = rtlCompactPagerSlots(activeIndex, count);
+  const box = compact ? "size-10" : "size-11";
+  const icon = compact ? "size-4" : "size-5";
+
+  function pill(index: number | null) {
+    if (index === null) {
+      return (
+        <span className={cn(box, "shrink-0")} aria-hidden />
+      );
+    }
+
+    const status = questionNavStatus({
+      index,
+      activeIndex,
+      questionId: questionIds[index] ?? "",
+      isSubmitted,
+      answers,
+      results,
+    });
+
+    return (
+      <button
+        type="button"
+        onClick={() => onNavigate(index)}
+        aria-label={`السؤال ${index + 1}`}
+        aria-current={index === activeIndex ? "step" : undefined}
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-xl border text-sm font-bold tabular-nums",
+          "touch-manipulation transition-colors duration-200",
+          box,
+          statusStyles[status]
+        )}
+      >
+        {index + 1}
+      </button>
+    );
+  }
+
   return (
     <div
+      dir="ltr"
       className={cn(
-        "flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "flex shrink-0 items-center justify-center",
+        compact ? "gap-1" : "gap-1.5",
         className
       )}
       {...spekit(SPEKIT.quizQuestionPager)}
     >
-      {Array.from({ length: count }, (_, index) => {
-        const status = questionNavStatus({
-          index,
-          activeIndex,
-          questionId: questionIds[index] ?? "",
-          isSubmitted,
-          answers,
-          results,
-        });
-
-        return (
-          <button
-            key={questionIds[index] ?? index}
-            type="button"
-            onClick={() => onNavigate(index)}
-            aria-label={`السؤال ${index + 1}`}
-            aria-current={index === activeIndex ? "step" : undefined}
-            className={cn(
-              "flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border text-sm font-bold tabular-nums",
-              "touch-manipulation transition-colors duration-200",
-              statusStyles[status]
-            )}
-          >
-            {index + 1}
-          </button>
-        );
-      })}
+      <button
+        type="button"
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40",
+          box
+        )}
+        disabled={!slots.canGoLeft}
+        onClick={() => onNavigate(activeIndex + 1)}
+        aria-label="السؤال التالي"
+      >
+        <ChevronLeft className={icon} aria-hidden />
+      </button>
+      {pill(slots.left)}
+      {pill(slots.current)}
+      {pill(slots.right)}
+      <button
+        type="button"
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40",
+          box
+        )}
+        disabled={!slots.canGoRight}
+        onClick={() => onNavigate(activeIndex - 1)}
+        aria-label="السؤال السابق"
+      >
+        <ChevronRight className={icon} aria-hidden />
+      </button>
     </div>
   );
 }

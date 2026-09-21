@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 127
+  total_targets: 134
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -113,6 +113,7 @@ QUIZ-001:
   quiz-results-share: "WhatsApp share results card"
   quiz-results-review: "Post-submit review guidance"
   quiz-pending-sync: "Pending offline sync state card"
+  quiz-retake-cta: "Student retake CTA (إعادة المحاولة / إعادة الاختبار) (QUIZ-006)"
 
 OFFLINE-001:
   offline-status-banner: "Offline mode banner during quiz"
@@ -336,8 +337,16 @@ UI-016:
   quiz-player-header: "Sticky quiz-taking sub-header (exit + timer)"
   quiz-exit-button: "Leave quiz control in the player header"
   quiz-exit-dialog: "Save-and-exit confirmation dialog"
-  quiz-question-pager: "Horizontal question number pager"
+  quiz-question-pager: "Compact 3-number stepper in the question card header"
   quiz-jump-sheet: "All-questions jump bottom sheet"
+UI-017:
+  quiz-step-prev: "Previous-question control under the card"
+  quiz-step-next: "Next-question control under the card"
+  quiz-submit-confirm: "Manual submit confirmation dialog"
+  quiz-unanswered-alert: "Unanswered-questions warning before submit"
+UI-018:
+  quiz-timer-bar: "Timed attempt remaining-time linear bar under the countdown"
+  quiz-all-questions: "Header كل الأسئلة control that opens the jump sheet"
 
 # ── Teacher gamification ────────────────────────────────────────
 GAMIF-001:

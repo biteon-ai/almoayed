@@ -56,6 +56,7 @@ export const SPEKIT = {
   quizPage: "quiz-page",
   quizGatekeeper: "quiz-gatekeeper",
   quizTimer: "quiz-timer",
+  quizTimerBar: "quiz-timer-bar",
   quizTimerSettings: "quiz-timer-settings",
   quizTimerCard: "quiz-timer-card",
   quizAttemptSettings: "quiz-attempt-settings",
@@ -71,6 +72,7 @@ export const SPEKIT = {
   quizResultsShare: "quiz-results-share",
   quizResultsReview: "quiz-results-review",
   quizPendingSync: "quiz-pending-sync",
+  quizRetakeCta: "quiz-retake-cta",
 
   // ── OFFLINE-001 ──────────────────────────────────────────────
   offlineStatusBanner: "offline-status-banner",
@@ -291,6 +293,13 @@ export const SPEKIT = {
   quizExitDialog: "quiz-exit-dialog",
   quizQuestionPager: "quiz-question-pager",
   quizJumpSheet: "quiz-jump-sheet",
+  quizAllQuestions: "quiz-all-questions",
+
+  // ── UI-017 step nav + submit confirm ─────────────────────────
+  quizStepPrev: "quiz-step-prev",
+  quizStepNext: "quiz-step-next",
+  quizSubmitConfirm: "quiz-submit-confirm",
+  quizUnansweredAlert: "quiz-unanswered-alert",
 } as const;
 
 export type SpekitTarget = (typeof SPEKIT)[keyof typeof SPEKIT];

@@ -15,6 +15,7 @@ interface QuestionNavGridProps {
   questionIds: string[];
   results: QuizSubmitResult | null;
   onNavigate: (index: number) => void;
+  className?: string;
 }
 
 const statusStyles: Record<QuestionNavStatus, string> = {
@@ -40,11 +41,12 @@ export function QuestionNavGrid({
   questionIds,
   results,
   onNavigate,
+  className,
 }: QuestionNavGridProps) {
   if (count === 0) return null;
 
   return (
-    <div className="grid grid-cols-5 gap-2.5 sm:grid-cols-6">
+    <div className={cn("grid grid-cols-5 gap-2.5 sm:grid-cols-6", className)}>
       {Array.from({ length: count }, (_, index) => {
         const status = questionNavStatus({
           index,

@@ -344,6 +344,7 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
               buttonVariants({ variant: "outline", size: "sm" }),
               "h-9 gap-1.5 rounded-xl border-border text-sm font-medium"
             )}
+            data-spekit={SPEKIT.quizRetakeCta}
           >
             <RotateCcw className="size-3.5 shrink-0" aria-hidden />
             إعادة المحاولة

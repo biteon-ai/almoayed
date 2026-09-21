@@ -49,9 +49,12 @@ test.describe(`${FEATURE} Quiz player chrome`, () => {
 
     const submit = page.locator('[data-spekit="quiz-submit-button"]');
     if (await submit.isVisible()) {
-      await expect(submit).toBeVisible();
+      const cardBox = await page.locator('[data-spekit="question-card"]').boundingBox();
       const barBox = await submit.boundingBox();
-      expect(barBox?.y ?? 0).toBeGreaterThan(500);
+      if (cardBox && barBox) {
+        expect(barBox.y).toBeGreaterThanOrEqual(cardBox.y - 4);
+        expect(barBox.y).toBeLessThan(cardBox.y + cardBox.height);
+      }
     }
   });
 });

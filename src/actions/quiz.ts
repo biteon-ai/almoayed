@@ -46,7 +46,23 @@ import {
 } from "@/lib/quiz-attempts";
 import { aggregateSubmissionStats } from "@/lib/teacher-gamification";
 import { resolveCorrectOptionText } from "@/lib/question-options";
+import {
+  applyPresentation,
+  authoredPresentation,
+  deleteLivePresentation,
+  loadLivePresentation,
+  parseOptionOrders,
+  parseQuestionIds,
+  presentationMatchesBank,
+  upsertLivePresentation,
+  isPermutation,
+} from "@/lib/quiz-presentation";
+import {
+  buildAttemptPresentation,
+  createCryptoRng,
+} from "@/lib/quiz-shuffle";
 import type {
+  AttemptPresentation,
   CategoryPerformance,
   ExamQuestion,
   Quiz,
@@ -207,7 +223,49 @@ export async function ensureTimedQuizSession(
   );
 }
 
-export async function getQuizForStudent(quizId: string): Promise<{
+function snapshotFromSubmissionRow(row: {
+  question_order?: unknown;
+  option_orders?: unknown;
+}): AttemptPresentation | null {
+  const questionIds = parseQuestionIds(row.question_order);
+  if (questionIds.length === 0) return null;
+  return {
+    questionIds,
+    optionOrders: parseOptionOrders(row.option_orders),
+  };
+}
+
+async function presentQuestionsForTaking(args: {
+  supabase: ReturnType<typeof createAdminClient>;
+  studentId: string;
+  quizId: string;
+  questions: ExamQuestion[];
+  previous: AttemptPresentation | null;
+}): Promise<ExamQuestion[]> {
+  const { supabase, studentId, quizId, questions, previous } = args;
+  if (questions.length === 0) return questions;
+
+  const live = await loadLivePresentation(supabase, studentId, quizId);
+  if (live && presentationMatchesBank(live, questions)) {
+    return applyPresentation(questions, live);
+  }
+  if (live) {
+    await deleteLivePresentation(supabase, studentId, quizId);
+  }
+
+  const minted = buildAttemptPresentation({
+    questions,
+    previous,
+    rng: createCryptoRng(),
+  });
+  await upsertLivePresentation(supabase, studentId, quizId, minted);
+  return applyPresentation(questions, minted);
+}
+
+export async function getQuizForStudent(
+  quizId: string,
+  opts?: { skipPresentation?: boolean }
+): Promise<{
   quiz: Quiz | null;
   questions: ExamQuestion[];
   existingSubmissionId: string | null;
@@ -268,7 +326,7 @@ export async function getQuizForStudent(quizId: string): Promise<{
 
   const { data: submissionRows } = await supabase
     .from("exam_submissions")
-    .select("id, score, submitted_at")
+    .select("id, score, submitted_at, question_order, option_orders")
     .eq("student_id", session.profileId)
     .eq("quiz_id", quizId)
     .order("submitted_at", { ascending: false });
@@ -284,6 +342,28 @@ export async function getQuizForStudent(quizId: string): Promise<{
     submissions
   );
 
+  const authoredQuestions = (questions ?? []) as ExamQuestion[];
+  const previousSnapshot = snapshotFromSubmissionRow(
+    (submissionRows?.[0] as {
+      question_order?: unknown;
+      option_orders?: unknown;
+    }) ?? {}
+  );
+
+  const taking =
+    attemptState.canStartNewAttempt && !opts?.skipPresentation;
+
+  const presentedQuestions =
+    taking && authoredQuestions.length > 0
+      ? await presentQuestionsForTaking({
+          supabase,
+          studentId: session.profileId,
+          quizId,
+          questions: authoredQuestions,
+          previous: previousSnapshot,
+        })
+      : authoredQuestions;
+
   const timer =
     attemptState.canStartNewAttempt && quiz.is_timed
       ? await ensureTimedQuizSession(quizId)
@@ -291,7 +371,7 @@ export async function getQuizForStudent(quizId: string): Promise<{
 
   return {
     quiz,
-    questions: (questions ?? []) as ExamQuestion[],
+    questions: presentedQuestions,
     existingSubmissionId: attemptState.reviewSubmissionId,
     attemptState,
     timer,
@@ -335,6 +415,7 @@ export async function getSubmissionResults(
 
   if (!answers) return null;
 
+  const snapshot = snapshotFromSubmissionRow(submission);
   const mapped = answers.map((a) => {
     const q = a.questions as unknown as {
       correct_answer: string;
@@ -345,11 +426,19 @@ export async function getSubmissionResults(
       question_text: string;
       question_image_url: string | null;
     };
-    const options = Array.isArray(q.options) ? q.options : [];
-    const correctAnswer = resolveCorrectOptionText(q.correct_answer, options);
+    const authoredOptions = Array.isArray(q.options) ? q.options : [];
+    const snapshotOptions = snapshot?.optionOrders[a.question_id as string];
+    const presentedOptions =
+      snapshotOptions && isPermutation(snapshotOptions, authoredOptions)
+        ? snapshotOptions
+        : authoredOptions;
+    const correctAnswer = resolveCorrectOptionText(
+      q.correct_answer,
+      authoredOptions
+    );
     return {
-      questionId: a.question_id,
-      studentAnswer: a.student_answer,
+      questionId: a.question_id as string,
+      studentAnswer: a.student_answer as string,
       isCorrect: a.student_answer === correctAnswer,
       correctAnswer,
       explanationText: q.explanation_text,
@@ -357,17 +446,28 @@ export async function getSubmissionResults(
       categoryTag: q.category_tag,
       questionText: q.question_text,
       questionImageUrl: q.question_image_url,
+      options: presentedOptions,
     };
   });
 
-  const correctCount = mapped.filter((a) => a.isCorrect).length;
+  const byId = new Map(mapped.map((row) => [row.questionId, row]));
+  const ordered = snapshot
+    ? [
+        ...snapshot.questionIds
+          .map((id) => byId.get(id))
+          .filter((row): row is (typeof mapped)[number] => Boolean(row)),
+        ...mapped.filter((row) => !snapshot.questionIds.includes(row.questionId)),
+      ]
+    : mapped;
+
+  const correctCount = ordered.filter((a) => a.isCorrect).length;
 
   return {
     submissionId: submission.id,
     score: submission.score,
-    totalQuestions: mapped.length,
+    totalQuestions: ordered.length,
     correctCount,
-    answers: mapped,
+    answers: ordered,
   };
 }
 
@@ -376,7 +476,7 @@ export async function submitQuiz(
   answers: Record<string, string>
 ): Promise<QuizSubmitResult> {
   const session = await requireStudent();
-  const gate = await getQuizForStudent(quizId);
+  const gate = await getQuizForStudent(quizId, { skipPresentation: true });
 
   if (!gate.quiz) {
     throw appError(ErrorCode.QUIZ_INACTIVE);
@@ -472,11 +572,29 @@ export async function submitQuiz(
     const isCorrect = studentAnswer === correctAnswerText;
     return {
       ...q,
+      options,
       correct_answer: correctAnswerText,
       studentAnswer,
       isCorrect,
     };
   });
+
+  const shufflable = graded.map((g) => ({
+    id: g.id as string,
+    options: g.options,
+  }));
+  const livePresentation = await loadLivePresentation(
+    supabase,
+    session.profileId,
+    quizId
+  );
+  if (
+    livePresentation &&
+    !presentationMatchesBank(livePresentation, shufflable)
+  ) {
+    throw appError(ErrorCode.QUIZ_CHANGED);
+  }
+  const snapshot = livePresentation ?? authoredPresentation(shufflable);
 
   const correctCount = graded.filter((g) => g.isCorrect).length;
   const score = Math.round((correctCount / graded.length) * 100);
@@ -487,6 +605,8 @@ export async function submitQuiz(
       student_id: session.profileId,
       quiz_id: quizId,
       score,
+      question_order: snapshot.questionIds,
+      option_orders: snapshot.optionOrders,
     })
     .select()
     .single();
@@ -521,21 +641,32 @@ export async function submitQuiz(
       .eq("quiz_id", quizId);
   }
 
+  await deleteLivePresentation(supabase, session.profileId, quizId);
+
+  const byId = new Map(graded.map((g) => [g.id as string, g]));
+  const orderedGraded = [
+    ...snapshot.questionIds
+      .map((id) => byId.get(id))
+      .filter((row): row is (typeof graded)[number] => Boolean(row)),
+    ...graded.filter((g) => !snapshot.questionIds.includes(g.id as string)),
+  ];
+
   return {
     submissionId: submission.id,
     score,
-    totalQuestions: graded.length,
+    totalQuestions: orderedGraded.length,
     correctCount,
-    answers: graded.map((g) => ({
-      questionId: g.id,
+    answers: orderedGraded.map((g) => ({
+      questionId: g.id as string,
       studentAnswer: g.studentAnswer,
       isCorrect: g.isCorrect,
-      correctAnswer: g.correct_answer,
-      explanationText: g.explanation_text,
-      explanationMediaUrl: g.explanation_media_url,
-      categoryTag: g.category_tag,
-      questionText: g.question_text,
-      questionImageUrl: g.question_image_url,
+      correctAnswer: g.correct_answer as string,
+      explanationText: g.explanation_text as string,
+      explanationMediaUrl: g.explanation_media_url as string | null,
+      categoryTag: g.category_tag as string,
+      questionText: g.question_text as string,
+      questionImageUrl: g.question_image_url as string | null,
+      options: snapshot.optionOrders[g.id as string] ?? g.options,
     })),
   };
 }

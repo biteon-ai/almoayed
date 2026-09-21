@@ -33,13 +33,23 @@ export function QuestionJumpSheet({
       open={open}
       onOpenChange={onOpenChange}
       className={cn(
-        "inset-x-0 bottom-16 top-auto m-0 max-h-[min(80vh,28rem)] w-full max-w-none",
-        "rounded-t-3xl rounded-b-none md:bottom-auto md:top-auto md:m-auto md:max-w-md md:rounded-3xl"
+        "inset-0 m-0 h-full max-h-none w-full max-w-none overflow-y-auto border-0 bg-transparent p-4 shadow-none",
+        "rounded-none open:flex open:flex-col open:items-center open:justify-center"
       )}
     >
-      <DialogContent className="space-y-4 p-5" {...spekit(SPEKIT.quizJumpSheet)}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 text-start">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden
+        className="absolute inset-0 cursor-default"
+        onClick={() => onOpenChange(false)}
+      />
+      <DialogContent
+        className="relative z-10 w-full max-w-sm space-y-4 overflow-visible rounded-2xl border border-border bg-card p-5 shadow-xl"
+        {...spekit(SPEKIT.quizJumpSheet)}
+      >
+        <div className="relative flex items-center justify-center px-11">
+          <div className="flex items-center gap-2 text-center">
             <span className="flex size-11 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-700">
               <LayoutGrid className="size-5" aria-hidden />
             </span>
@@ -47,14 +57,15 @@ export function QuestionJumpSheet({
           </div>
           <button
             type="button"
-            onClick={() => onOpenChange(false)}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-muted"
+            className="absolute end-0 top-1/2 inline-flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-xl hover:bg-muted"
             aria-label="إغلاق"
+            onClick={() => onOpenChange(false)}
           >
             <X className="size-5" aria-hidden />
           </button>
         </div>
         <QuestionNavGrid
+          className="mx-auto w-fit grid-cols-5 sm:grid-cols-5"
           count={count}
           activeIndex={activeIndex}
           isSubmitted={isSubmitted}

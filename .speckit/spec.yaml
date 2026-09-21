@@ -589,6 +589,31 @@ features:
       - Gamification uses best score per quiz (no double-count)
     spekit: [quiz-attempt-settings, quiz-attempt-badge, challenge-leaderboard]
 
+  - id: QUIZ-006
+    name: Quiz Retake Reset & Shuffle
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/quiz/[id]", "/results"]
+    extends: [QUIZ-001, QUIZ-004, QUIZ-005, UI-016, UI-017, OFFLINE-001]
+    spec: specs/032-quiz-retake-shuffle/
+    files:
+      - supabase/migrations/021_quiz_attempt_presentation.sql
+      - src/lib/quiz-shuffle.ts
+      - src/lib/quiz-presentation.ts
+      - src/lib/quiz-player.ts
+      - src/actions/quiz.ts
+      - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuizRunnerContainer.tsx
+      - tests/features/quiz-006-retake-shuffle.test.ts
+      - e2e/quiz-006-retake-shuffle.spec.ts
+    acceptance:
+      - New attempt (including «إعادة المحاولة») starts with no leftover answers, empty progress, and a full timer when timed
+      - Each new attempt shuffles question order and MCQ options; letters A–D follow display order
+      - Scoring uses option text, not letter position; retake order differs from the previous attempt when another order exists
+      - In-progress resume keeps the same layout and answers; completed attempts keep a review snapshot
+      - Teacher authored order is unchanged; QUIZ-001 solutions stay hidden until that attempt is submitted
+    spekit: [quiz-retake-cta, question-card, quiz-progress, quiz-page]
+
   # ── Gamification ────────────────────────────────────────────────────────────
   - id: GAMIF-001
     name: Teacher-Driven Gamification & Ranking
@@ -1417,6 +1442,74 @@ partial_features:
       - quiz-timer
       - question-card
       - quiz-submit-button
+      - quiz-progress
+
+  - id: UI-017
+    name: Quiz Navigation and Safe Submit
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/quiz/[id]"]
+    extends: [UI-016, QUIZ-001, QUIZ-004]
+    spec: specs/031-quiz-nav-submit/
+    files:
+      - src/lib/quiz-player.ts
+      - src/components/quiz/QuestionStepNav.tsx
+      - src/components/quiz/QuizUnansweredDialog.tsx
+      - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuestionCard.tsx
+      - src/components/quiz/QuizPlayerHeader.tsx
+      - src/components/quiz/QuestionPager.tsx
+      - src/components/quiz/QuizProgressBar.tsx
+      - tests/features/ui-017-quiz-nav-submit.test.ts
+      - e2e/ui-017-quiz-nav-submit.spec.ts
+    acceptance:
+      - Card-header stepper is the only question pager (no bottom «التالي» / «السابق» row)
+      - Compact RTL 3-pill pager in the card header: next left, current middle, previous right
+      - «كل الأسئلة» lives in the player header beside the timer (visual left)
+      - Thin emerald progress bar under the card-header stepper (replaces «N من N • %» text)
+      - Compact submit sits left of the stepper while taking; UI-018 keeps it visible on every question and disabled until complete
+      - Timed auto-submit skips the new confirm dialog
+      - Selecting a choice auto-advances after a short delay
+    spekit:
+      - quiz-step-prev
+      - quiz-step-next
+      - quiz-submit-confirm
+      - quiz-unanswered-alert
+      - quiz-submit-button
+      - quiz-jump-sheet
+      - quiz-player-header
+      - question-card
+      - quiz-progress
+
+  - id: UI-018
+    name: Quiz Header Polish
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/quiz/[id]"]
+    extends: [UI-017, UI-016, QUIZ-001, QUIZ-004]
+    spec: specs/033-quiz-header-polish/
+    files:
+      - src/lib/quiz-timer.ts
+      - src/components/quiz/QuizTimerBadge.tsx
+      - src/components/quiz/QuizPlayerHeader.tsx
+      - src/components/quiz/QuizRunner.tsx
+      - src/lib/spekit-targets.ts
+      - tests/features/ui-018-quiz-header-polish.test.ts
+      - e2e/ui-018-quiz-header-polish.spec.ts
+    acceptance:
+      - Compact «تسليم» sits on the visual left of the card-header row for the whole taking session
+      - Submit stays disabled until every question is answered; tap does not grade while disabled
+      - Number stepper stays on the visual right of the card header
+      - Timed quizzes show a thin remaining-time bar under MM:SS «الوقت المتبقي»
+      - «كل الأسئلة» stays tappable and opens the jump sheet
+    spekit:
+      - quiz-submit-button
+      - quiz-question-pager
+      - quiz-timer
+      - quiz-timer-bar
+      - quiz-all-questions
+      - quiz-jump-sheet
+      - quiz-submit-confirm
       - quiz-progress
 
   - id: GAMIF-004

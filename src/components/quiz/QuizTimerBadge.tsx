@@ -4,27 +4,38 @@ import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import {
   formatRemainingMmSs,
   isWarningRemaining,
+  remainingTimeFraction,
 } from "@/lib/quiz-timer";
 import { cn } from "@/lib/utils";
 import { Timer } from "lucide-react";
 
 interface QuizTimerBadgeProps {
   remainingSeconds: number;
+  durationMinutes?: number;
   compact?: boolean;
 }
 
 export function QuizTimerBadge({
   remainingSeconds,
+  durationMinutes,
   compact = false,
 }: QuizTimerBadgeProps) {
   const warning = isWarningRemaining(remainingSeconds);
   const expired = remainingSeconds <= 0;
+  const showBar =
+    compact &&
+    typeof durationMinutes === "number" &&
+    durationMinutes > 0;
+  const fraction = showBar
+    ? remainingTimeFraction(remainingSeconds, durationMinutes)
+    : 0;
+  const percent = Math.round(fraction * 100);
 
   return (
     <div
       className={cn(
         compact
-          ? "rounded-xl px-2 py-1.5"
+          ? "w-full rounded-xl px-2 py-1.5"
           : "sticky top-0 z-40 -mx-4 mb-4 border-b px-4 py-2.5 backdrop-blur-md sm:-mx-0 sm:rounded-2xl sm:border",
         expired || warning
           ? "border-rose-200/80 bg-rose-50/95 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/80 dark:text-rose-200"
@@ -41,9 +52,12 @@ export function QuizTimerBadge({
     >
       <div
         className={cn(
-          "flex items-center gap-2",
-          compact ? "justify-end" : "mx-auto max-w-7xl justify-center"
+          "flex items-center gap-1.5",
+          compact
+            ? "w-full justify-center"
+            : "mx-auto max-w-7xl justify-center"
         )}
+        dir={compact ? "ltr" : "rtl"}
       >
         <Timer
           className={cn(
@@ -61,8 +75,38 @@ export function QuizTimerBadge({
         >
           {formatRemainingMmSs(remainingSeconds)}
         </span>
-        <span className="text-xs font-bold">الوقت المتبقي</span>
+        <span className="text-xs font-bold leading-none" dir="rtl">
+          الوقت المتبقي
+        </span>
       </div>
+      {showBar ? (
+        <div
+          className="mt-1.5 w-full"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+          aria-label="الوقت المتبقي"
+          data-spekit={SPEKIT.quizTimerBar}
+        >
+          <div
+            className={cn(
+              "h-1 w-full overflow-hidden rounded-full",
+              expired || warning
+                ? "bg-rose-200/80 dark:bg-rose-900/50"
+                : "bg-muted"
+            )}
+          >
+            <div
+              className={cn(
+                "h-full rounded-full transition-[width] duration-1000 ease-linear",
+                expired || warning ? "bg-rose-600" : "bg-emerald-600"
+              )}
+              style={{ width: `${fraction * 100}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
