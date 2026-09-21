@@ -2,14 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import type { QuizSubmitResult } from "@/types/database";
-
-export type QuestionNavStatus =
-  | "default"
-  | "answered"
-  | "active"
-  | "correct"
-  | "wrong"
-  | "unanswered-review";
+import {
+  questionNavStatus,
+  type QuestionNavStatus,
+} from "@/lib/quiz-player";
 
 interface QuestionNavGridProps {
   count: number;
@@ -19,31 +15,12 @@ interface QuestionNavGridProps {
   questionIds: string[];
   results: QuizSubmitResult | null;
   onNavigate: (index: number) => void;
-}
-
-function getQuestionStatus(
-  index: number,
-  activeIndex: number,
-  questionId: string,
-  isSubmitted: boolean,
-  answers: Record<string, string>,
-  results: QuizSubmitResult | null
-): QuestionNavStatus {
-  if (index === activeIndex) return "active";
-
-  if (isSubmitted && results) {
-    const answer = results.answers.find((a) => a.questionId === questionId);
-    if (!answer) return "unanswered-review";
-    return answer.isCorrect ? "correct" : "wrong";
-  }
-
-  if (answers[questionId]) return "answered";
-  return "default";
+  className?: string;
 }
 
 const statusStyles: Record<QuestionNavStatus, string> = {
   default:
-    "border-border/70 bg-white text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/50 dark:bg-card",
+    "border-border/70 bg-card text-muted-foreground hover:border-emerald-200 hover:bg-emerald-50/50",
   answered:
     "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-300 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-200",
   active:
@@ -64,20 +41,21 @@ export function QuestionNavGrid({
   questionIds,
   results,
   onNavigate,
+  className,
 }: QuestionNavGridProps) {
   if (count === 0) return null;
 
   return (
-    <div className="grid grid-cols-5 gap-2.5 sm:grid-cols-6 md:grid-cols-4 lg:grid-cols-5">
+    <div className={cn("grid grid-cols-5 gap-2.5 sm:grid-cols-6", className)}>
       {Array.from({ length: count }, (_, index) => {
-        const status = getQuestionStatus(
+        const status = questionNavStatus({
           index,
           activeIndex,
-          questionIds[index] ?? "",
+          questionId: questionIds[index] ?? "",
           isSubmitted,
           answers,
-          results
-        );
+          results,
+        });
 
         return (
           <button
@@ -87,7 +65,7 @@ export function QuestionNavGrid({
             aria-label={`السؤال ${index + 1}`}
             aria-current={index === activeIndex ? "step" : undefined}
             className={cn(
-              "flex size-10 items-center justify-center rounded-xl border text-sm font-bold tabular-nums transition-all duration-200",
+              "flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm font-bold tabular-nums transition-all duration-200",
               "touch-manipulation active:scale-95",
               statusStyles[status]
             )}

@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 105
+  total_targets: 135
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -113,6 +113,7 @@ QUIZ-001:
   quiz-results-share: "WhatsApp share results card"
   quiz-results-review: "Post-submit review guidance"
   quiz-pending-sync: "Pending offline sync state card"
+  quiz-retake-cta: "Student retake CTA (إعادة المحاولة / إعادة الاختبار) (QUIZ-006)"
 
 OFFLINE-001:
   offline-status-banner: "Offline mode banner during quiz"
@@ -302,6 +303,7 @@ UI-006:
 # ── Student results cards ───────────────────────────────────────
 UI-007:
   results-card: "Quiz result history card wrapper (suffix -<submissionId>)"
+  results-score-badge: "Circular score ring badge on results cards"
 
 # ── PWA install on login ────────────────────────────────────────
 UI-010:
@@ -309,6 +311,43 @@ UI-010:
   pwa-install-android: "Android install button (native prompt or guide)"
   pwa-install-ios: "iOS install button (Safari home-screen guide)"
   pwa-install-modal: "Arabic step-by-step PWA install instruction dialog"
+
+# ── Native home-screen shell / drawer / tiles / A2HS ────────────
+UI-012:
+  native-app-version: "Profile drawer published version label"
+UI-013:
+  native-profile-drawer: "Student native profile / settings drawer"
+  native-drawer-close: "Close control on the native profile drawer"
+  native-theme-switcher: "Dark / Light / System appearance control"
+  native-offline-list: "Cached / offline saved quizzes list"
+  native-drawer-settings: "Drawer row to profile settings / upgrade"
+  native-share-app: "Share Al-Moayed app action"
+  native-contact-us: "Contact support action"
+DASH-002:
+  dashboard-action-tiles: "Student home card-tile quick-action grid"
+  dashboard-tile-progress: "Daily progress tile"
+  dashboard-tile-quizzes: "Interactive tests tile"
+  dashboard-tile-results: "Results summary tile"
+  dashboard-tile-continue: "Continue / next-study tile"
+UI-015:
+  pwa-install-sheet: "In-app Add to Home Screen bottom sheet"
+  pwa-install-sheet-android: "Sheet Android native install action"
+  pwa-install-sheet-guide: "Sheet iOS / manual install steps"
+  pwa-install-sheet-dismiss: "Sheet later / dismiss action"
+UI-016:
+  quiz-player-header: "Sticky quiz-taking sub-header (exit + timer)"
+  quiz-exit-button: "Leave quiz control in the player header"
+  quiz-exit-dialog: "Save-and-exit confirmation dialog"
+  quiz-question-pager: "Compact 3-number stepper in the question card header"
+  quiz-jump-sheet: "All-questions jump bottom sheet"
+UI-017:
+  quiz-step-prev: "Previous-question control under the card"
+  quiz-step-next: "Next-question control under the card"
+  quiz-submit-confirm: "Manual submit confirmation dialog"
+  quiz-unanswered-alert: "Unanswered-questions warning before submit"
+UI-018:
+  quiz-timer-bar: "Timed attempt remaining-time linear bar under the countdown"
+  quiz-all-questions: "Header كل الأسئلة control that opens the jump sheet"
 
 # ── Teacher gamification ────────────────────────────────────────
 GAMIF-001:

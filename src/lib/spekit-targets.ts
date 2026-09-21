@@ -56,6 +56,7 @@ export const SPEKIT = {
   quizPage: "quiz-page",
   quizGatekeeper: "quiz-gatekeeper",
   quizTimer: "quiz-timer",
+  quizTimerBar: "quiz-timer-bar",
   quizTimerSettings: "quiz-timer-settings",
   quizTimerCard: "quiz-timer-card",
   quizAttemptSettings: "quiz-attempt-settings",
@@ -71,6 +72,7 @@ export const SPEKIT = {
   quizResultsShare: "quiz-results-share",
   quizResultsReview: "quiz-results-review",
   quizPendingSync: "quiz-pending-sync",
+  quizRetakeCta: "quiz-retake-cta",
 
   // ── OFFLINE-001 ──────────────────────────────────────────────
   offlineStatusBanner: "offline-status-banner",
@@ -239,6 +241,7 @@ export const SPEKIT = {
 
   // ── UI-007 ───────────────────────────────────────────────────
   resultsCard: "results-card",
+  resultsScoreBadge: "results-score-badge",
 
   // ── UI-006 ───────────────────────────────────────────────────
   navbarProgress: "navbar-progress",
@@ -261,6 +264,43 @@ export const SPEKIT = {
   gamifRewardsExpand: "gamif-rewards-expand",
   gamifRewardsTrack: "gamif-rewards-track",
   gamifResultsSummary: "gamif-results-summary",
+
+  // ── UI-012 / UI-013 native shell + drawer ────────────────────
+  nativeProfileDrawer: "native-profile-drawer",
+  nativeDrawerClose: "native-drawer-close",
+  nativeThemeSwitcher: "native-theme-switcher",
+  nativeOfflineList: "native-offline-list",
+  nativeDrawerSettings: "native-drawer-settings",
+  nativeShareApp: "native-share-app",
+  nativeContactUs: "native-contact-us",
+  nativeAppVersion: "native-app-version",
+
+  // ── DASH-002 action tiles ────────────────────────────────────
+  dashboardActionTiles: "dashboard-action-tiles",
+  dashboardTileProgress: "dashboard-tile-progress",
+  dashboardTileQuizzes: "dashboard-tile-quizzes",
+  dashboardTileResults: "dashboard-tile-results",
+  dashboardTileContinue: "dashboard-tile-continue",
+
+  // ── UI-015 in-app A2HS sheet ─────────────────────────────────
+  pwaInstallSheet: "pwa-install-sheet",
+  pwaInstallSheetAndroid: "pwa-install-sheet-android",
+  pwaInstallSheetGuide: "pwa-install-sheet-guide",
+  pwaInstallSheetDismiss: "pwa-install-sheet-dismiss",
+
+  // ── UI-016 quiz player ───────────────────────────────────────
+  quizPlayerHeader: "quiz-player-header",
+  quizExitButton: "quiz-exit-button",
+  quizExitDialog: "quiz-exit-dialog",
+  quizQuestionPager: "quiz-question-pager",
+  quizJumpSheet: "quiz-jump-sheet",
+  quizAllQuestions: "quiz-all-questions",
+
+  // ── UI-017 step nav + submit confirm ─────────────────────────
+  quizStepPrev: "quiz-step-prev",
+  quizStepNext: "quiz-step-next",
+  quizSubmitConfirm: "quiz-submit-confirm",
+  quizUnansweredAlert: "quiz-unanswered-alert",
 } as const;
 
 export type SpekitTarget = (typeof SPEKIT)[keyof typeof SPEKIT];

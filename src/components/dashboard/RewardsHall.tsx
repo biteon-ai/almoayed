@@ -8,6 +8,7 @@ import {
 } from "@/lib/teacher-gamification";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
+import { CountOfText } from "@/components/ui/rtl-num";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, LayoutGrid, Lock, Rows3 } from "lucide-react";
 
@@ -57,7 +58,7 @@ function BadgeCard({
 
       <span
         className={cn(
-          "rounded-full px-2 py-0.5 text-[10px] font-bold",
+          "rounded-full px-3 py-1 text-[10px] font-medium",
           badge.unlocked
             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
             : "bg-slate-200/80 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
@@ -92,10 +93,10 @@ export function RewardsHall({ status }: RewardsHallProps) {
             قاعة المكافآت
           </h3>
           <span
-            className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium tabular-nums text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+            className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium tabular-nums text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
             {...spekit(SPEKIT.gamifRewardsCount)}
           >
-            {unlockedCount} من {totalCount}
+            <CountOfText current={unlockedCount} total={totalCount} />
           </span>
         </div>
 
