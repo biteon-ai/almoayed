@@ -148,13 +148,7 @@ export function QuizCarouselCard({
       <QuestionMeta count={quiz.questionCount} />
 
       <div className="mt-auto pt-5">
-        <Link
-          href={`/quiz/${quiz.id}`}
-          className={ctaClasses}
-          {...(quiz.hasSubmission && quiz.canRetake
-            ? spekit(SPEKIT.quizRetakeCta)
-            : {})}
-        >
+        <Link href={`/quiz/${quiz.id}`} className={ctaClasses}>
           {quiz.hasSubmission
             ? quiz.canRetake
               ? "إعادة الاختبار"

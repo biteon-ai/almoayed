@@ -168,67 +168,12 @@
   }
 }
 
-@keyframes nativeDrawerIn {
-  from {
-    opacity: 0.4;
-    transform: translateX(1.25rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes studentPageEnter {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 .animate-slide-up {
   animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in {
   animation: fadeIn 0.35s ease-out forwards;
-}
-
-.animate-native-drawer-in {
-  animation: nativeDrawerIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.student-page-enter {
-  animation: studentPageEnter 0.22s ease-out both;
-}
-
-@keyframes quizQuestionEnter {
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.quiz-question-enter {
-  animation: quizQuestionEnter 0.2s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-slide-up,
-  .animate-fade-in,
-  .animate-native-drawer-in,
-  .student-page-enter,
-  .quiz-question-enter {
-    animation: none;
-  }
 }
 
 /* [UI-006 / FIX-UI-001 / FIX-UI-003] Single top progress bar — always left-anchored.

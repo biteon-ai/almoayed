@@ -9,9 +9,6 @@ export default defineConfig({
     reporters: ["verbose"],
     passWithNoTests: false,
   },
-  esbuild: {
-    jsx: "automatic",
-  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

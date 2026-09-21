@@ -286,22 +286,12 @@ export type ExamQuestion = Pick<
   "id" | "quiz_id" | "question_text" | "question_image_url" | "options" | "sort_order"
 >;
 
-/** [QUIZ-006] Per-attempt question and option display order. */
-export interface AttemptPresentation {
-  questionIds: string[];
-  optionOrders: Record<string, string[]>;
-}
-
 export interface ExamSubmission {
   id: string;
   student_id: string;
   quiz_id: string;
   score: number;
   submitted_at: string;
-  /** [QUIZ-006] Snapshot of question IDs in the order shown; null on legacy rows. */
-  question_order: string[] | null;
-  /** [QUIZ-006] Map of questionId → option texts in display order; null on legacy rows. */
-  option_orders: Record<string, string[]> | null;
 }
 
 export interface StudentAnswer {
@@ -334,8 +324,6 @@ export interface QuizSubmitResult {
     categoryTag: string;
     questionText: string;
     questionImageUrl: string | null;
-    /** [QUIZ-006] Options in the order shown on this attempt. */
-    options: string[];
   }>;
 }
 

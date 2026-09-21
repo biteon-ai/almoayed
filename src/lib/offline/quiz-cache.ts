@@ -81,21 +81,3 @@ export async function getQuizPackage(
 export async function hasQuizPackage(quizId: string): Promise<boolean> {
   return (await getQuizPackage(quizId)) !== null;
 }
-
-/** MT-002: only packages for the active teacher, newest opened first. */
-export function filterQuizPackagesForTeacher(
-  packages: QuizPackageRecord[],
-  teacherId: string | null
-): QuizPackageRecord[] {
-  if (!teacherId) return [];
-  return packages
-    .filter((record) => record.teacherId === teacherId)
-    .sort((a, b) => (a.openedAt < b.openedAt ? 1 : a.openedAt > b.openedAt ? -1 : 0));
-}
-
-export async function listQuizPackages(input: {
-  teacherId: string | null;
-}): Promise<QuizPackageRecord[]> {
-  const all = await idbGetAll<QuizPackageRecord>(OFFLINE_STORES.quizPackages);
-  return filterQuizPackagesForTeacher(all, input.teacherId);
-}

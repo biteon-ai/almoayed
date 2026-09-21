@@ -15,7 +15,7 @@ import {
 } from "@/lib/student-profile";
 import { TRIAL_JOIN_MESSAGES } from "@/lib/trial-join-messages";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
-import { choiceChipClass } from "@/lib/ui-chrome";
+import { cn } from "@/lib/utils";
 import { GraduationCap, Loader2, MessageCircle, User } from "lucide-react";
 
 const initialState: JoinState | null = null;
@@ -163,15 +163,17 @@ export function JoinForm({ teacherCode, teacherName }: JoinFormProps) {
 
           <div className="space-y-2" {...spekit(SPEKIT.joinClassLevel)}>
             <p className="text-sm font-semibold">المرحلة الدراسية</p>
-            <div className="grid gap-2.5">
+            <div className="grid gap-2">
               {EDUCATION_STAGES.map((stage) => (
                 <button
                   key={stage}
                   type="button"
                   onClick={() => setEducationStage(stage)}
-                  className={choiceChipClass(
-                    educationStage === stage,
-                    "h-12 w-full px-4 text-start text-sm"
+                  className={cn(
+                    "h-12 rounded-xl border px-4 text-start text-sm font-semibold",
+                    educationStage === stage
+                      ? "border-emerald-600 bg-emerald-50 text-emerald-900"
+                      : "border-border bg-muted/30"
                   )}
                 >
                   {EDUCATION_STAGE_LABELS[stage]}

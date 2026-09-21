@@ -1,10 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Progress } from "@/components/ui/progress";
 import { SPEKIT } from "@/lib/spekit-targets";
+import { cn } from "@/lib/utils";
 import type { StudentGamification } from "@/lib/student-gamification";
-import { Flame, Sparkles } from "lucide-react";
+import {
+  BookOpen,
+  Flame,
+  ListChecks,
+  Sparkles,
+} from "lucide-react";
 
 export interface StudentDashboardHeroProps {
   studentName: string;
@@ -56,6 +64,29 @@ export function StudentDashboardHero({
               className="h-2 rounded-full bg-white/20"
               value={gamification.dailyGoalProgress}
             />
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Link
+              href="/quizzes"
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "rounded-xl bg-white/15 font-bold text-white hover:bg-white/25"
+              )}
+            >
+              <BookOpen className="h-4 w-4" />
+              ابدأ اختباراً
+            </Link>
+            <Link
+              href="/results"
+              className={cn(
+                buttonVariants({ size: "sm", variant: "outline" }),
+                "rounded-xl border-white/30 bg-transparent font-bold text-white hover:bg-white/10 hover:text-white"
+              )}
+            >
+              <ListChecks className="h-4 w-4" />
+              نتائجي
+            </Link>
           </div>
         </div>
 

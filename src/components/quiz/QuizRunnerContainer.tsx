@@ -52,7 +52,7 @@ export function QuizRunnerContainer({
 
     async function hydrate() {
       if (quiz && questions.length > 0) {
-        if (online && !initialResults) {
+        if (online) {
           await saveQuizPackage({ quiz, questions, teacherId, timer });
         }
         if (!cancelled) {
@@ -144,7 +144,6 @@ export function QuizRunnerContainer({
         initialResults={loadedResults}
         teacherId={teacherId}
         timer={loadedResults ? null : loadedTimer}
-        usedAttempts={attemptState?.usedAttempts ?? 0}
       />
     </>
   );

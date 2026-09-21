@@ -10,12 +10,11 @@ function Textarea({
     <textarea
       data-slot="textarea"
       className={cn(
-        "flex min-h-[96px] w-full rounded-xl border border-gray-200 bg-background px-4 py-3",
-        "text-start text-base font-medium leading-relaxed transition-all duration-200 outline-none touch-manipulation",
-        "placeholder:text-muted-foreground/55",
-        "hover:border-gray-300 dark:border-border dark:hover:border-border",
-        "focus:border-emerald-500 focus:bg-background",
-        "focus-visible:ring-2 focus-visible:ring-emerald-100 focus-visible:ring-offset-0",
+        "flex min-h-[96px] w-full rounded-xl border border-input bg-muted/50 px-3.5 py-3",
+        "text-base font-medium transition-all duration-200 outline-none touch-manipulation",
+        "placeholder:text-muted-foreground/70",
+        "hover:border-brand-300/70 focus:border-brand-500 focus:bg-background",
+        "focus-visible:ring-[3px] focus-visible:ring-brand-500/15 focus-visible:ring-offset-0",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
         "aria-invalid:border-destructive aria-invalid:ring-destructive/15",
         "resize-y",

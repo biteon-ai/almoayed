@@ -121,17 +121,6 @@ export function padAnswersForQuestions(
   return out;
 }
 
-/** Fill fraction for the taking countdown bar: remaining ÷ attempt duration. */
-export function remainingTimeFraction(
-  remainingSeconds: number,
-  durationMinutes: number
-): number {
-  const total = durationMinutes * 60;
-  if (!Number.isFinite(total) || total <= 0) return 0;
-  if (!Number.isFinite(remainingSeconds)) return 0;
-  return Math.min(1, Math.max(0, remainingSeconds / total));
-}
-
 /** Client remaining seconds from absolute endsAt (refresh-safe). */
 export function remainingSecondsFromEndsAt(
   endsAt: string,

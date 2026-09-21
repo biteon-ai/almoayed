@@ -169,7 +169,6 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
               buttonVariants({ variant: "outline", size: "lg" }),
               "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
             )}
-            data-spekit={SPEKIT.quizRetakeCta}
           >
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             <span>

@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { statIconBadgeClass } from "@/lib/ui-chrome";
 import type { SpekitTarget } from "@/lib/spekit-targets";
 import type { LucideIcon } from "lucide-react";
 
@@ -24,23 +23,19 @@ export function StatCard({
       className="overflow-hidden border-border/70 shadow-sm"
       {...(spekitId ? { "data-spekit": spekitId } : {})}
     >
-      <CardContent className="flex items-center justify-between gap-4 p-6">
-        <div className="min-w-0 space-y-1.5 text-start">
-          <p className="text-sm font-medium leading-none text-muted-foreground">
-            {label}
-          </p>
-          <p
-            className={cn(
-              "text-3xl font-bold tracking-tight text-foreground tabular-nums",
-              valueClassName
-            )}
-          >
-            {value}
-          </p>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between gap-3 text-muted-foreground">
+          <span className="text-sm font-medium leading-none">{label}</span>
+          <Icon className="size-5 shrink-0 opacity-70" aria-hidden />
         </div>
-        <div className={statIconBadgeClass} aria-hidden>
-          <Icon className="size-5" />
-        </div>
+        <p
+          className={cn(
+            "mt-2 text-3xl font-bold tracking-tight text-foreground tabular-nums",
+            valueClassName
+          )}
+        >
+          {value}
+        </p>
       </CardContent>
     </Card>
   );

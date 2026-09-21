@@ -3,7 +3,6 @@ import {
   type TeacherGamificationStatus,
 } from "@/lib/teacher-gamification";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
-import { PercentText } from "@/components/ui/rtl-num";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -88,7 +87,7 @@ export function LevelProgressCard({
           <p className="text-lg font-bold">{title}</p>
           <p className="text-sm tabular-nums text-muted-foreground">
             {status.totalQuizzesCompleted} اختبار · متوسط{" "}
-            <PercentText value={Math.round(status.averageScorePercentage)} />
+            {Math.round(status.averageScorePercentage)}%
           </p>
         </div>
         <div

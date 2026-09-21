@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Target, Sparkles, Trophy, BookOpen } from "lucide-react";
-import { PercentText } from "@/components/ui/rtl-num";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -75,7 +74,7 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
                 "text-lg font-black tracking-tight",
                 averageSuccess >= STRONG_THRESHOLD ? "text-green-600" : averageSuccess < WEAK_THRESHOLD ? "text-destructive" : "text-brand-600"
               )}>
-                <PercentText value={averageSuccess} />
+                {averageSuccess}%
               </div>
             </div>
           </div>
@@ -128,7 +127,7 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
                     {/* Inner Text */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-[13px] font-black tracking-tighter text-foreground font-mono">
-                        <PercentText value={Math.round(success)} />
+                        {Math.round(success)}%
                       </span>
                     </div>
                   </div>
@@ -141,7 +140,7 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
                     <Badge
                       variant={isWeak ? "destructive" : isStrong ? "secondary" : "outline"}
                       className={cn(
-                        "h-auto rounded-full border-0 px-3 py-1 text-[10px] font-medium leading-none",
+                        "text-[9px] font-bold px-1.5 py-0 border-0 leading-none h-4",
                         isStrong && "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-400"
                       )}
                     >
@@ -176,7 +175,7 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
                     تنبيه مراجعة هامة: قسم {cat.category_tag}
                   </h4>
                   <p className="mt-1 text-xs font-medium leading-relaxed text-destructive/80">
-                    مستواك فيه <PercentText value={cat.success_percentage} />. شوية مراجعة للحلول
+                    مستواك فيه {cat.success_percentage}%. شوية مراجعة للحلول
                     والشروحات رح تعوض النقص وتثبت معلوماتك. ركز وحل بإيدك!
                   </p>
                 </div>

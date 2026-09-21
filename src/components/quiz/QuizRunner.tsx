@@ -2,26 +2,22 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { submitQuiz } from "@/actions/quiz";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
-import { QuizPlayerHeader } from "@/components/quiz/QuizPlayerHeader";
-import { QuizExitDialog } from "@/components/quiz/QuizExitDialog";
-import { QuizSubmitDialog } from "@/components/quiz/QuizSubmitDialog";
-import { QuestionPager } from "@/components/quiz/QuestionPager";
-import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
-import { QuestionJumpSheet } from "@/components/quiz/QuestionJumpSheet";
+import { QuizTimerBadge } from "@/components/quiz/QuizTimerBadge";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
+import { QuizSidebar } from "@/components/quiz/QuizSidebar";
 import { WhatsAppShare } from "@/components/quiz/WhatsAppShare";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   CloudUpload,
-  Flag,
   HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,18 +25,8 @@ import { toUserMessage, uiMessage, ErrorCode } from "@/lib/app-errors";
 import { useOnlineStatus } from "@/lib/offline/connectivity";
 import {
   getInProgress,
-  saveInProgress,
   saveInProgressDebounced,
-  clearInProgress,
 } from "@/lib/offline/in-progress";
-import {
-  answeredProgress,
-  isQuizComplete,
-  isStaleInProgressDraft,
-  QUIZ_AUTO_ADVANCE_MS,
-  remainingUnanswered,
-  shouldConfirmQuizExit,
-} from "@/lib/quiz-player";
 import {
   enqueuePendingSubmission,
   getPendingForQuiz,
@@ -51,7 +37,6 @@ import {
   remainingSecondsFromEndsAt,
   type TimedQuizSessionView,
 } from "@/lib/quiz-timer";
-import { hapticPulse } from "@/lib/haptic";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
 const TIME_EXPIRED_NOTICE =
@@ -63,7 +48,6 @@ interface QuizRunnerProps {
   initialResults?: QuizSubmitResult | null;
   teacherId: string;
   timer?: TimedQuizSessionView | null;
-  usedAttempts?: number;
 }
 
 export function QuizRunner({
@@ -72,7 +56,6 @@ export function QuizRunner({
   initialResults,
   teacherId,
   timer = null,
-  usedAttempts = 0,
 }: QuizRunnerProps) {
   const online = useOnlineStatus();
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -87,15 +70,10 @@ export function QuizRunner({
     timer ? remainingSecondsFromEndsAt(timer.endsAt) : 0
   );
   const [draftReady, setDraftReady] = useState(false);
-  const [exitOpen, setExitOpen] = useState(false);
-  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
-  const [jumpOpen, setJumpOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   useStudentLoadingBarSync(isPending);
-  const router = useRouter();
 
   const autoSubmitStarted = useRef(false);
-  const advanceTimer = useRef<number | null>(null);
   const answersRef = useRef(answers);
   answersRef.current = answers;
 
@@ -119,27 +97,16 @@ export function QuizRunner({
 
       if (cancelled) return;
 
+      if (draft?.answers) {
+        setAnswers(draft.answers);
+        if (typeof draft.activeIndex === "number") {
+          setActiveIndex(draft.activeIndex);
+        }
+      }
+
       if (pending) {
         setPendingSync(true);
         setAnswers(pending.answers);
-      } else if (draft) {
-        if (
-          isStaleInProgressDraft({
-            usedAttempts,
-            draftUsedAttemptsAtStart: draft.usedAttemptsAtStart,
-            hasPendingSubmission: false,
-          })
-        ) {
-          await clearInProgress(quiz.id);
-          if (cancelled) return;
-          setAnswers({});
-          setActiveIndex(0);
-        } else {
-          setAnswers(draft.answers);
-          if (typeof draft.activeIndex === "number") {
-            setActiveIndex(draft.activeIndex);
-          }
-        }
       }
 
       setDraftReady(true);
@@ -150,39 +117,21 @@ export function QuizRunner({
     return () => {
       cancelled = true;
     };
-  }, [quiz.id, usedAttempts]);
+  }, [quiz.id]);
 
   useEffect(() => {
     if (results || pendingSync) return;
     if (!draftReady) return;
-    saveInProgressDebounced(quiz.id, {
-      answers,
-      activeIndex,
-      usedAttemptsAtStart: usedAttempts,
-    });
-  }, [answers, activeIndex, quiz.id, results, pendingSync, draftReady, usedAttempts]);
+    saveInProgressDebounced(quiz.id, { answers, activeIndex });
+  }, [answers, activeIndex, quiz.id, results, pendingSync, draftReady]);
 
   const isSubmitted = results !== null;
   const timeLocked = Boolean(timer) && remainingSeconds <= 0 && !isSubmitted;
+  const answeredCount = Object.keys(answers).length;
+  const progress = questions.length
+    ? (answeredCount / questions.length) * 100
+    : 0;
   const questionIds = questions.map((q) => q.id);
-  const remaining = remainingUnanswered({ answers, questionIds });
-  const complete = isQuizComplete({ answers, questionIds });
-  const showTakingSubmit =
-    !isSubmitted &&
-    !pendingSync &&
-    !timeLocked &&
-    questions.length > 0;
-  const answeredCount = questions.length - remaining;
-  const { percent: progressPercent, label: progressLabel } = answeredProgress(
-    answeredCount,
-    questions.length
-  );
-  const confirmExit = shouldConfirmQuizExit({
-    isSubmitted,
-    pendingSync,
-    questionCount: questions.length,
-    timeExpiredNotice,
-  });
 
   const activeQuestion = questions[activeIndex];
   const activeResult = results?.answers.find(
@@ -192,39 +141,19 @@ export function QuizRunner({
   const handleAnswer = (questionId: string, value: string) => {
     if (isSubmitted || pendingSync || timeLocked) return;
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
-    hapticPulse(10);
-
-    if (advanceTimer.current) {
-      window.clearTimeout(advanceTimer.current);
-      advanceTimer.current = null;
-    }
-    if (activeIndex >= questions.length - 1) return;
-    const nextIndex = activeIndex + 1;
-    advanceTimer.current = window.setTimeout(() => {
-      advanceTimer.current = null;
-      goToQuestion(nextIndex);
-    }, QUIZ_AUTO_ADVANCE_MS);
   };
 
-  const submitAttempt = (opts: {
-    forceTimedExpiry: boolean;
-    allowIncomplete?: boolean;
-  }) => {
+  const submitAttempt = (opts: { forceTimedExpiry: boolean }) => {
     if (questions.length === 0) {
       setError(uiMessage(ErrorCode.QUIZ_EMPTY));
       return;
     }
 
-    const payload =
-      opts.forceTimedExpiry || opts.allowIncomplete
-        ? padAnswersForQuestions(questionIds, answersRef.current)
-        : answersRef.current;
+    const payload = opts.forceTimedExpiry
+      ? padAnswersForQuestions(questionIds, answersRef.current)
+      : answersRef.current;
 
-    if (
-      !opts.forceTimedExpiry &&
-      !opts.allowIncomplete &&
-      Object.keys(payload).length < questions.length
-    ) {
+    if (!opts.forceTimedExpiry && Object.keys(payload).length < questions.length) {
       setError("يرجى الإجابة على جميع الأسئلة قبل تسليم الاختبار.");
       return;
     }
@@ -251,7 +180,6 @@ export function QuizRunner({
 
       try {
         const result = await submitQuiz(quiz.id, payload);
-        await clearInProgress(quiz.id);
         setResults(result);
         setPendingSync(false);
         setTimeExpiredNotice(false);
@@ -270,7 +198,6 @@ export function QuizRunner({
     if (questions.length === 0) return;
 
     autoSubmitStarted.current = true;
-    setSubmitConfirmOpen(false);
     submitAttempt({ forceTimedExpiry: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on expiry after draft restore
   }, [
@@ -283,29 +210,8 @@ export function QuizRunner({
   ]);
 
   const handleSubmit = () => {
-    if (isPending || !complete) return;
-    hapticPulse(20);
-    setSubmitConfirmOpen(true);
+    submitAttempt({ forceTimedExpiry: false });
   };
-
-  const handleSubmitConfirm = () => {
-    setSubmitConfirmOpen(false);
-    submitAttempt({
-      forceTimedExpiry: false,
-    });
-  };
-
-  useEffect(() => {
-    if (timeLocked || timeExpiredNotice) {
-      setSubmitConfirmOpen(false);
-    }
-  }, [timeLocked, timeExpiredNotice]);
-
-  useEffect(() => {
-    return () => {
-      if (advanceTimer.current) window.clearTimeout(advanceTimer.current);
-    };
-  }, []);
 
   const handleRetrySync = () => {
     startTransition(async () => {
@@ -324,43 +230,8 @@ export function QuizRunner({
   };
 
   const goToQuestion = (index: number) => {
-    if (advanceTimer.current) {
-      window.clearTimeout(advanceTimer.current);
-      advanceTimer.current = null;
-    }
     setActiveIndex(Math.max(0, Math.min(index, questions.length - 1)));
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    if (!confirmExit) return;
-    const url = `${window.location.pathname}${window.location.search}`;
-    window.history.pushState({ quizPlayerGuard: true }, "", url);
-    const onPop = () => {
-      window.history.pushState({ quizPlayerGuard: true }, "", url);
-      setExitOpen(true);
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, [confirmExit, quiz.id]);
-
-  const handleExitRequest = () => {
-    if (confirmExit) {
-      setExitOpen(true);
-      return;
-    }
-    router.replace("/quizzes");
-  };
-
-  const handleExitConfirm = () => {
-    void saveInProgress(quiz.id, {
-      answers: answersRef.current,
-      activeIndex,
-      usedAttemptsAtStart: usedAttempts,
-    }).finally(() => {
-      setExitOpen(false);
-      router.replace("/quizzes");
-    });
   };
 
   const wrongAnswersCount = results
@@ -369,53 +240,14 @@ export function QuizRunner({
 
   return (
     <div
-      className="mx-auto max-w-3xl px-4 py-3 pb-4 md:py-5"
+      className="mx-auto max-w-7xl px-4 py-6 pb-36 md:py-8 md:pb-24"
       {...spekit(SPEKIT.quizPage)}
     >
-      <QuizPlayerHeader
-        showTimer={Boolean(timer) && !isSubmitted}
-        remainingSeconds={remainingSeconds}
-        durationMinutes={timer?.durationMinutes}
-        onExit={handleExitRequest}
-        onOpenJump={
-          questions.length > 0 && !pendingSync
-            ? () => setJumpOpen(true)
-            : undefined
-        }
-      />
-      <QuizExitDialog
-        open={exitOpen}
-        onOpenChange={setExitOpen}
-        onConfirm={handleExitConfirm}
-      />
-      <QuizSubmitDialog
-        open={submitConfirmOpen}
-        onOpenChange={setSubmitConfirmOpen}
-        onConfirm={handleSubmitConfirm}
-      />
-      <QuestionJumpSheet
-        open={jumpOpen}
-        onOpenChange={setJumpOpen}
-        count={questions.length}
-        activeIndex={activeIndex}
-        isSubmitted={isSubmitted}
-        answers={answers}
-        questionIds={questionIds}
-        results={results}
-        onNavigate={goToQuestion}
-      />
+      {timer && !isSubmitted ? (
+        <QuizTimerBadge remainingSeconds={remainingSeconds} />
+      ) : null}
 
       {!online && !isSubmitted && !pendingSync && <OfflineStatusBanner />}
-
-      {error && !isSubmitted && !timeLocked && !timeExpiredNotice ? (
-        <div
-          role="alert"
-          className="mb-3 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-xs text-red-700"
-        >
-          <AlertCircle className="mt-0.5 size-4 shrink-0" />
-          <span className="font-bold">{error}</span>
-        </div>
-      ) : null}
 
       {timeExpiredNotice && !isSubmitted ? (
         <div
@@ -426,7 +258,11 @@ export function QuizRunner({
         </div>
       ) : null}
 
-      <main className="space-y-4" {...spekit(SPEKIT.quizQuestionList)}>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
+        <main
+          className="order-2 space-y-6 md:order-1 md:col-span-8 lg:col-span-8"
+          {...spekit(SPEKIT.quizQuestionList)}
+        >
           {pendingSync && !isSubmitted && (
             <Card
               className="border-teal-200 bg-teal-50/80"
@@ -459,15 +295,15 @@ export function QuizRunner({
 
           {questions.length === 0 ? (
             <Card
-              className="border-dashed border-border"
+              className="border-dashed border-slate-200"
               {...spekit(SPEKIT.quizEmptyState)}
             >
               <CardContent className="space-y-3 p-8 text-center">
-                <AlertCircle className="mx-auto size-8 text-muted-foreground" />
-                <p className="text-sm font-semibold text-foreground">
+                <AlertCircle className="mx-auto size-8 text-slate-400" />
+                <p className="text-sm font-semibold text-slate-800">
                   هذا الاختبار فاضي — ما في أسئلة بعد
                 </p>
-                <p className="text-xs leading-relaxed text-muted-foreground">
+                <p className="text-xs leading-relaxed text-slate-500">
                   الأستاذ لسه ما أضاف أسئلة. ارجع للوحة التحكم وجرب لاحقاً.
                 </p>
                 <Link href="/dashboard">
@@ -480,12 +316,10 @@ export function QuizRunner({
           ) : (
             !pendingSync && (
               <>
-                {activeQuestion ? (
-                  <div
-                    key={activeQuestion.id}
-                    className="quiz-question-enter w-full"
-                  >
+                <div className="mx-auto w-full max-w-3xl">
+                  {activeQuestion && (
                     <QuestionCard
+                      key={activeQuestion.id}
                       question={activeQuestion}
                       index={activeIndex}
                       value={
@@ -496,84 +330,48 @@ export function QuizRunner({
                       onChange={(v) => handleAnswer(activeQuestion.id, v)}
                       disabled={isSubmitted || timeLocked}
                       showResult={isSubmitted}
-                      correctAnswer={
-                        isSubmitted ? activeResult?.correctAnswer : undefined
-                      }
-                      categoryTag={
-                        isSubmitted ? activeResult?.categoryTag : undefined
-                      }
-                      explanationText={
-                        isSubmitted ? activeResult?.explanationText : undefined
-                      }
-                      explanationMediaUrl={
-                        isSubmitted
-                          ? activeResult?.explanationMediaUrl
-                          : undefined
-                      }
-                      header={
-                        <div className="flex w-full flex-col items-stretch gap-2">
-                          <div
-                            dir="ltr"
-                            className="flex w-full items-center gap-2"
-                          >
-                            {showTakingSubmit ? (
-                              <Button
-                                size="sm"
-                                className={cn(
-                                  "min-h-11 shrink-0 gap-1 rounded-xl px-3",
-                                  "text-sm font-extrabold",
-                                  "bg-brand-600 text-white shadow-sm transition-all hover:bg-brand-700",
-                                  "hover:scale-[1.01] active:scale-[0.99]",
-                                  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-                                )}
-                                onClick={handleSubmit}
-                                disabled={!complete || isPending}
-                                {...spekit(SPEKIT.quizSubmitButton)}
-                              >
-                                {isPending ? (
-                                  online ? (
-                                    "جاري التسليم..."
-                                  ) : (
-                                    "جاري الحفظ..."
-                                  )
-                                ) : (
-                                  <>
-                                    <Flag className="size-3.5" aria-hidden />
-                                    تسليم
-                                  </>
-                                )}
-                              </Button>
-                            ) : null}
-                            <QuestionPager
-                              count={questions.length}
-                              activeIndex={activeIndex}
-                              isSubmitted={isSubmitted}
-                              answers={answers}
-                              questionIds={questionIds}
-                              results={results}
-                              onNavigate={goToQuestion}
-                              compact={showTakingSubmit}
-                              className={
-                                showTakingSubmit ? "ms-auto" : "mx-auto"
-                              }
-                            />
-                          </div>
-                          <QuizProgressBar
-                            percent={progressPercent}
-                            label={progressLabel}
-                          />
-                        </div>
-                      }
+                      correctAnswer={activeResult?.correctAnswer}
+                      categoryTag={activeResult?.categoryTag}
+                      explanationText={activeResult?.explanationText}
+                      explanationMediaUrl={activeResult?.explanationMediaUrl}
                     />
-                  </div>
-                ) : null}
+                  )}
+                </div>
+
+                <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-10 gap-1 rounded-xl font-bold"
+                    disabled={activeIndex === 0}
+                    onClick={() => goToQuestion(activeIndex - 1)}
+                  >
+                    <ChevronRight className="size-4" />
+                    السابق
+                  </Button>
+                  <span className="text-xs font-bold tabular-nums text-slate-500">
+                    {activeIndex + 1} / {questions.length}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-10 gap-1 rounded-xl font-bold"
+                    disabled={activeIndex >= questions.length - 1}
+                    onClick={() => goToQuestion(activeIndex + 1)}
+                  >
+                    التالي
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                </div>
               </>
             )
           )}
 
           {isSubmitted && results && (
             <div
-              className="space-y-6 animate-slide-up"
+              className="mx-auto max-w-3xl space-y-6 animate-slide-up"
               {...spekit(SPEKIT.quizResultsReview)}
             >
               <WhatsAppShare
@@ -593,7 +391,7 @@ export function QuizRunner({
                         راجع تفاصيل الأخطاء
                       </h3>
                       <p className="mt-1 text-xs leading-relaxed text-amber-800/90">
-                        استخدم أرقام الأسئلة لمراجعة الإجابات الخاطئة — الشروحات
+                        استخدم شبكة التنقل لمراجعة الأسئلة الخاطئة — الشروحات
                         مفتوحة لكل سؤال.
                       </p>
                     </div>
@@ -627,7 +425,58 @@ export function QuizRunner({
               </Link>
             </div>
           )}
-      </main>
+        </main>
+
+        <QuizSidebar
+          className="order-1 md:order-2 md:col-span-4 lg:col-span-4"
+          quiz={quiz}
+          questionCount={questions.length}
+          questionIds={questionIds}
+          answeredCount={answeredCount}
+          progress={progress}
+          isSubmitted={isSubmitted || pendingSync || timeLocked}
+          activeIndex={activeIndex}
+          answers={answers}
+          results={results}
+          onNavigate={goToQuestion}
+        />
+      </div>
+
+      {!isSubmitted && !pendingSync && !timeLocked && questions.length > 0 && (
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-slate-100 bg-white/90 p-4 shadow-lg backdrop-blur-md safe-bottom md:bottom-0 md:z-30">
+          <div className="mx-auto max-w-3xl space-y-3">
+            {error && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-xs text-red-700"
+              >
+                <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                <span className="font-bold">{error}</span>
+              </div>
+            )}
+            <Button
+              size="lg"
+              className={cn(
+                "h-12 w-full rounded-xl text-base font-extrabold",
+                "bg-brand-600 text-white shadow-md transition-all hover:bg-brand-700",
+                "hover:scale-[1.01] active:scale-[0.99]",
+                "disabled:opacity-50 disabled:hover:scale-100"
+              )}
+              onClick={handleSubmit}
+              disabled={isPending}
+              {...spekit(SPEKIT.quizSubmitButton)}
+            >
+              {isPending
+                ? online
+                  ? "جاري تسليم الإجابات وحساب النتيجة..."
+                  : "جاري حفظ المحاولة على الجهاز..."
+                : online
+                  ? "تسليم الإجابات وإنهاء الاختبار 🏁"
+                  : "حفظ المحاولة للمزامنة لاحقاً 📥"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {error && (timeLocked || timeExpiredNotice) && !isSubmitted ? (
         <div
