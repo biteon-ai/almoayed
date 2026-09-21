@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,7 +15,6 @@ import {
 } from "@/components/layout/StudentNavLink";
 import { StudentLogoutButton } from "@/components/layout/StudentLogoutButton";
 import { NavbarProgress } from "@/components/layout/NavbarProgress";
-import { StudentProfileDrawer } from "@/components/student/StudentProfileDrawer";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Settings } from "lucide-react";
 
@@ -42,7 +40,7 @@ function DesktopNavLink({
       {item.label}
       {active && (
         <span
-          className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-brand-600"
+          className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-emerald-600"
           aria-hidden
         />
       )}
@@ -50,27 +48,21 @@ function DesktopNavLink({
   );
 }
 
-export function StudentHeader({
-  slogan,
-  currentTeacherId,
-}: {
-  slogan: string;
-  currentTeacherId: string | null;
-}) {
+export function StudentHeader({ slogan }: { slogan: string }) {
   const pathname = usePathname();
   const hash = useStudentRouteHash();
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/90 backdrop-blur-md">
       <NavbarProgress />
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:py-4">
+        {/* RTL: brand + desktop nav (right) */}
         <div className="flex min-w-0 flex-1 items-center gap-6 md:gap-10">
           <Link href="/dashboard" className="min-w-0 shrink-0 text-start">
-            <span className="block text-xl font-bold tracking-tight text-brand-700 dark:text-brand-400 md:text-2xl">
+            <span className="block text-xl font-bold tracking-tight text-brand-700 md:text-2xl">
               المؤيد
             </span>
-            <span className="mt-0.5 block truncate text-[11px] font-medium text-muted-foreground md:text-xs">
+            <span className="mt-0.5 block truncate text-[11px] font-medium text-slate-500 md:text-xs">
               {slogan}
             </span>
           </Link>
@@ -90,28 +82,21 @@ export function StudentHeader({
           </nav>
         </div>
 
+        {/* RTL: utilities (left) */}
         <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
+          <Link
+            href="/settings"
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon" }),
-              "rounded-xl text-muted-foreground hover:bg-muted"
+              "rounded-xl text-slate-600 hover:bg-slate-100 md:hidden"
             )}
             aria-label="الإعدادات"
-            aria-expanded={drawerOpen}
-            aria-haspopup="dialog"
           >
             <Settings className="size-5" />
-          </button>
+          </Link>
           <StudentLogoutButton />
         </div>
       </div>
-      <StudentProfileDrawer
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        currentTeacherId={currentTeacherId}
-      />
     </header>
   );
 }

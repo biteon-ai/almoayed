@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScoreRingBadge } from "@/components/ui/score-ring-badge";
 import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
 import {
   QUIZ_CATEGORY_FILTERS,
@@ -23,6 +22,7 @@ import {
   filterQuizzesBySearch,
   getScoreGrade,
   gradePillClassName,
+  scoreBadgeClassName,
 } from "@/lib/student-quiz-ui";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
@@ -316,7 +316,15 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
             </div>
           </div>
 
-          <ScoreRingBadge score={row.score} />
+          <span
+            className={cn(
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-lg font-bold tabular-nums shadow-sm",
+              scoreBadgeClassName(grade.tone)
+            )}
+            aria-label={`النتيجة ${row.score}%`}
+          >
+            {row.score}%
+          </span>
         </div>
 
         <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
@@ -336,7 +344,6 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
               buttonVariants({ variant: "outline", size: "sm" }),
               "h-9 gap-1.5 rounded-xl border-border text-sm font-medium"
             )}
-            data-spekit={SPEKIT.quizRetakeCta}
           >
             <RotateCcw className="size-3.5 shrink-0" aria-hidden />
             إعادة المحاولة

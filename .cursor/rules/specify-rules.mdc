@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/033-quiz-header-polish/plan.md`
+**Active plan**: `specs/028-teacher-login-recovery/plan.md`
 
 Related artifacts:
-- Spec: `specs/033-quiz-header-polish/spec.md`
-- Research: `specs/033-quiz-header-polish/research.md`
-- Data model: `specs/033-quiz-header-polish/data-model.md`
-- Contracts: `specs/033-quiz-header-polish/contracts/`
-- Quickstart: `specs/033-quiz-header-polish/quickstart.md`
+- Spec: `specs/028-teacher-login-recovery/spec.md`
+- Research: `specs/028-teacher-login-recovery/research.md`
+- Data model: `specs/028-teacher-login-recovery/data-model.md`
+- Contracts: `specs/028-teacher-login-recovery/contracts/`
+- Quickstart: `specs/028-teacher-login-recovery/quickstart.md`
 <!-- SPECKIT END -->

@@ -15,7 +15,6 @@ import {
   Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { PercentText } from "@/components/ui/rtl-num";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { PaginatedPopularExams } from "@/components/teacher/PaginatedPopularExams";
@@ -165,13 +164,13 @@ export function TeacherDashboardAnalytics({
         data-spekit={SPEKIT.teacherAnalyticsKpis}
       >
         <Card className="rounded-2xl border shadow-sm">
-        <CardContent className="flex items-center justify-between gap-4 p-6">
+          <CardContent className="flex items-center justify-between p-5">
             <div className="space-y-1 text-start">
               <p className="text-xs font-medium text-muted-foreground">
                 نسبة التفاعل وإكمال الاختبارات
               </p>
               <h3 className="text-2xl font-bold tabular-nums">
-                <PercentText value={kpis.completionRate} />
+                {kpis.completionRate}%
               </h3>
               <p className="text-[11px] text-muted-foreground">
                 {kpis.completedAttempts}/{kpis.totalAttempts} محاولة مكملة
@@ -183,16 +182,16 @@ export function TeacherDashboardAnalytics({
         </Card>
 
         <Card className="rounded-2xl border shadow-sm">
-        <CardContent className="flex items-center justify-between gap-4 p-6">
+          <CardContent className="flex items-center justify-between p-5">
             <div className="space-y-1 text-start">
               <p className="text-xs font-medium text-muted-foreground">
                 نسبة النجاح العامة
               </p>
               <h3 className="text-2xl font-bold tabular-nums">
-                <PercentText value={kpis.passRate} />
+                {kpis.passRate}%
               </h3>
               <p className="text-[11px] text-muted-foreground">
-                نسبة التفوق 100%: <PercentText value={kpis.perfectScoreStudentPct} /> من الطلاب
+                نسبة التفوق 100%: {kpis.perfectScoreStudentPct}% من الطلاب
               </p>
               <span className="text-[11px] font-semibold text-emerald-600">
                 {kpis.perfectScoreStudentCount} طالب بدرجة كاملة
@@ -205,7 +204,7 @@ export function TeacherDashboardAnalytics({
         </Card>
 
         <Card className="rounded-2xl border shadow-sm">
-        <CardContent className="flex items-center justify-between gap-4 p-6">
+          <CardContent className="flex items-center justify-between p-5">
             <div className="space-y-1 text-start">
               <p className="text-xs font-medium text-muted-foreground">
                 متوسط العلامات العامة
@@ -227,7 +226,7 @@ export function TeacherDashboardAnalytics({
         </Card>
 
         <Card className="rounded-2xl border shadow-sm">
-        <CardContent className="flex items-center justify-between gap-4 p-6">
+          <CardContent className="flex items-center justify-between p-5">
             <div className="min-w-0 space-y-1 text-start">
               <p className="text-xs font-medium text-muted-foreground">
                 أعلى طالب إنجازاً
@@ -238,7 +237,7 @@ export function TeacherDashboardAnalytics({
                     {kpis.topPerformer.name}
                   </h3>
                   <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-600">
-                    👑 المعدل: <PercentText value={kpis.topPerformer.averageScore} />
+                    👑 المعدل: {kpis.topPerformer.averageScore}%
                   </span>
                 </>
               ) : (

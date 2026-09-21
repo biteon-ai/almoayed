@@ -4,7 +4,7 @@
   "description": "حلّ بإيدك، ما حدا بيفيدك.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#0d9488",
   "orientation": "portrait",
   "lang": "ar",

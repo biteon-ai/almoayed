@@ -16,7 +16,6 @@ import { SPEKIT } from "@/lib/spekit-targets";
 import { shouldBlockNewQuiz } from "@/lib/student-profile";
 import { AppError, ErrorCode, toUserMessage } from "@/lib/app-errors";
 import { getActiveTeacherId, requireStudent } from "@/lib/auth";
-import { applyPresentation, presentationFromSubmitResult } from "@/lib/quiz-presentation";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
@@ -26,7 +25,7 @@ interface QuizPageProps {
 export async function generateMetadata({ params }: QuizPageProps) {
   const { id } = await params;
   try {
-    const { quiz } = await getQuizForStudent(id, { skipPresentation: true });
+    const { quiz } = await getQuizForStudent(id);
     return {
       title: quiz ? `${quiz.title} | المؤيد` : "اختبار | المؤيد",
     };
@@ -42,16 +41,11 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
   const teacherId =
     session.currentTeacherId ?? (await getActiveTeacherId(session)) ?? "";
 
-  const explicitReviewId = reviewSubmissionId?.trim() || null;
-  const isExplicitReview = Boolean(explicitReviewId);
-
   let data;
   let accessError: string | null = null;
 
   try {
-    data = await getQuizForStudent(id, {
-      skipPresentation: isExplicitReview,
-    });
+    data = await getQuizForStudent(id);
   } catch (e) {
     if (e instanceof AppError && e.code === ErrorCode.SUBSCRIPTION_REQUIRED) {
       redirect("/login");
@@ -91,6 +85,9 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
       : Promise.resolve({ entries: [], viewerEntry: null }),
   ]);
 
+  const explicitReviewId = reviewSubmissionId?.trim() || null;
+  const isExplicitReview = Boolean(explicitReviewId);
+
   if (
     !isExplicitReview &&
     shouldBlockNewQuiz({
@@ -113,10 +110,6 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
     ? await getSubmissionResults(reviewId)
     : null;
 
-  const runnerQuestions = initialResults
-    ? applyPresentation(questions, presentationFromSubmitResult(initialResults))
-    : questions;
-
   return (
     <div data-spekit={SPEKIT.quizPage} className="space-y-4">
       {quiz.assessment_category === "challenge" ? (
@@ -130,7 +123,7 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
       <QuizRunnerContainer
         teacherId={teacherId}
         quiz={quiz}
-        questions={runnerQuestions}
+        questions={questions}
         initialResults={initialResults}
         timer={
           initialResults || !attemptState.canStartNewAttempt ? null : timer

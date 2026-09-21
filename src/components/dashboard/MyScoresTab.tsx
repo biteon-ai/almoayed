@@ -2,8 +2,8 @@ import type { RecentScoreRow } from "@/types/database";
 import {
   getScoreGrade,
   gradePillClassName,
+  scoreBadgeClassName,
 } from "@/lib/student-quiz-ui";
-import { ScoreRingBadge } from "@/components/ui/score-ring-badge";
 import { cn } from "@/lib/utils";
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
@@ -56,7 +56,14 @@ export function MyScoresTab({ scores }: MyScoresTabProps) {
                   {grade.label} {grade.emoji}
                 </span>
               </div>
-              <ScoreRingBadge score={row.score} size="sm" />
+    <span
+                className={cn(
+                  "flex h-10 shrink-0 items-center justify-center rounded-full border px-2.5 text-sm font-bold tabular-nums shadow-sm",
+                  scoreBadgeClassName(grade.tone)
+                )}
+              >
+                {row.score}%
+              </span>
             </li>
           );
         })}

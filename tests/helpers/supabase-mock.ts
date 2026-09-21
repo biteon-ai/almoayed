@@ -18,7 +18,6 @@ interface MockTable extends PromiseLike<MockQueryResult<unknown>> {
   single: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
   insert: ReturnType<typeof vi.fn>;
-  upsert: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
   _setResult: (result: MockQueryResult<unknown>) => void;
 }
@@ -50,7 +49,6 @@ function createChainableTable(): MockTable {
     single: vi.fn(),
     update: vi.fn(),
     insert: vi.fn(),
-    upsert: vi.fn(),
     delete: vi.fn(),
   } as MockTable;
 
@@ -65,7 +63,6 @@ function createChainableTable(): MockTable {
     "range",
     "update",
     "insert",
-    "upsert",
     "delete",
   ] as const) {
     table[key].mockReturnValue(table);

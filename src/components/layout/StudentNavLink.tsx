@@ -40,25 +40,7 @@ export function StudentNavLink({
         push: (url) => router.push(url),
       });
       onNavigate?.();
-      return;
     }
-
-    if (item.href === pathname) return;
-
-    event.preventDefault();
-    const go = () => {
-      router.push(item.href);
-      onNavigate?.();
-    };
-
-    const doc = document as Document & {
-      startViewTransition?: (callback: () => void) => void;
-    };
-    if (typeof doc.startViewTransition === "function") {
-      doc.startViewTransition(go);
-      return;
-    }
-    go();
   };
 
   return (
@@ -70,10 +52,5 @@ export function StudentNavLink({
 }
 
 export function studentNavLinkClass(active: boolean, base: string) {
-  return cn(
-    base,
-    active
-      ? "text-brand-700 dark:text-brand-400"
-      : "text-muted-foreground hover:text-foreground"
-  );
+  return cn(base, active ? "text-brand-700" : "text-slate-500 hover:text-slate-700");
 }

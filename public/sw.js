@@ -1,5 +1,5 @@
-const APP_SHELL_CACHE = "APP_SHELL_CACHE_v3";
-const RUNTIME_CACHE = "RUNTIME_CACHE_v3";
+const APP_SHELL_CACHE = "APP_SHELL_CACHE_v2";
+const RUNTIME_CACHE = "RUNTIME_CACHE_v2";
 
 const PRECACHE_URLS = [
   "/offline.html",

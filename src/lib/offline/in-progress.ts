@@ -5,17 +5,12 @@ const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 export async function saveInProgress(
   quizId: string,
-  state: {
-    answers: Record<string, string>;
-    activeIndex?: number;
-    usedAttemptsAtStart?: number;
-  }
+  state: { answers: Record<string, string>; activeIndex?: number }
 ): Promise<void> {
   const record: InProgressRecord = {
     quizId,
     answers: state.answers,
     activeIndex: state.activeIndex,
-    usedAttemptsAtStart: state.usedAttemptsAtStart,
     updatedAt: new Date().toISOString(),
   };
   await idbPut(OFFLINE_STORES.inProgress, record);
@@ -23,11 +18,7 @@ export async function saveInProgress(
 
 export function saveInProgressDebounced(
   quizId: string,
-  state: {
-    answers: Record<string, string>;
-    activeIndex?: number;
-    usedAttemptsAtStart?: number;
-  },
+  state: { answers: Record<string, string>; activeIndex?: number },
   delayMs = 300
 ): void {
   const existing = debounceTimers.get(quizId);

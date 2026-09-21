@@ -24,11 +24,11 @@ const settingsFieldShellClass = cn(
 /** Editable settings input */
 export const settingsEditableInputClass = cn(
   settingsFieldShellClass,
-  "border-gray-200 bg-white text-start text-base font-medium leading-relaxed text-foreground",
+  "border-slate-200 bg-white text-start text-base font-medium leading-relaxed text-foreground",
   "shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)]",
-  "placeholder:text-muted-foreground/55",
-  "hover:border-gray-300",
-  "focus:border-emerald-500 focus:bg-white focus-visible:ring-2 focus-visible:ring-emerald-100"
+  "placeholder:text-slate-400",
+  "hover:border-slate-300",
+  "focus:border-brand-500 focus:bg-white focus-visible:ring-[3px] focus-visible:ring-brand-500/10"
 );
 
 /** Read-only / locked field surface */

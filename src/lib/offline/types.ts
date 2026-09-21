@@ -28,8 +28,6 @@ export type InProgressRecord = {
   quizId: string;
   answers: Record<string, string>;
   activeIndex?: number;
-  /** [QUIZ-006] Attempt count when this draft started; mismatch means stale retake leak. */
-  usedAttemptsAtStart?: number;
   updatedAt: string;
 };
 

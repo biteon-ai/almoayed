@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType } from "react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { PercentText } from "@/components/ui/rtl-num";
 import { Progress } from "@/components/ui/progress";
 import {
   QUIZ_CATEGORY_FILTERS,
@@ -134,7 +133,7 @@ export function StudentQuizzesView({
             />
             <QuickStat
               icon={Target}
-              value={<PercentText value={stats.overallAverageScore} />}
+              value={`${stats.overallAverageScore}%`}
               label="المعدل"
             />
           </div>
@@ -190,9 +189,9 @@ export function StudentQuizzesView({
             <CardContent className="flex flex-col items-start justify-between gap-6 p-5 sm:flex-row sm:items-center sm:p-6">
               <div className="w-full max-w-xl space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="rounded-full border-amber-200 bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+                  <Badge className="border-amber-200 bg-amber-500/15 text-xs font-semibold text-amber-700 dark:text-amber-300">
                     {continueQuiz.hasSubmission ? "للمراجعة" : "قيد التقدم"} (
-                    <PercentText value={continueProgress} />)
+                    {continueProgress}%)
                   </Badge>
                   <Badge className="text-xs" variant="outline">
                     {continueQuiz.categoryName}
@@ -308,7 +307,7 @@ function QuickStat({
   label,
 }: {
   icon: ComponentType<{ className?: string }>;
-  value: ReactNode;
+  value: string | number;
   label: string;
 }) {
   return (

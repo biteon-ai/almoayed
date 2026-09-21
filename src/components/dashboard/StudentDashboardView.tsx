@@ -10,7 +10,6 @@ import type { StudentGamification } from "@/lib/student-gamification";
 import type { TeacherGamificationStatus } from "@/lib/teacher-gamification";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentDashboardActiveQuizSection } from "@/components/dashboard/StudentDashboardActiveQuizSection";
-import { DashboardActionTiles } from "@/components/dashboard/DashboardActionTiles";
 import { StudentDashboardHero } from "@/components/dashboard/StudentDashboardHero";
 import { StudentDashboardStatsRow } from "@/components/dashboard/StudentDashboardStatsRow";
 import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
@@ -83,10 +82,6 @@ export function StudentDashboardView({
     >
       <PendingSyncBadge />
       <StudentDashboardHero studentName={studentName} gamification={gamification} />
-      <DashboardActionTiles
-        gamification={gamification}
-        lastScore={recentScores[0]?.score ?? null}
-      />
 
       <StudentDashboardStatsRow stats={stats} gamification={gamification} />
 

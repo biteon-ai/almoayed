@@ -12,7 +12,6 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { PercentText } from "@/components/ui/rtl-num";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -225,7 +224,7 @@ export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) 
               نسبة إكمال الاختبارات
             </p>
             <h3 className="text-2xl font-bold tabular-nums">
-              <PercentText value={kpis.completionRate} />
+              {kpis.completionRate}%
             </h3>
             <p className="text-[11px] text-muted-foreground">
               {kpis.completedAttempts}/{kpis.totalAccessibleQuizzes} اختبار
@@ -234,14 +233,12 @@ export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) 
         </Card>
 
         <Card className="rounded-2xl border shadow-sm">
-          <CardContent className="flex items-center justify-between gap-4 p-6">
+          <CardContent className="flex items-center justify-between p-5">
             <div className="space-y-1 text-start">
               <p className="text-xs font-medium text-muted-foreground">
                 نسبة النجاح
               </p>
-              <h3 className="text-2xl font-bold tabular-nums">
-                <PercentText value={kpis.passRate} />
-              </h3>
+              <h3 className="text-2xl font-bold tabular-nums">{kpis.passRate}%</h3>
               <p className="text-[11px] text-muted-foreground">
                 {kpis.perfectScores} درجة كاملة
               </p>
@@ -253,7 +250,7 @@ export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) 
         </Card>
 
         <Card className="rounded-2xl border shadow-sm">
-          <CardContent className="flex items-center justify-between gap-4 p-6">
+          <CardContent className="flex items-center justify-between p-5">
             <div className="space-y-1 text-start">
               <p className="text-xs font-medium text-muted-foreground">
                 متوسط العلامات
@@ -275,7 +272,7 @@ export function StudentDetailDashboard({ detail }: StudentDetailDashboardProps) 
         </Card>
 
         <Card className="rounded-2xl border shadow-sm">
-          <CardContent className="flex items-center justify-between gap-4 p-6">
+          <CardContent className="flex items-center justify-between p-5">
             <div className="space-y-1 text-start">
               <p className="text-xs font-medium text-muted-foreground">
                 المحاولات المسجّلة
