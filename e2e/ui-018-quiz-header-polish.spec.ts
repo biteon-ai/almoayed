@@ -17,6 +17,7 @@ test.describe(`${FEATURE} Quiz header polish`, () => {
   test("compact تسليم left of pager, gated until complete, timer bar, كل الأسئلة", async ({
     page,
   }) => {
+    test.setTimeout(120_000);
     test.skip(
       shouldSkipLiveSupabase(),
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"

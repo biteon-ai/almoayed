@@ -17,6 +17,7 @@ test.describe(`${FEATURE} Quiz nav and gated submit`, () => {
   test("Q1 السابق disabled, التالي advances, submit gated then confirm cancel stays", async ({
     page,
   }) => {
+    test.setTimeout(120_000);
     test.skip(
       shouldSkipLiveSupabase(),
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"

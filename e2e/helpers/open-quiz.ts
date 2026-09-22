@@ -15,30 +15,46 @@ export async function openFirstStudentQuiz(
 ): Promise<void> {
   const { requireTaking = false } = options;
 
-  // Prefer taking links (no ?review=) so gated-submit specs do not land in archive review.
+  // Prefer taking CTAs so gated-submit specs do not land in archive review.
   const takingCta = page
-    .locator('a[href^="/quiz/"]:not([href*="review="])')
-    .filter({ hasText: /^(ابدأ الاختبار|إعادة المحاولة)/ })
+    .getByRole("link", { name: /^(ابدأ الاختبار|إعادة المحاولة)/ })
     .first();
   const reviewCta = page
     .getByRole("link", { name: /^مراجعة النتيجة/ })
     .first();
 
+  await expect(
+    takingCta.or(reviewCta),
+    "Expected a quiz CTA on /quizzes"
+  ).toBeVisible({ timeout: 15_000 });
+
   if (await takingCta.isVisible().catch(() => false)) {
-    await takingCta.click();
-  } else if (!requireTaking && (await reviewCta.isVisible().catch(() => false))) {
-    await reviewCta.click();
+    await Promise.all([
+      page.waitForURL(/\/quiz\//, { timeout: 20_000 }),
+      takingCta.click(),
+    ]);
+  } else if (!requireTaking) {
+    await Promise.all([
+      page.waitForURL(/\/quiz\//, { timeout: 20_000 }),
+      reviewCta.click(),
+    ]);
   } else {
     await expect(
       takingCta,
       "Expected a start/retake quiz CTA on /quizzes"
     ).toBeVisible({ timeout: 15_000 });
-    await takingCta.click();
+    await Promise.all([
+      page.waitForURL(/\/quiz\//, { timeout: 20_000 }),
+      takingCta.click(),
+    ]);
   }
 
-  await expect(page).toHaveURL(/\/quiz\//, { timeout: 15_000 });
+  // Wait past route loading skeleton before asserting player chrome.
+  await expect(page.getByText("جاري تحميل الاختبار...")).toHaveCount(0, {
+    timeout: 30_000,
+  });
   await expect(page.locator('[data-spekit="question-card"]')).toBeVisible({
-    timeout: 15_000,
+    timeout: 20_000,
   });
 
   if (requireTaking) {
@@ -47,10 +63,15 @@ export async function openFirstStudentQuiz(
     if (await archive.isVisible().catch(() => false)) {
       await page.goto("/quizzes");
       await expect(takingCta).toBeVisible({ timeout: 15_000 });
-      await takingCta.click();
-      await expect(page).toHaveURL(/\/quiz\//, { timeout: 15_000 });
+      await Promise.all([
+        page.waitForURL(/\/quiz\//, { timeout: 20_000 }),
+        takingCta.click(),
+      ]);
+      await expect(page.getByText("جاري تحميل الاختبار...")).toHaveCount(0, {
+        timeout: 30_000,
+      });
       await expect(page.locator('[data-spekit="question-card"]')).toBeVisible({
-        timeout: 15_000,
+        timeout: 20_000,
       });
     }
 

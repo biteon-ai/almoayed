@@ -10,6 +10,7 @@ test.describe(`${FEATURE} Quiz player chrome`, () => {
   test("header, pager, and no taking sidebar after demo login", async ({
     page,
   }) => {
+    test.setTimeout(90_000);
     test.skip(
       shouldSkipLiveSupabase(),
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"
