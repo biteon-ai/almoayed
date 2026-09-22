@@ -48,7 +48,7 @@ export function StudentPageHero({
       id={id}
       data-spekit={spekit}
       className={cn(
-        "relative overflow-hidden rounded-2xl px-3 py-3 text-white shadow-lg sm:rounded-3xl sm:px-5 sm:py-5",
+        "relative overflow-hidden rounded-2xl px-4 py-3 text-white shadow-lg sm:rounded-3xl sm:px-6 sm:py-5",
         VARIANT_CLASS[variant],
         className
       )}

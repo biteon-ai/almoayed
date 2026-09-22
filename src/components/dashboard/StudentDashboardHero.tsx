@@ -57,7 +57,7 @@ export function StudentDashboardHero({
         </div>
       }
     >
-      <div className="flex w-full items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-2 py-1.5 text-white shadow-inner backdrop-blur-md sm:w-auto sm:gap-2 sm:px-2.5 sm:py-2">
+      <div className="flex w-full items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-2.5 py-1.5 text-white shadow-inner backdrop-blur-md sm:w-auto sm:gap-2 sm:px-3 sm:py-2">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-400/40 bg-amber-500/20">
           <Flame className="h-3.5 w-3.5 animate-pulse fill-amber-400 text-amber-400" />
         </div>

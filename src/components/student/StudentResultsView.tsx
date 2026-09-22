@@ -123,7 +123,7 @@ export function StudentResultsView({
         }
         subtitle="تابع تطور أدائك، راجع إجاباتك، وأعد المحاولة لتحسين معدلك."
       >
-        <div className="grid w-full min-w-0 grid-cols-3 gap-1 rounded-xl border border-white/20 bg-white/10 px-1.5 py-1.5 backdrop-blur-md sm:w-auto sm:gap-2 sm:px-2.5 sm:py-2">
+        <div className="grid w-full min-w-0 grid-cols-3 items-center justify-items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-2 py-2 backdrop-blur-md sm:w-auto sm:min-w-[12rem] sm:gap-3 sm:px-3 sm:py-2.5">
           <QuickStat icon={BookOpen} value={totalQuizzes} label="اختبار" />
           <QuickStat
             icon={CheckCircle2}
@@ -329,12 +329,12 @@ function QuickStat({
   label: string;
 }) {
   return (
-    <div className="min-w-0 text-center">
-      <Icon className="mx-auto mb-0.5 size-3.5 text-amber-300" />
-      <div className="truncate text-sm font-black leading-none tabular-nums sm:text-base">
+    <div className="flex w-full min-w-0 flex-col items-center justify-center px-1 text-center">
+      <Icon className="mb-0.5 size-3.5 shrink-0 text-amber-300" />
+      <div className="w-full overflow-visible text-sm font-black leading-none tabular-nums sm:text-base">
         {value}
       </div>
-      <p className="mt-0.5 truncate text-[10px] font-medium text-emerald-100">
+      <p className="mt-0.5 w-full truncate text-[10px] font-medium text-emerald-100">
         {label}
       </p>
     </div>
