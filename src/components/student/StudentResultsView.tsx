@@ -338,7 +338,8 @@ function QuizResultGroupCard({ group }: { group: QuizResultGroup }) {
         <div className="mt-auto flex flex-col gap-2.5 border-t border-border/50 pt-3 dark:border-slate-700/80">
           <div className="flex flex-col gap-2.5 min-[380px]:flex-row min-[380px]:gap-3">
             <Link
-              href={`/results/${latest.submissionId}`}
+              href={`/quiz/${latest.quizId}?review=${encodeURIComponent(latest.submissionId)}`}
+              prefetch
               className={cn(
                 buttonVariants({ size: "sm" }),
                 "flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 sm:py-3"
@@ -397,7 +398,8 @@ function QuizResultGroupCard({ group }: { group: QuizResultGroup }) {
                   {archive.map((row, index) => (
                     <li key={row.submissionId}>
                       <Link
-                        href={`/results/${row.submissionId}`}
+                        href={`/quiz/${row.quizId}?review=${encodeURIComponent(row.submissionId)}`}
+                        prefetch
                         className={cn(
                           "flex items-center justify-between gap-3 rounded-lg px-2.5 py-2",
                           "transition-colors hover:bg-background dark:hover:bg-slate-900"

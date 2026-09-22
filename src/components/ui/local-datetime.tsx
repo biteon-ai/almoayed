@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import {
   formatLocalDate,
+  formatLocalDateTime,
   formatLocalTime,
 } from "@/lib/format-local-datetime";
 import { cn } from "@/lib/utils";
 
-type Mode = "date" | "time";
+type Mode = "date" | "time" | "datetime";
 
 /**
  * Renders a server timestamp in the viewer's local timezone after mount
@@ -25,11 +26,21 @@ export function LocalDateTime({
   const [label, setLabel] = useState("—");
 
   useEffect(() => {
-    setLabel(mode === "date" ? formatLocalDate(iso) : formatLocalTime(iso));
+    if (mode === "datetime") {
+      setLabel(formatLocalDateTime(iso));
+    } else if (mode === "date") {
+      setLabel(formatLocalDate(iso));
+    } else {
+      setLabel(formatLocalTime(iso));
+    }
   }, [iso, mode]);
 
   return (
-    <span dir="ltr" className={cn("tabular-nums", className)} suppressHydrationWarning>
+    <span
+      dir={mode === "datetime" ? "auto" : "ltr"}
+      className={cn("tabular-nums", className)}
+      suppressHydrationWarning
+    >
       {label}
     </span>
   );

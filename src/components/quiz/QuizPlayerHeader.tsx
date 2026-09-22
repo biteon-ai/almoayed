@@ -38,8 +38,8 @@ export function QuizPlayerHeader({
     >
       <div
         className={cn(
-          "flex min-w-0 items-center justify-between gap-1.5",
-          showAttemptMeta && "items-start"
+          "flex min-w-0 justify-between gap-1.5",
+          showAttemptMeta ? "items-start" : "items-center"
         )}
       >
         <button
@@ -59,11 +59,12 @@ export function QuizPlayerHeader({
           <span className="text-xs font-bold leading-none">رجوع</span>
         </button>
 
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-1 px-1">
+        <div className="flex min-w-0 flex-1 flex-col items-center px-1">
           <h1
             className={cn(
-              "w-full truncate text-center text-sm font-bold text-foreground dark:text-slate-100",
-              "max-w-[12.5rem] sm:max-w-[18rem] md:max-w-md"
+              "w-full truncate text-center text-sm font-bold leading-9 text-foreground dark:text-slate-100 sm:leading-10",
+              "max-w-[12.5rem] sm:max-w-[18rem] md:max-w-md",
+              showAttemptMeta && "mb-1"
             )}
             title={displayTitle}
           >
@@ -73,21 +74,19 @@ export function QuizPlayerHeader({
           {showAttemptMeta && attemptSubmittedAt ? (
             <div
               className={cn(
-                "inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-0.5",
-                "border border-amber-200/80 bg-amber-50 text-[10px] font-semibold leading-tight text-amber-900",
-                "dark:border-amber-800/50 dark:bg-amber-950/50 dark:text-amber-100"
+                "inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1",
+                "text-xs font-medium text-amber-800",
+                "dark:border-amber-800/60 dark:bg-amber-950/50 dark:text-amber-100"
               )}
               data-spekit={SPEKIT.quizAttemptMeta}
             >
-              <CalendarClock className="size-3 shrink-0 opacity-80" aria-hidden />
-              <span className="shrink-0 whitespace-nowrap">
-                محاولة أرشيفية بتاريخ:
-              </span>
-              <span className="min-w-0 truncate">
-                <LocalDateTime iso={attemptSubmittedAt} mode="date" />
-                <span aria-hidden>، </span>
-                <LocalDateTime iso={attemptSubmittedAt} mode="time" />
-              </span>
+              <CalendarClock className="size-3.5 shrink-0 opacity-80" aria-hidden />
+              <span className="shrink-0 whitespace-nowrap">محاولة أرشيفية:</span>
+              <LocalDateTime
+                iso={attemptSubmittedAt}
+                mode="datetime"
+                className="min-w-0 truncate"
+              />
             </div>
           ) : null}
         </div>

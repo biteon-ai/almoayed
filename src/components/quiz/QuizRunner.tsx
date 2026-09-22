@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { submitQuiz } from "@/actions/quiz";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
@@ -37,6 +37,7 @@ import {
   answeredProgress,
   isQuizComplete,
   isStaleInProgressDraft,
+  quizPlayerExitHref,
   QUIZ_AUTO_ADVANCE_MS,
   remainingUnanswered,
   shouldConfirmQuizExit,
@@ -93,6 +94,8 @@ export function QuizRunner({
   const [isPending, startTransition] = useTransition();
   useStudentLoadingBarSync(isPending);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const reviewSubmissionId = searchParams.get("review");
 
   const autoSubmitStarted = useRef(false);
   const advanceTimer = useRef<number | null>(null);
@@ -182,6 +185,10 @@ export function QuizRunner({
     pendingSync,
     questionCount: questions.length,
     timeExpiredNotice,
+  });
+  const exitHref = quizPlayerExitHref({
+    isSubmitted,
+    reviewSubmissionId,
   });
 
   const activeQuestion = questions[activeIndex];
@@ -349,7 +356,7 @@ export function QuizRunner({
       setExitOpen(true);
       return;
     }
-    router.replace("/quizzes");
+    router.replace(exitHref);
   };
 
   const handleExitConfirm = () => {

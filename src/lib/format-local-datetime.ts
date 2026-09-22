@@ -73,3 +73,17 @@ export function formatLocalTime(
     ...(timeZone ? { timeZone } : {}),
   }).format(date);
 }
+
+/**
+ * Full local stamp: day + long month + year + 24h time
+ * e.g. "22 أيلول 2026 - 23:58"
+ */
+export function formatLocalDateTime(
+  iso: string,
+  locale = "ar-SY"
+): string {
+  const dateLabel = formatLocalDate(iso, locale);
+  const timeLabel = formatLocalTime(iso, locale);
+  if (dateLabel === "—" || timeLabel === "—") return "—";
+  return `${dateLabel} - ${timeLabel}`;
+}

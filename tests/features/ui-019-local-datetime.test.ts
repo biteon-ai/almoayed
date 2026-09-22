@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatLocalDate,
+  formatLocalDateTime,
   formatLocalTime,
   parseServerTimestamp,
 } from "@/lib/format-local-datetime";
@@ -37,9 +38,19 @@ describe("[UI-019] format-local-datetime", () => {
     expect(timeLabel).toBe(expected);
   });
 
+  it("formats a full date-time stamp with an en dash separator", () => {
+    const iso = "2026-09-22T20:58:00.000Z";
+    const stamp = formatLocalDateTime(iso, "en-GB");
+    expect(stamp).toMatch(/\d{1,2}.+\d{4} - \d{2}:\d{2}/);
+    expect(stamp).toBe(
+      `${formatLocalDate(iso, "en-GB")} - ${formatLocalTime(iso, "en-GB")}`
+    );
+  });
+
   it("returns em dash for invalid input", () => {
     expect(formatLocalDate("not-a-date")).toBe("—");
     expect(formatLocalTime("")).toBe("—");
+    expect(formatLocalDateTime("")).toBe("—");
     expect(parseServerTimestamp("bogus")).toBeNull();
   });
 });

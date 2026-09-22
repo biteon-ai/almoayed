@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { AlertCircle } from "lucide-react";
+import { useParams, useSearchParams } from "next/navigation";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { QuizRunner } from "@/components/quiz/QuizRunner";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { useOnlineStatus } from "@/lib/offline/connectivity";
@@ -36,7 +36,10 @@ export function QuizRunnerContainer({
   attemptState,
 }: QuizRunnerContainerProps) {
   const params = useParams();
+  const searchParams = useSearchParams();
   const quizId = (params.id as string) ?? quiz.id;
+  const isReviewEntry =
+    Boolean(initialResults) || Boolean(searchParams.get("review")?.trim());
   const online = useOnlineStatus();
   const [loadedQuiz, setLoadedQuiz] = useState(quiz);
   const [loadedQuestions, setLoadedQuestions] = useState(questions);
@@ -97,8 +100,24 @@ export function QuizRunnerContainer({
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center px-6">
-        <p className="text-sm font-bold text-slate-500">جاري تحميل الاختبار...</p>
+      <div
+        className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 py-12"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <Loader2
+          className="size-8 animate-spin text-brand-600 dark:text-brand-400"
+          aria-hidden
+        />
+        <p className="text-sm font-bold text-foreground">
+          {isReviewEntry
+            ? "جاري تحميل تفاصيل النتيجة..."
+            : "جاري تحميل الاختبار..."}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {isReviewEntry ? "نحضّر مراجعة إجاباتك" : "نحضّر الأسئلة"}
+        </p>
       </div>
     );
   }

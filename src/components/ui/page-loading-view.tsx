@@ -7,15 +7,23 @@ import { cn } from "@/lib/utils";
 interface PageLoadingViewProps {
   message?: string;
   subMessage?: string;
+  /** Fill the student/teacher shell content area instead of the full viewport. */
+  compact?: boolean;
 }
 
 export function PageLoadingView({
   message = "جاري التحميل…",
   subMessage = "نحضّر صفحتك",
+  compact = false,
 }: PageLoadingViewProps) {
   return (
     <div
-      className="flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-brand-50/30 to-background px-6 dark:from-brand-950/20"
+      className={cn(
+        "flex flex-col items-center justify-center px-6",
+        compact
+          ? "min-h-[50vh] py-16"
+          : "min-h-dvh bg-gradient-to-b from-brand-50/30 to-background dark:from-brand-950/20"
+      )}
       role="status"
       aria-live="polite"
       aria-busy="true"
@@ -42,9 +50,11 @@ export function PageLoadingView({
             />
           ))}
         </div>
-        <p className="mt-5 text-[10px] font-bold text-muted-foreground/60">
-          {APP_NAME}
-        </p>
+        {!compact ? (
+          <p className="mt-5 text-[10px] font-bold text-muted-foreground/60">
+            {APP_NAME}
+          </p>
+        ) : null}
       </div>
     </div>
   );
