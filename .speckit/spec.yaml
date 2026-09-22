@@ -1515,6 +1515,37 @@ partial_features:
       - quiz-submit-confirm
       - quiz-progress
 
+  - id: UI-019
+    name: Compact Welcome Hero
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/dashboard"]
+    extends: [UI-001, GAMIF-001]
+    spec: specs/034-compact-welcome-hero/
+    files:
+      - src/components/student/StudentPageHero.tsx
+      - src/components/dashboard/StudentDashboardHero.tsx
+      - src/components/dashboard/StudentDashboardView.tsx
+      - src/components/student/StudentQuizzesView.tsx
+      - src/components/student/StudentResultsView.tsx
+      - src/components/settings/SettingsPageShell.tsx
+      - src/lib/format-local-datetime.ts
+      - src/components/ui/local-datetime.tsx
+      - tests/features/ui-019-compact-welcome-hero.test.ts
+      - tests/features/ui-019-local-datetime.test.ts
+      - e2e/ui-019-compact-welcome-hero.spec.ts
+    acceptance:
+      - Shared StudentPageHero shell: p-3 / sm:p-4, badge+title tight, subtitle hidden on phone
+      - Dashboard / quizzes / results / settings headers use the same mobile density pattern
+      - Stats grids use text-sm–text-base with gap-2; no overflow on ~320px
+      - Results submission timestamps format in the viewer local timezone (not SSR UTC)
+      - Results card actions stack below ~380px and sit side-by-side with gap-2 without overflow
+      - Spekit student-welcome and #student-welcome preserved
+    spekit:
+      - student-welcome
+      - student-quizzes-page
+      - student-results-page
+
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel
     status: done

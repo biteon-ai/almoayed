@@ -14,7 +14,13 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScoreRingBadge } from "@/components/ui/score-ring-badge";
+import { LocalDateTime } from "@/components/ui/local-datetime";
 import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
+import {
+  StudentPageHero,
+  StudentPageHeroBadge,
+  studentPageHeroTitleClassName,
+} from "@/components/student/StudentPageHero";
 import {
   QUIZ_CATEGORY_FILTERS,
   STUDENT_RESULTS_PAGE_SIZE,
@@ -44,27 +50,6 @@ interface StudentResultsViewProps {
   scoresPage: PagedResult<RecentScoreRow>;
   totalQuizzes: number;
   teacherGamification: TeacherGamificationStatus | null;
-}
-
-function formatSubmittedDate(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("ar", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    numberingSystem: "latn",
-  }).format(date);
-}
-
-function formatSubmittedTime(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("ar", {
-    hour: "2-digit",
-    minute: "2-digit",
-    numberingSystem: "latn",
-  }).format(date);
 }
 
 export function StudentResultsView({
@@ -122,43 +107,36 @@ export function StudentResultsView({
 
   return (
     <div
-      className="container mx-auto max-w-7xl space-y-8 p-4 pb-28 sm:p-6 md:pb-8"
+      className="container mx-auto max-w-7xl space-y-4 p-4 pb-28 sm:space-y-6 sm:p-6 md:pb-8"
       data-spekit={SPEKIT.studentResultsPage}
     >
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-teal-700 via-emerald-600 to-teal-800 p-6 text-white shadow-xl sm:p-8">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-16 top-0 size-48 rounded-full bg-white/10 blur-3xl"
-        />
-        <div className="relative z-10 flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
-          <div className="space-y-2">
-            <Badge className="rounded-full border-white/20 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-md">
-              <Sparkles className="ms-1 size-3.5 text-amber-300" />
-              سجل الإنجاز
-            </Badge>
-            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
-              نتائجي
-            </h1>
-            <p className="max-w-md text-sm leading-relaxed text-emerald-50/90">
-              تابع تطور أدائك، راجع إجاباتك، وأعد المحاولة لتحسين معدلك.
-            </p>
-          </div>
-
-          <div className="grid w-full grid-cols-3 gap-2 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-md sm:w-auto sm:gap-3 sm:p-3.5">
-            <QuickStat icon={BookOpen} value={totalQuizzes} label="اختبار" />
-            <QuickStat
-              icon={CheckCircle2}
-              value={stats.completedQuizCount}
-              label="مكتمل"
-            />
-            <QuickStat
-              icon={Target}
-              value={`${stats.overallAverageScore}%`}
-              label="الدقة"
-            />
-          </div>
+      <StudentPageHero
+        variant="teal"
+        badge={
+          <StudentPageHeroBadge variant="teal">
+            <Sparkles className="size-3 shrink-0 text-amber-300" />
+            <span className="truncate">سجل الإنجاز</span>
+          </StudentPageHeroBadge>
+        }
+        title={
+          <h1 className={studentPageHeroTitleClassName()}>نتائجي</h1>
+        }
+        subtitle="تابع تطور أدائك، راجع إجاباتك، وأعد المحاولة لتحسين معدلك."
+      >
+        <div className="grid w-full min-w-0 grid-cols-3 gap-1 rounded-xl border border-white/20 bg-white/10 px-1.5 py-1.5 backdrop-blur-md sm:w-auto sm:gap-2 sm:px-2.5 sm:py-2">
+          <QuickStat icon={BookOpen} value={totalQuizzes} label="اختبار" />
+          <QuickStat
+            icon={CheckCircle2}
+            value={stats.completedQuizCount}
+            label="مكتمل"
+          />
+          <QuickStat
+            icon={Target}
+            value={`${stats.overallAverageScore}%`}
+            label="الدقة"
+          />
         </div>
-      </section>
+      </StudentPageHero>
 
       {teacherGamification ? (
         <LevelProgressCard
@@ -274,25 +252,25 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
       data-spekit={`results-card-${row.submissionId}`}
       className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md"
     >
-      <CardContent className="flex h-full flex-col gap-4 p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-2.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-foreground sm:text-lg">
-                {row.quizTitle}
-              </h3>
-            </div>
+      <CardContent className="flex h-full flex-col gap-3 p-4 sm:gap-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <ScoreRingBadge score={row.score} size="sm" className="mt-0.5" />
 
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="min-w-0 flex-1 space-y-2">
+            <h3 className="line-clamp-2 text-sm font-extrabold leading-snug text-foreground sm:text-base">
+              {row.quizTitle}
+            </h3>
+
+            <div className="flex flex-wrap items-center gap-1.5">
               <Badge
                 variant="outline"
-                className="rounded-full border-emerald-200/80 bg-emerald-50/70 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-200"
+                className="rounded-full border-emerald-200/80 bg-emerald-50/70 px-2 py-0 text-[11px] font-bold text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-200"
               >
                 {row.categoryName}
               </Badge>
               <Badge
                 className={cn(
-                  "rounded-full border text-xs font-semibold",
+                  "rounded-full border px-2 py-0 text-[11px] font-semibold",
                   gradePillClassName(grade.tone)
                 )}
               >
@@ -300,46 +278,40 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
               </Badge>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground sm:text-xs">
+              <span className="inline-flex min-w-0 items-center gap-1.5">
                 <Calendar className="size-3.5 shrink-0" aria-hidden />
-                <span dir="ltr" className="tabular-nums">
-                  {formatSubmittedDate(row.submittedAt)}
-                </span>
+                <LocalDateTime iso={row.submittedAt} mode="date" />
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Clock className="size-3.5 shrink-0" aria-hidden />
-                <span dir="ltr" className="tabular-nums">
-                  {formatSubmittedTime(row.submittedAt)}
-                </span>
+                <LocalDateTime iso={row.submittedAt} mode="time" />
               </span>
             </div>
           </div>
-
-          <ScoreRingBadge score={row.score} />
         </div>
 
-        <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
+        <div className="mt-auto flex flex-col gap-2.5 border-t border-border/50 pt-3 min-[380px]:flex-row min-[380px]:gap-3">
           <Link
             href={`/results/${row.submissionId}`}
             className={cn(
               buttonVariants({ size: "sm" }),
-              "h-9 gap-1.5 rounded-xl bg-emerald-600 text-sm font-medium text-white hover:bg-emerald-700"
+              "flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 sm:py-3"
             )}
           >
-            <Eye className="size-3.5 shrink-0" aria-hidden />
-            مراجعة الإجابات
+            <Eye className="size-4 shrink-0" aria-hidden />
+            <span className="truncate">مراجعة الإجابات</span>
           </Link>
           <Link
             href={`/quiz/${row.quizId}`}
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
-              "h-9 gap-1.5 rounded-xl border-border text-sm font-medium"
+              "flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-border px-4 py-2.5 text-sm font-medium sm:py-3"
             )}
             data-spekit={SPEKIT.quizRetakeCta}
           >
-            <RotateCcw className="size-3.5 shrink-0" aria-hidden />
-            إعادة المحاولة
+            <RotateCcw className="size-4 shrink-0" aria-hidden />
+            <span className="truncate">إعادة المحاولة</span>
           </Link>
         </div>
       </CardContent>
@@ -357,10 +329,14 @@ function QuickStat({
   label: string;
 }) {
   return (
-    <div className="min-w-[72px] text-center">
-      <Icon className="mx-auto mb-1 size-4 text-amber-300" />
-      <div className="text-lg font-black leading-none tabular-nums">{value}</div>
-      <p className="mt-1 text-[10px] font-medium text-emerald-100">{label}</p>
+    <div className="min-w-0 text-center">
+      <Icon className="mx-auto mb-0.5 size-3.5 text-amber-300" />
+      <div className="truncate text-sm font-black leading-none tabular-nums sm:text-base">
+        {value}
+      </div>
+      <p className="mt-0.5 truncate text-[10px] font-medium text-emerald-100">
+        {label}
+      </p>
     </div>
   );
 }

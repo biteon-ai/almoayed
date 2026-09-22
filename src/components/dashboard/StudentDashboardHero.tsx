@@ -1,6 +1,10 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import {
+  StudentPageHero,
+  StudentPageHeroBadge,
+  studentPageHeroTitleClassName,
+} from "@/components/student/StudentPageHero";
 import { Progress } from "@/components/ui/progress";
 import { SPEKIT } from "@/lib/spekit-targets";
 import type { StudentGamification } from "@/lib/student-gamification";
@@ -11,71 +15,64 @@ export interface StudentDashboardHeroProps {
   gamification: StudentGamification;
 }
 
+const DESKTOP_SUBTITLE = "أنت على بعد خطوة واحدة من هدفك!";
+
 /**
- * Gradient welcome banner with daily goal, streak, and quick navigation links.
- * Used on the student dashboard home screen.
+ * Compact dashboard welcome hero — goal progress + streak (UI-019).
  */
 export function StudentDashboardHero({
   studentName,
   gamification,
 }: StudentDashboardHeroProps) {
   return (
-    <section
+    <StudentPageHero
       id="student-welcome"
-      className="scroll-mt-24 relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-800 p-6 text-white shadow-xl sm:p-8"
-      data-spekit={SPEKIT.studentWelcome}
-    >
-      <div className="pointer-events-none absolute -left-12 -top-12 h-56 w-56 rounded-full bg-emerald-400/20 blur-3xl" />
-
-      <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-        <div className="max-w-lg space-y-3">
-          <Badge className="gap-1 rounded-full border-white/20 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-md">
-            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-            <span>جاهز للتحدي اليوم؟</span>
-          </Badge>
-
-          <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
-            أهلاً بعودتك، {studentName}! 👋
-          </h1>
-
-          <p className="text-sm leading-relaxed text-emerald-100/90">
-            استمر في إنجاز الاختبارات اليومية ورفع معدلك العام. أنت على بعد خطوة
-            واحدة من هدفك!
-          </p>
-
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center justify-between text-xs font-semibold">
-              <span className="text-emerald-100/90">هدف اليوم</span>
-              <span className="text-amber-200">
-                {gamification.dailyGoalProgress === 100
-                  ? "مكتمل ✓"
-                  : "اختبار واحد على الأقل"}
-              </span>
-            </div>
-            <Progress
-              className="h-2 rounded-full bg-white/20"
-              value={gamification.dailyGoalProgress}
-            />
+      spekit={SPEKIT.studentWelcome}
+      badge={
+        <StudentPageHeroBadge>
+          <Sparkles className="h-3 w-3 shrink-0 text-amber-300" />
+          <span className="truncate">جاهز للتحدي اليوم؟</span>
+        </StudentPageHeroBadge>
+      }
+      title={
+        <h1 className={studentPageHeroTitleClassName()}>
+          أهلاً بعودتك، {studentName}! 👋
+        </h1>
+      }
+      subtitle={DESKTOP_SUBTITLE}
+      belowTitle={
+        <div className="min-w-0 space-y-0.5">
+          <div className="flex min-w-0 items-center justify-between gap-2 text-[10px] font-semibold sm:text-[11px]">
+            <span className="min-w-0 text-emerald-100/90">هدف اليوم</span>
+            <span className="shrink-0 text-amber-200">
+              {gamification.dailyGoalProgress === 100
+                ? "مكتمل ✓"
+                : "اختبار واحد على الأقل"}
+            </span>
           </div>
+          <Progress
+            className="h-1 rounded-full bg-white/20 sm:h-1.5"
+            value={gamification.dailyGoalProgress}
+          />
         </div>
-
-        <div className="flex items-center justify-between gap-4 self-stretch rounded-2xl border border-white/20 bg-white/10 p-4 text-white shadow-inner backdrop-blur-md sm:self-auto sm:justify-start">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-400/40 bg-amber-500/20">
-            <Flame className="h-7 w-7 animate-pulse fill-amber-400 text-amber-400" />
+      }
+    >
+      <div className="flex w-full items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-2 py-1.5 text-white shadow-inner backdrop-blur-md sm:w-auto sm:gap-2 sm:px-2.5 sm:py-2">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-400/40 bg-amber-500/20">
+          <Flame className="h-3.5 w-3.5 animate-pulse fill-amber-400 text-amber-400" />
+        </div>
+        <div className="min-w-0 leading-tight">
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm font-black tabular-nums sm:text-base">
+              {gamification.streakDays}
+            </span>
+            <span className="text-[10px] text-amber-200">أيام</span>
           </div>
-          <div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black">
-                {gamification.streakDays}
-              </span>
-              <span className="text-xs text-amber-200">أيام</span>
-            </div>
-            <p className="text-xs font-medium text-emerald-100">
-              سلسلة المذاكرة المتتالية 🔥
-            </p>
-          </div>
+          <p className="text-[10px] font-medium text-emerald-100">
+            سلسلة المذاكرة 🔥
+          </p>
         </div>
       </div>
-    </section>
+    </StudentPageHero>
   );
 }

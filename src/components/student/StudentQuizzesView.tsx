@@ -16,6 +16,11 @@ import { Input } from "@/components/ui/input";
 import { PercentText } from "@/components/ui/rtl-num";
 import { Progress } from "@/components/ui/progress";
 import {
+  StudentPageHero,
+  StudentPageHeroBadge,
+  studentPageHeroTitleClassName,
+} from "@/components/student/StudentPageHero";
+import {
   QUIZ_CATEGORY_FILTERS,
   STUDENT_EXAMS_PAGE_SIZE,
   type QuizCategoryFilter,
@@ -104,42 +109,38 @@ export function StudentQuizzesView({
 
   return (
     <div
-      className="container mx-auto max-w-7xl space-y-8 p-4 sm:p-6"
+      className="container mx-auto max-w-7xl space-y-4 p-4 sm:space-y-6 sm:p-6"
       data-spekit={SPEKIT.studentQuizzesPage}
     >
       <PendingSyncBadge />
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-800 p-6 text-white shadow-xl sm:p-8">
-        <div className="relative z-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div className="space-y-1.5">
-            <Badge className="rounded-full border-white/20 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-md">
-              <Sparkles className="ml-1 h-3.5 w-3.5 text-amber-300" />
-              مركز الاختبارات
-            </Badge>
-            <h1 className="text-2xl font-black sm:text-3xl">الاختبارات المتاحة</h1>
-            <p className="text-xs text-emerald-100 sm:text-sm">
-              اختر اختبارك وابدأ التحدي لتقييم مستواك وتطوير مهاراتك اليومية.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-md sm:gap-3 sm:p-3.5">
-            <QuickStat
-              icon={BookOpen}
-              value={total}
-              label="متاح"
-            />
-            <QuickStat
-              icon={CheckCircle2}
-              value={stats.completedQuizCount}
-              label="مكتمل"
-            />
-            <QuickStat
-              icon={Target}
-              value={<PercentText value={stats.overallAverageScore} />}
-              label="المعدل"
-            />
-          </div>
+      <StudentPageHero
+        badge={
+          <StudentPageHeroBadge>
+            <Sparkles className="h-3 w-3 shrink-0 text-amber-300" />
+            <span className="truncate">مركز الاختبارات</span>
+          </StudentPageHeroBadge>
+        }
+        title={
+          <h1 className={studentPageHeroTitleClassName()}>
+            الاختبارات المتاحة
+          </h1>
+        }
+        subtitle="اختر اختبارك وابدأ التحدي لتقييم مستواك وتطوير مهاراتك اليومية."
+      >
+        <div className="grid w-full min-w-0 grid-cols-3 gap-1 rounded-xl border border-white/20 bg-white/10 px-1.5 py-1.5 backdrop-blur-md sm:w-auto sm:gap-2 sm:px-2.5 sm:py-2">
+          <QuickStat icon={BookOpen} value={total} label="متاح" />
+          <QuickStat
+            icon={CheckCircle2}
+            value={stats.completedQuizCount}
+            label="مكتمل"
+          />
+          <QuickStat
+            icon={Target}
+            value={<PercentText value={stats.overallAverageScore} />}
+            label="المعدل"
+          />
         </div>
-      </section>
+      </StudentPageHero>
 
       <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border bg-card p-4 shadow-xs sm:flex-row">
         <div className="relative w-full sm:w-80">
@@ -312,10 +313,14 @@ function QuickStat({
   label: string;
 }) {
   return (
-    <div className="min-w-[72px] text-center">
-      <Icon className="mx-auto mb-1 h-4 w-4 text-amber-300" />
-      <div className="text-lg font-black leading-none">{value}</div>
-      <p className="mt-1 text-[10px] font-medium text-emerald-100">{label}</p>
+    <div className="min-w-0 text-center">
+      <Icon className="mx-auto mb-0.5 h-3.5 w-3.5 text-amber-300" />
+      <div className="truncate text-sm font-black leading-none tabular-nums sm:text-base">
+        {value}
+      </div>
+      <p className="mt-0.5 truncate text-[10px] font-medium text-emerald-100">
+        {label}
+      </p>
     </div>
   );
 }
