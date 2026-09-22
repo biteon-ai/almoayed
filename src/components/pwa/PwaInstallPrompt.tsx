@@ -145,9 +145,10 @@ function InstallBadge({
 /**
  * Login/signup PWA install CTAs — brand-green buttons matching login
  * primary actions; white mono Apple / Play icons (UI-010).
+ * Hidden entirely when the app is already running as an installed PWA.
  */
 export function PwaInstallPrompt({ className }: { className?: string }) {
-  const { canPrompt, installed, promptInstall } = usePwaInstall();
+  const { canPrompt, installed, ready, promptInstall } = usePwaInstall();
   const [modalOpen, setModalOpen] = useState(false);
   const [platform, setPlatform] = useState<PwaInstallPlatform>("ios");
 
@@ -157,15 +158,16 @@ export function PwaInstallPrompt({ className }: { className?: string }) {
   };
 
   const onAndroidClick = async () => {
-    if (installed) {
-      openGuide("android");
-      return;
-    }
     const outcome = await promptInstall();
     if (outcome === "unavailable") {
       openGuide("android");
     }
   };
+
+  // Wait for client standalone check so installed PWAs never flash CTAs.
+  if (!ready || installed) {
+    return null;
+  }
 
   const title =
     platform === "ios"
@@ -175,9 +177,7 @@ export function PwaInstallPrompt({ className }: { className?: string }) {
   const description =
     platform === "ios"
       ? "Safari لا يدعم التثبيت المباشر — اتبع الخطوات التالية:"
-      : installed
-        ? "التطبيق مثبت أو التثبيت المباشر غير متاح. يمكنك أيضاً إضافته يدوياً:"
-        : "التثبيت المباشر غير متاح في هذا المتصفح. اتبع الخطوات التالية:";
+      : "التثبيت المباشر غير متاح في هذا المتصفح. اتبع الخطوات التالية:";
 
   return (
     <div
@@ -202,7 +202,7 @@ export function PwaInstallPrompt({ className }: { className?: string }) {
         />
       </div>
 
-      {!canPrompt && !installed ? (
+      {!canPrompt ? (
         <p className="text-center text-[10px] leading-snug text-muted-foreground/80">
           على Android يظهر التثبيت المباشر عندما يدعمه Chrome
         </p>
