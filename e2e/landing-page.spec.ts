@@ -45,6 +45,7 @@ test.describe(`${FEATURE} Marketing landing (logged out)`, () => {
 
 test.describe(`${FEATURE} Marketing landing (logged in)`, () => {
   test("demo student redirect from / to dashboard", async ({ page }) => {
+    test.setTimeout(90_000);
     test.skip(
       shouldSkipAuthedLandingE2E(),
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"
@@ -53,6 +54,6 @@ test.describe(`${FEATURE} Marketing landing (logged in)`, () => {
     await loginAsDemoStudent(page);
 
     await page.goto("/");
-    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 20_000 });
   });
 });

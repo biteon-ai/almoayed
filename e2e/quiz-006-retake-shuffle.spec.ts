@@ -17,6 +17,7 @@ test.describe(`${FEATURE} Retake reset`, () => {
   test("retake or start opens a blank player with no pre-selected choice", async ({
     page,
   }) => {
+    test.setTimeout(90_000);
     test.skip(
       shouldSkipLiveSupabase(),
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"
