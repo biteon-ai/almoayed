@@ -27,7 +27,7 @@ function isRecentlyCreated(createdAt: string): boolean {
 
 function QuestionMeta({ count }: { count: number }) {
   return (
-    <p className="inline-flex items-center gap-1.5 text-sm text-slate-500">
+    <p className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
       <FileText
         className="size-4 shrink-0 text-brand-500/90"
         aria-hidden
@@ -127,9 +127,10 @@ export function QuizCarouselCard({
     <article
       className={cn(
         "flex min-h-[190px] flex-col rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md",
+        "dark:bg-slate-900 dark:shadow-none dark:hover:shadow-none",
         featured
-          ? "border-emerald-200/90 bg-gradient-to-br from-emerald-50/50 to-white p-6 ring-1 ring-emerald-100/80 md:min-h-[210px]"
-          : "border-slate-100"
+          ? "border-emerald-200/90 bg-gradient-to-br from-emerald-50/50 to-white p-6 ring-1 ring-emerald-100/80 md:min-h-[210px] dark:border-emerald-800/60 dark:from-emerald-950/40 dark:to-slate-900 dark:ring-emerald-900/40"
+          : "border-slate-100 dark:border-slate-700"
       )}
       data-spekit={SPEKIT.studentQuizItem}
     >
@@ -137,7 +138,7 @@ export function QuizCarouselCard({
         <StatusBadgeRow quiz={quiz} />
         <h3
           className={cn(
-            "line-clamp-2 font-bold text-slate-800",
+            "line-clamp-2 font-bold text-slate-800 dark:text-white",
             featured ? "text-xl md:text-2xl" : "text-lg"
           )}
         >
@@ -180,13 +181,14 @@ function LockedQuizCarouselCard({ quiz }: QuizCarouselCardProps) {
     <article
       className={cn(
         "flex min-h-[190px] flex-col rounded-2xl border border-amber-100/80 bg-gradient-to-br from-amber-50/50 to-white p-5 shadow-sm",
-        "transition-all duration-200 hover:shadow-md"
+        "dark:border-amber-800/50 dark:from-amber-950/30 dark:to-slate-900 dark:shadow-none",
+        "transition-all duration-200 hover:shadow-md dark:hover:shadow-none"
       )}
       {...spekit(SPEKIT.proUpgradeCard)}
     >
       <div className="flex flex-1 flex-col gap-2">
         <StatusBadgeRow quiz={quiz} />
-        <h3 className="line-clamp-2 text-lg font-bold text-slate-800">
+        <h3 className="line-clamp-2 text-lg font-bold text-slate-800 dark:text-white">
           {quiz.title}
         </h3>
       </div>

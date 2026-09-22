@@ -17,9 +17,11 @@ export function MyScoresTab({ scores }: MyScoresTabProps) {
   if (scores.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
-        <BarChart3 className="mb-3 size-8 text-slate-300" />
-        <p className="text-sm font-semibold text-slate-600">ما في نتائج بعد</p>
-        <p className="mt-1 text-xs text-slate-500">
+        <BarChart3 className="mb-3 size-8 text-slate-300 dark:text-slate-500" />
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-100">
+          ما في نتائج بعد
+        </p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           حلّ أول اختبار وشوف نتيجتك هون!
         </p>
         <Link
@@ -41,10 +43,10 @@ export function MyScoresTab({ scores }: MyScoresTabProps) {
           return (
             <li
               key={`${row.quizId}-${row.submittedAt}`}
-              className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-4"
+              className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-700 dark:bg-slate-800/70"
             >
               <div className="min-w-0 flex-1 space-y-1">
-                <span className="block text-start text-sm font-semibold text-slate-800">
+                <span className="block text-start text-sm font-semibold text-slate-800 dark:text-white">
                   {row.quizTitle}
                 </span>
                 <span

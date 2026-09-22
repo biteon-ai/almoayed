@@ -11,8 +11,8 @@ export function TeachersTab({ teachers, currentTeacherId }: TeachersTabProps) {
   if (teachers.length === 0) {
     return (
       <div className="flex flex-col items-center py-10 text-center">
-        <GraduationCap className="mb-3 size-8 text-slate-300" />
-        <p className="text-sm text-slate-500">
+        <GraduationCap className="mb-3 size-8 text-slate-300 dark:text-slate-500" />
+        <p className="text-sm text-slate-500 dark:text-slate-300">
           ما في أستاذ مرتبط بحسابك حالياً.
         </p>
       </div>
@@ -20,7 +20,7 @@ export function TeachersTab({ teachers, currentTeacherId }: TeachersTabProps) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 md:bg-transparent md:p-0">
+    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700 dark:bg-slate-800/70 md:border-0 md:bg-transparent md:p-0 dark:md:bg-transparent">
       <TeacherSwitcher
         teachers={teachers}
         currentTeacherId={currentTeacherId}

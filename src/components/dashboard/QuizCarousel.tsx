@@ -98,23 +98,23 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
       className="scroll-mt-24 scroll-mb-24 space-y-8 md:scroll-mb-0"
       data-spekit={SPEKIT.studentQuizList}
     >
-      <h2 className="flex items-center gap-2 text-lg font-bold text-slate-800 md:text-xl">
+      <h2 className="flex items-center gap-2 text-lg font-bold text-slate-800 dark:text-white md:text-xl">
         <BookOpen className="size-5 text-brand-600" />
         الاختبارات المتاحة
       </h2>
 
       {quizzes.length === 0 ? (
         <div
-          className="flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center"
+          className="flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-900/60"
           data-spekit={SPEKIT.studentQuizEmpty}
         >
-          <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-100">
+          <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-100 dark:bg-slate-800 dark:ring-slate-700">
             <ClipboardList className="size-8 text-slate-400" />
           </div>
-          <p className="text-base font-semibold text-slate-700">
+          <p className="text-base font-semibold text-slate-700 dark:text-white">
             لا توجد اختبارات متاحة حالياً
           </p>
-          <p className="mt-2 max-w-sm text-sm text-slate-500">
+          <p className="mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
             راجع أستاذك قريباً — الاختبارات الجديدة رح تظهر هون فوراً.
           </p>
         </div>
@@ -122,7 +122,7 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
         <>
           {continueQuiz && (
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-slate-800 md:text-lg">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white md:text-lg">
                 تابع من حيث توقفت
               </h3>
               <div className="max-w-2xl">
@@ -133,9 +133,9 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
 
           <div className="space-y-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <h3 className="text-base font-bold text-slate-800 md:text-lg">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white md:text-lg">
                 جميع الاختبارات المتاحة
-                <span className="ms-2 text-sm font-medium text-slate-500">
+                <span className="ms-2 text-sm font-medium text-slate-500 dark:text-slate-400">
                   ({queueQuizzes.length})
                 </span>
               </h3>
@@ -151,7 +151,7 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
                     value={query}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="ابحث عن اختبار..."
-                    className="h-11 bg-white ps-10 text-sm"
+                    className="h-11 bg-white ps-10 text-sm dark:bg-slate-900"
                     aria-label="بحث في الاختبارات"
                   />
                 </div>
@@ -159,11 +159,11 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
             </div>
 
             {filteredQueue.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-10 text-center">
-                <p className="text-sm font-semibold text-slate-700">
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900/50">
+                <p className="text-sm font-semibold text-slate-700 dark:text-white">
                   ما في نتائج مطابقة لبحثك
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   جرّب كلمة مختلفة أو امسح البحث لعرض كل الاختبارات.
                 </p>
               </div>
@@ -184,7 +184,7 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
                       type="button"
                       variant="outline"
                       disabled={isLoadingMore}
-                      className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 font-medium text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 disabled:opacity-70"
+                      className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 font-medium text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 disabled:opacity-70 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-slate-800"
                       onClick={handleLoadMore}
                     >
                       {isLoadingMore ? (

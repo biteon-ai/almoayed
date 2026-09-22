@@ -3,6 +3,10 @@
 export const QUIZ_TIMER_MIN_MINUTES = 1;
 export const QUIZ_TIMER_MAX_MINUTES = 180;
 export const QUIZ_TIMER_WARNING_SECONDS = 120;
+/** Critical last minute — progress bar turns red even if % still > 20. */
+export const QUIZ_TIMER_CRITICAL_SECONDS = 60;
+
+export type TimerProgressTone = "green" | "amber" | "red";
 
 export type TimedQuizSessionView = {
   startedAt: string;
@@ -130,6 +134,26 @@ export function remainingTimeFraction(
   if (!Number.isFinite(total) || total <= 0) return 0;
   if (!Number.isFinite(remainingSeconds)) return 0;
   return Math.min(1, Math.max(0, remainingSeconds / total));
+}
+
+/**
+ * Progress-bar urgency from remaining % (and last 60s critical floor).
+ * >50% green · 20–50% amber · <20% or ≤60s red.
+ */
+export function timerProgressTone(
+  remainingSeconds: number,
+  durationMinutes: number
+): TimerProgressTone {
+  if (!Number.isFinite(remainingSeconds) || remainingSeconds <= 0) {
+    return "red";
+  }
+  if (remainingSeconds <= QUIZ_TIMER_CRITICAL_SECONDS) {
+    return "red";
+  }
+  const fraction = remainingTimeFraction(remainingSeconds, durationMinutes);
+  if (fraction < 0.2) return "red";
+  if (fraction <= 0.5) return "amber";
+  return "green";
 }
 
 /** Client remaining seconds from absolute endsAt (refresh-safe). */

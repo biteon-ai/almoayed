@@ -20,6 +20,13 @@ export function PwaInstallSheet() {
   const [open, setOpen] = useState(false);
   const [sessionHidden, setSessionHidden] = useState(false);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
+  // Defer UA detection until after mount — navigator differs on SSR vs client
+  // and Dialog keeps children in the DOM even when closed (hydration mismatch).
+  const [isIos, setIsIos] = useState(false);
+
+  useEffect(() => {
+    setIsIos(isLikelyIosDevice());
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -110,7 +117,7 @@ export function PwaInstallSheet() {
             {...spekit(SPEKIT.pwaInstallSheetGuide)}
             className="list-decimal space-y-2 pe-4 text-start text-xs leading-relaxed text-foreground"
           >
-            {isLikelyIosDevice() ? (
+            {isIos ? (
               <>
                 <li>اضغط زر المشاركة في شريط Safari.</li>
                 <li>اختر «إضافة إلى الشاشة الرئيسية» ثم إضافة.</li>

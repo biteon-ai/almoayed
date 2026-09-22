@@ -259,7 +259,7 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
   return (
     <Card
       data-spekit={`results-card-${row.submissionId}`}
-      className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md"
+      className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:shadow-none"
     >
       <CardContent className="flex h-full flex-col gap-3 p-4 sm:gap-4 sm:p-5">
         <div className="flex items-start gap-3">
@@ -300,7 +300,7 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
           </div>
         </div>
 
-        <div className="mt-auto flex flex-col gap-2.5 border-t border-border/50 pt-3 min-[380px]:flex-row min-[380px]:gap-3">
+        <div className="mt-auto flex flex-col gap-2.5 border-t border-border/50 pt-3 dark:border-slate-700/80 min-[380px]:flex-row min-[380px]:gap-3">
           <Link
             href={`/results/${row.submissionId}`}
             className={cn(
@@ -315,7 +315,7 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
             href={`/quiz/${row.quizId}`}
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
-              "flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-border px-4 py-2.5 text-sm font-medium sm:py-3"
+              "flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-border px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-800 sm:py-3"
             )}
             data-spekit={SPEKIT.quizRetakeCta}
           >

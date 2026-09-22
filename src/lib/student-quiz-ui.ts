@@ -110,10 +110,10 @@ export function scoreRingDashOffset(score: number, circumference: number): numbe
 export function gradePillClassName(tone: ScoreGradeTone): string {
   switch (tone) {
     case "green":
-      return "border-emerald-200/80 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+      return "border-emerald-200/80 bg-emerald-500/10 text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-300";
     case "amber":
-      return "border-amber-200/80 bg-amber-500/10 text-amber-800 dark:text-amber-300";
+      return "border-amber-200/80 bg-amber-500/10 text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300";
     case "red":
-      return "border-rose-200/80 bg-rose-500/10 text-rose-700 dark:text-rose-300";
+      return "border-rose-200/80 bg-rose-500/10 text-rose-700 dark:border-rose-700/60 dark:bg-rose-950/40 dark:text-rose-300";
   }
 }

@@ -43,7 +43,7 @@ export function DashboardTabs({
   return (
     <section
       id="dashboard-tabs"
-      className="scroll-mt-24 scroll-mb-24 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm md:scroll-mb-0 md:p-6"
+      className="scroll-mt-24 scroll-mb-24 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none md:scroll-mb-0 md:p-6"
     >
       <Tabs
         value={tab}
