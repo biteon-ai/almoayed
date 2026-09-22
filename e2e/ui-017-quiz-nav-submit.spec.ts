@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { loginAsDemoStudent, shouldSkipLiveSupabase } from "./helpers/demo-login";
+import { openFirstStudentQuiz } from "./helpers/open-quiz";
 
 const FEATURE = "[UI-017]";
 
@@ -15,24 +16,7 @@ async function openFirstQuiz(page: import("@playwright/test").Page) {
   await dismissA2hs(page);
   await page.goto("/quizzes");
   await dismissA2hs(page);
-
-  const startQuiz = page.getByRole("link", { name: "ابدأ الاختبار الآن" }).first();
-  const continueQuiz = page.getByRole("link", { name: "متابعة الاختبار" }).first();
-  const retakeQuiz = page.getByRole("link", { name: /إعادة الاختبار/ }).first();
-  const reviewQuiz = page.getByRole("link", { name: /مراجعة الاختبار|مراجعة النتيجة/ }).first();
-
-  if (await startQuiz.isVisible()) {
-    await startQuiz.click();
-  } else if (await continueQuiz.isVisible()) {
-    await continueQuiz.click();
-  } else if (await retakeQuiz.isVisible()) {
-    await retakeQuiz.click();
-  } else {
-    await expect(reviewQuiz).toBeVisible({ timeout: 15_000 });
-    await reviewQuiz.click();
-  }
-
-  await expect(page).toHaveURL(/\/quiz\//, { timeout: 15_000 });
+  await openFirstStudentQuiz(page);
   await dismissA2hs(page);
 }
 
