@@ -30,7 +30,7 @@ import {
 } from "@/lib/student-quiz-ui";
 import { PendingSyncBadge } from "@/components/quiz/PendingSyncBadge";
 import { SPEKIT } from "@/lib/spekit-targets";
-import { cn } from "@/lib/utils";
+import { cn, scrollbarHideClass } from "@/lib/utils";
 import {
   BookOpen,
   Search,
@@ -142,11 +142,11 @@ export function StudentQuizzesView({
         </div>
       </StudentPageHero>
 
-      <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border bg-card p-4 shadow-xs sm:flex-row">
-        <div className="relative w-full sm:w-80">
+      <div className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-2xl border bg-card px-4 py-3 shadow-xs sm:flex-row sm:items-center sm:gap-3 sm:px-5 sm:py-4">
+        <div className="relative w-full min-w-0 sm:max-w-xs sm:shrink-0">
           <Search className="absolute end-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="h-10 rounded-xl border-muted bg-muted/30 pe-10 text-xs focus-visible:ring-emerald-500"
+            className="h-10 w-full rounded-xl border-muted bg-muted/30 pe-10 text-xs focus-visible:ring-emerald-500"
             placeholder="ابحث عن اختبار..."
             value={searchQuery}
             onChange={(event) => {
@@ -157,7 +157,13 @@ export function StudentQuizzesView({
           />
         </div>
 
-        <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
+        <div
+          className={cn(
+            "flex min-w-0 w-full items-center gap-2 overflow-x-auto overscroll-x-contain whitespace-nowrap [-webkit-overflow-scrolling:touch] sm:flex-1",
+            "scroll-ps-0.5 scroll-pe-0.5",
+            scrollbarHideClass
+          )}
+        >
           {QUIZ_CATEGORY_FILTERS.map((category) => (
             <Button
               key={category}

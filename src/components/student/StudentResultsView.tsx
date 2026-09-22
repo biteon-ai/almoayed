@@ -31,7 +31,7 @@ import {
   gradePillClassName,
 } from "@/lib/student-quiz-ui";
 import { SPEKIT } from "@/lib/spekit-targets";
-import { cn } from "@/lib/utils";
+import { cn, scrollbarHideClass } from "@/lib/utils";
 import {
   BarChart3,
   BookOpen,
@@ -146,11 +146,11 @@ export function StudentResultsView({
         />
       ) : null}
 
-      <div className="flex flex-col items-stretch justify-between gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm sm:flex-row sm:items-center">
-        <div className="relative w-full sm:w-80">
+      <div className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:gap-3 sm:px-5 sm:py-4">
+        <div className="relative w-full min-w-0 sm:max-w-xs sm:shrink-0">
           <Search className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="h-11 rounded-2xl border-border/60 bg-muted/30 pe-10 text-sm focus-visible:ring-emerald-500"
+            className="h-11 w-full rounded-2xl border-border/60 bg-muted/30 pe-10 text-sm focus-visible:ring-emerald-500"
             placeholder="ابحث في النتائج..."
             value={searchQuery}
             onChange={(event) => {
@@ -161,7 +161,13 @@ export function StudentResultsView({
           />
         </div>
 
-        <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
+        <div
+          className={cn(
+            "flex min-w-0 w-full items-center gap-2 overflow-x-auto overscroll-x-contain whitespace-nowrap [-webkit-overflow-scrolling:touch] sm:flex-1",
+            "scroll-ps-0.5 scroll-pe-0.5",
+            scrollbarHideClass
+          )}
+        >
           {QUIZ_CATEGORY_FILTERS.map((category) => (
             <Button
               key={category}
