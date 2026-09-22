@@ -88,6 +88,8 @@ UI-001:
   student-welcome: "Welcome greeting section"
   student-quizzes-page: "Dedicated available quizzes page"
   student-results-page: "Dedicated student results page"
+  results-archive-toggle: "Expand/collapse past attempts archive on a results card"
+  results-archive-list: "List of archived attempts for one quiz"
   student-quiz-list: "Available quizzes section"
   student-quiz-item: "Single accessible quiz card link"
   student-quiz-empty: "Empty state when no quizzes"

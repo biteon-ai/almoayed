@@ -11,11 +11,7 @@ export const metadata = {
   description: APP_DESCRIPTION,
 };
 
-interface PageProps {
-  searchParams: Promise<{ page?: string }>;
-}
-
-export default async function StudentResultsPage({ searchParams }: PageProps) {
+export default async function StudentResultsPage() {
   await requireStudent();
 
   const profile = await getStudentProfile();
@@ -23,11 +19,8 @@ export default async function StudentResultsPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  const params = await searchParams;
-  const page = Number(params.page) || 1;
-
   const [data, teacherGamification] = await Promise.all([
-    getStudentResultsPageData({ page }),
+    getStudentResultsPageData(),
     getStudentGamificationStatus(),
   ]);
 
@@ -41,7 +34,7 @@ export default async function StudentResultsPage({ searchParams }: PageProps) {
     >
       <StudentResultsView
         stats={data.stats}
-        scoresPage={data.scores}
+        scores={data.scores}
         totalQuizzes={data.totalQuizzes}
         teacherGamification={teacherGamification}
       />

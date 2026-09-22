@@ -1,4 +1,4 @@
-import type { QuizCarouselItem } from "@/types/database";
+import type { QuizCarouselItem, RecentScoreRow } from "@/types/database";
 
 export const QUIZ_CATEGORY_FILTERS = [
   "الكل",
@@ -116,4 +116,49 @@ export function gradePillClassName(tone: ScoreGradeTone): string {
     case "red":
       return "border-rose-200/80 bg-rose-500/10 text-rose-700 dark:border-rose-700/60 dark:bg-rose-950/40 dark:text-rose-300";
   }
+}
+
+/** One quiz bucket: latest attempt + older attempts (newest first). */
+export type QuizResultGroup = {
+  quizId: string;
+  quizTitle: string;
+  categoryName: string;
+  latest: RecentScoreRow;
+  /** Past attempts only (excludes `latest`), already DESC by submittedAt. */
+  archive: RecentScoreRow[];
+};
+
+/**
+ * Collapse attempt rows into one group per quiz.
+ * Input may be unsorted; output groups are ordered by latest attempt DESC.
+ */
+export function groupResultsByQuiz(scores: RecentScoreRow[]): QuizResultGroup[] {
+  const sorted = [...scores].sort((a, b) =>
+    b.submittedAt.localeCompare(a.submittedAt)
+  );
+  const byQuiz = new Map<string, RecentScoreRow[]>();
+
+  for (const row of sorted) {
+    const list = byQuiz.get(row.quizId);
+    if (list) list.push(row);
+    else byQuiz.set(row.quizId, [row]);
+  }
+
+  const groups: QuizResultGroup[] = [];
+  for (const attempts of byQuiz.values()) {
+    const [latest, ...archive] = attempts;
+    if (!latest) continue;
+    groups.push({
+      quizId: latest.quizId,
+      quizTitle: latest.quizTitle,
+      categoryName: latest.categoryName,
+      latest,
+      archive,
+    });
+  }
+
+  groups.sort((a, b) =>
+    b.latest.submittedAt.localeCompare(a.latest.submittedAt)
+  );
+  return groups;
 }

@@ -14,7 +14,6 @@ import {
 import {
   estimateQuizDurationMinutes,
   STUDENT_EXAMS_PAGE_SIZE,
-  STUDENT_RESULTS_PAGE_SIZE,
 } from "@/lib/student-quiz-ui";
 import {
   clampPage,
@@ -951,27 +950,18 @@ export async function getStudentQuizzesPageData(
   };
 }
 
-export async function getStudentResultsPageData(
-  pageInput?: PageInput
-): Promise<{
+export async function getStudentResultsPageData(): Promise<{
   stats: StudentDashboardData["stats"];
-  scores: PagedResult<RecentScoreRow>;
+  scores: RecentScoreRow[];
   totalQuizzes: number;
 }> {
   const session = await requireStudent();
   const ctx = await getStudentContext(session);
   const bundle = await fetchStudentQuizBundle(session, ctx);
 
-  const pageSize = pageInput?.pageSize ?? STUDENT_RESULTS_PAGE_SIZE;
-  const requestedPage = pageInput?.page ?? 1;
-  const total = bundle.allScores.length;
-  const page = clampPage(requestedPage, pageSize, total);
-  const { from, to } = rangeFromPage(page, pageSize);
-  const items = bundle.allScores.slice(from, to + 1);
-
   return {
     stats: bundle.stats,
-    scores: toPagedResult(items, total, page, pageSize),
+    scores: bundle.allScores,
     totalQuizzes: bundle.quizzes.length,
   };
 }
