@@ -65,7 +65,7 @@ export function AdminTeacherActionConfirmModal({
           {isDelete ? "حذف حساب المدرس" : "تغيير حالة الحساب"}
         </h2>
 
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground dark:text-slate-300">
           {isDelete
             ? "هل أنت تأكد من حذف حساب المدرس؟"
             : "هل أنت تأكد من تغيير حالة حساب المدرس؟"}

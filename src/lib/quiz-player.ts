@@ -67,6 +67,19 @@ export function shouldConfirmQuizExit(args: {
   );
 }
 
+/**
+ * Back-button destination for the quiz player.
+ * Review (`?review=` or post-submit results) → نتائجي; active attempt → الاختبارات.
+ */
+export function quizPlayerExitHref(args: {
+  isSubmitted: boolean;
+  reviewSubmissionId?: string | null;
+}): string {
+  const isReviewMode =
+    args.isSubmitted || Boolean(args.reviewSubmissionId?.trim());
+  return isReviewMode ? "/results" : "/quizzes";
+}
+
 function hasAnswer(
   answers: Record<string, string>,
   questionId: string

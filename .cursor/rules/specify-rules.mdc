@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/033-quiz-header-polish/plan.md`
+**Active plan**: `specs/034-compact-welcome-hero/plan.md`
 
 Related artifacts:
-- Spec: `specs/033-quiz-header-polish/spec.md`
-- Research: `specs/033-quiz-header-polish/research.md`
-- Data model: `specs/033-quiz-header-polish/data-model.md`
-- Contracts: `specs/033-quiz-header-polish/contracts/`
-- Quickstart: `specs/033-quiz-header-polish/quickstart.md`
+- Spec: `specs/034-compact-welcome-hero/spec.md`
+- Research: `specs/034-compact-welcome-hero/research.md`
+- Data model: `specs/034-compact-welcome-hero/data-model.md`
+- Contracts: `specs/034-compact-welcome-hero/contracts/`
+- Quickstart: `specs/034-compact-welcome-hero/quickstart.md`
 <!-- SPECKIT END -->

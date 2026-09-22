@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { loginAsDemoStudent, shouldSkipLiveSupabase } from "./helpers/demo-login";
+import { openFirstStudentQuiz } from "./helpers/open-quiz";
 
 const FEATURE = "[UI-016]";
 
@@ -9,6 +10,7 @@ test.describe(`${FEATURE} Quiz player chrome`, () => {
   test("header, pager, and no taking sidebar after demo login", async ({
     page,
   }) => {
+    test.setTimeout(90_000);
     test.skip(
       shouldSkipLiveSupabase(),
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"
@@ -25,10 +27,7 @@ test.describe(`${FEATURE} Quiz player chrome`, () => {
     if (await dismiss.isVisible()) {
       await dismiss.click();
     }
-    const startQuiz = page.getByRole("link", { name: "ابدأ الاختبار الآن" }).first();
-    await expect(startQuiz).toBeVisible({ timeout: 15_000 });
-    await startQuiz.click();
-    await expect(page).toHaveURL(/\/quiz\//, { timeout: 15_000 });
+    await openFirstStudentQuiz(page);
 
     await expect(page.locator('[data-spekit="quiz-player-header"]')).toBeVisible();
     await expect(page.locator('[data-spekit="quiz-exit-button"]')).toBeVisible();

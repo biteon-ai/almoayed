@@ -88,10 +88,14 @@ UI-001:
   student-welcome: "Welcome greeting section"
   student-quizzes-page: "Dedicated available quizzes page"
   student-results-page: "Dedicated student results page"
+  results-archive-toggle: "Expand/collapse past attempts archive on a results card"
+  results-archive-list: "List of archived attempts for one quiz"
+  quiz-attempt-meta: "Archived attempt date badge under quiz title in review header"
   student-quiz-list: "Available quizzes section"
   student-quiz-item: "Single accessible quiz card link"
   student-quiz-empty: "Empty state when no quizzes"
   student-logout: "Logout button"
+  student-header-back: "Mobile header contextual back button"
 
 # ── Quiz experience ─────────────────────────────────────────────
 QUIZ-001:
@@ -319,6 +323,7 @@ UI-013:
   native-profile-drawer: "Student native profile / settings drawer"
   native-drawer-close: "Close control on the native profile drawer"
   native-theme-switcher: "Dark / Light / System appearance control"
+  student-header-back: "Mobile header contextual back (sections; not quiz attempt)"
   native-offline-list: "Cached / offline saved quizzes list"
   native-drawer-settings: "Drawer row to profile settings / upgrade"
   native-share-app: "Share Al-Moayed app action"

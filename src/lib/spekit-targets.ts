@@ -47,10 +47,14 @@ export const SPEKIT = {
   studentWelcome: "student-welcome",
   studentQuizzesPage: "student-quizzes-page",
   studentResultsPage: "student-results-page",
+  resultsArchiveToggle: "results-archive-toggle",
+  resultsArchiveList: "results-archive-list",
+  quizAttemptMeta: "quiz-attempt-meta",
   studentQuizList: "student-quiz-list",
   studentQuizItem: "student-quiz-item",
   studentQuizEmpty: "student-quiz-empty",
   studentLogout: "student-logout",
+  studentHeaderBack: "student-header-back",
 
   // ── QUIZ-001 ─────────────────────────────────────────────────
   quizPage: "quiz-page",

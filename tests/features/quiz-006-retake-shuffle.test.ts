@@ -221,6 +221,7 @@ describe(`${FEATURE} presentationFromSubmitResult`, () => {
       score: 50,
       totalQuestions: 2,
       correctCount: 1,
+      submittedAt: "2026-01-03T10:00:00.000Z",
       answers: [
         {
           questionId: "q2",

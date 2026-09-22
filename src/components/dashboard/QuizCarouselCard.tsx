@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Crown, FileText, Lock } from "lucide-react";
 import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
+import { getQuizListAction } from "@/lib/student-quiz-ui";
+import { quizPlayerHref } from "@/lib/quiz-route-prefetch";
+import { usePrefetchOnIntent } from "@/hooks/use-prefetch-on-intent";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -27,7 +30,7 @@ function isRecentlyCreated(createdAt: string): boolean {
 
 function QuestionMeta({ count }: { count: number }) {
   return (
-    <p className="inline-flex items-center gap-1.5 text-sm text-slate-500">
+    <p className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
       <FileText
         className="size-4 shrink-0 text-brand-500/90"
         aria-hidden
@@ -117,27 +120,35 @@ export function QuizCarouselCard({
   quiz,
   variant = "default",
 }: QuizCarouselCardProps) {
+  const href = quiz.isLocked ? null : quizPlayerHref(quiz.id);
+  const { ref, intentProps } = usePrefetchOnIntent(href);
+
   if (quiz.isLocked) {
     return <LockedQuizCarouselCard quiz={quiz} />;
   }
 
   const featured = variant === "featured";
+  const action = getQuizListAction(quiz);
+  const playerHref = quizPlayerHref(quiz.id);
 
   return (
     <article
+      ref={ref}
       className={cn(
         "flex min-h-[190px] flex-col rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md",
+        "dark:bg-slate-900 dark:shadow-none dark:hover:shadow-none",
         featured
-          ? "border-emerald-200/90 bg-gradient-to-br from-emerald-50/50 to-white p-6 ring-1 ring-emerald-100/80 md:min-h-[210px]"
-          : "border-slate-100"
+          ? "border-emerald-200/90 bg-gradient-to-br from-emerald-50/50 to-white p-6 ring-1 ring-emerald-100/80 md:min-h-[210px] dark:border-emerald-800/60 dark:from-emerald-950/40 dark:to-slate-900 dark:ring-emerald-900/40"
+          : "border-slate-100 dark:border-slate-700"
       )}
       data-spekit={SPEKIT.studentQuizItem}
+      {...intentProps}
     >
       <div className="flex flex-1 flex-col gap-2">
         <StatusBadgeRow quiz={quiz} />
         <h3
           className={cn(
-            "line-clamp-2 font-bold text-slate-800",
+            "line-clamp-2 font-bold text-slate-800 dark:text-white",
             featured ? "text-xl md:text-2xl" : "text-lg"
           )}
         >
@@ -149,19 +160,14 @@ export function QuizCarouselCard({
 
       <div className="mt-auto pt-5">
         <Link
-          href={`/quiz/${quiz.id}`}
+          href={playerHref}
+          prefetch
           className={ctaClasses}
-          {...(quiz.hasSubmission && quiz.canRetake
-            ? spekit(SPEKIT.quizRetakeCta)
-            : {})}
+          {...(action.kind === "retake" ? spekit(SPEKIT.quizRetakeCta) : {})}
         >
-          {quiz.hasSubmission
-            ? quiz.canRetake
-              ? "إعادة الاختبار"
-              : "مراجعة النتيجة"
-            : "ابدأ الآن"}
+          {action.label}
         </Link>
-        {quiz.hasSubmission && quiz.canRetake && quiz.maxAttempts > 0 ? (
+        {action.kind === "retake" && quiz.maxAttempts > 0 ? (
           <p className="mt-2 text-center text-[11px] text-muted-foreground">
             {formatAttemptProgressAr(quiz.usedAttempts, quiz.maxAttempts)}
           </p>
@@ -180,13 +186,14 @@ function LockedQuizCarouselCard({ quiz }: QuizCarouselCardProps) {
     <article
       className={cn(
         "flex min-h-[190px] flex-col rounded-2xl border border-amber-100/80 bg-gradient-to-br from-amber-50/50 to-white p-5 shadow-sm",
-        "transition-all duration-200 hover:shadow-md"
+        "dark:border-amber-800/50 dark:from-amber-950/30 dark:to-slate-900 dark:shadow-none",
+        "transition-all duration-200 hover:shadow-md dark:hover:shadow-none"
       )}
       {...spekit(SPEKIT.proUpgradeCard)}
     >
       <div className="flex flex-1 flex-col gap-2">
         <StatusBadgeRow quiz={quiz} />
-        <h3 className="line-clamp-2 text-lg font-bold text-slate-800">
+        <h3 className="line-clamp-2 text-lg font-bold text-slate-800 dark:text-white">
           {quiz.title}
         </h3>
       </div>

@@ -30,24 +30,26 @@
   }
 
   .dark {
+    color-scheme: dark;
     --background: 215 28% 7%;
-    --foreground: 210 18% 94%;
+    --foreground: 210 18% 96%;
     --card: 215 25% 10%;
-    --card-foreground: 210 18% 94%;
-    --popover: 215 25% 9%;
-    --popover-foreground: 210 18% 94%;
+    --card-foreground: 210 18% 96%;
+    --popover: 215 25% 11%;
+    --popover-foreground: 210 18% 96%;
     --primary: 180 65% 42%;
     --primary-foreground: 215 28% 7%;
     --secondary: 215 20% 14%;
-    --secondary-foreground: 210 15% 90%;
-    --muted: 215 18% 13%;
-    --muted-foreground: 215 12% 58%;
+    --secondary-foreground: 210 15% 92%;
+    --muted: 215 18% 14%;
+    /* Was ~58% — too dim on dark cards/modals; keep secondary readable */
+    --muted-foreground: 215 14% 72%;
     --accent: 180 35% 14%;
     --accent-foreground: 180 55% 78%;
     --destructive: 354 70% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 215 15% 18%;
-    --input: 215 15% 18%;
+    --border: 215 15% 22%;
+    --input: 215 15% 22%;
     --ring: 180 55% 42%;
   }
 

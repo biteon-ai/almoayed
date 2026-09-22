@@ -1,6 +1,13 @@
 "use client";
 
-import { APP_NAME, APP_SLOGAN, APP_URL, buildResultShareUrl } from "@/lib/constants";
+import { useEffect, useMemo, useState } from "react";
+import {
+  APP_NAME,
+  APP_SLOGAN,
+  buildQuizAbsoluteUrl,
+  buildResultShareUrl,
+} from "@/lib/constants";
+import { resolveShareOrigin } from "@/lib/app-origin";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -16,6 +23,16 @@ interface WhatsAppShareProps {
   totalQuestions: number;
 }
 
+function useShareOrigin(): string {
+  const [origin, setOrigin] = useState(() => resolveShareOrigin());
+
+  useEffect(() => {
+    setOrigin(resolveShareOrigin(window.location.origin));
+  }, []);
+
+  return origin;
+}
+
 export function WhatsAppShare({
   score,
   quizId,
@@ -23,7 +40,11 @@ export function WhatsAppShare({
   correctCount,
   totalQuestions,
 }: WhatsAppShareProps) {
-  const quizUrl = `${APP_URL}/quiz/${quizId}`;
+  const origin = useShareOrigin();
+  const quizUrl = useMemo(
+    () => buildQuizAbsoluteUrl(quizId, origin),
+    [origin, quizId]
+  );
   const shareUrl = buildResultShareUrl(score, quizUrl);
 
   return (
@@ -78,7 +99,11 @@ export function WhatsAppShareCompact({
   score: number;
   quizId: string;
 }) {
-  const shareUrl = buildResultShareUrl(score, `${APP_URL}/quiz/${quizId}`);
+  const origin = useShareOrigin();
+  const shareUrl = buildResultShareUrl(
+    score,
+    buildQuizAbsoluteUrl(quizId, origin)
+  );
 
   return (
     <a

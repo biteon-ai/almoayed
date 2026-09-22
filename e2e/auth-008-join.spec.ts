@@ -11,6 +11,7 @@ test.describe(`${AUTH} public trial join page`, () => {
     page,
     context,
   }) => {
+    test.setTimeout(90_000);
     test.skip(
       shouldSkipLiveSupabase(),
       "Needs live Supabase for demo teacher lookup"

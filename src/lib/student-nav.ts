@@ -234,3 +234,40 @@ export function useStudentRouteHash() {
 
   return hash;
 }
+
+/**
+ * Contextual parent for the mobile header back control.
+ * Returns null on dashboard (home) and during an active quiz attempt
+ * (quiz player has its own confirmed exit).
+ */
+export function studentBackFallbackHref(pathname: string): string | null {
+  if (!pathname || pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
+    return null;
+  }
+  if (pathname.startsWith("/quiz/")) {
+    return null;
+  }
+  if (pathname.startsWith("/results/") && pathname !== "/results") {
+    return "/results";
+  }
+  return "/dashboard";
+}
+
+/** Compact mobile header title for the current student route. */
+export function studentMobilePageTitle(pathname: string): string {
+  if (pathname.startsWith("/quiz/")) return "الاختبار";
+  if (pathname.startsWith("/results/") && pathname !== "/results") {
+    return "تفاصيل النتيجة";
+  }
+  if (pathname === "/results" || pathname.startsWith("/results/")) {
+    return "نتائجي";
+  }
+  if (pathname === "/quizzes" || pathname.startsWith("/quizzes/")) {
+    return "الاختبارات";
+  }
+  if (pathname === "/settings" || pathname.startsWith("/settings/")) {
+    return "الإعدادات";
+  }
+  return "المؤيد";
+}
+

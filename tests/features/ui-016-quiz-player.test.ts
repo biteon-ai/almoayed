@@ -3,6 +3,7 @@ import {
   answeredProgress,
   optionLetter,
   questionNavStatus,
+  quizPlayerExitHref,
   shouldConfirmQuizExit,
 } from "@/lib/quiz-player";
 
@@ -155,5 +156,28 @@ describe(`${FEATURE} shouldConfirmQuizExit`, () => {
         timeExpiredNotice: true,
       })
     ).toBe(false);
+  });
+});
+
+describe(`${FEATURE} quizPlayerExitHref`, () => {
+  it("sends review / post-submit back to /results", () => {
+    expect(
+      quizPlayerExitHref({
+        isSubmitted: false,
+        reviewSubmissionId: "sub-1",
+      })
+    ).toBe("/results");
+    expect(
+      quizPlayerExitHref({ isSubmitted: true, reviewSubmissionId: null })
+    ).toBe("/results");
+  });
+
+  it("sends an active attempt back to /quizzes", () => {
+    expect(
+      quizPlayerExitHref({ isSubmitted: false, reviewSubmissionId: null })
+    ).toBe("/quizzes");
+    expect(
+      quizPlayerExitHref({ isSubmitted: false, reviewSubmissionId: "  " })
+    ).toBe("/quizzes");
   });
 });

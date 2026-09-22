@@ -12,7 +12,7 @@ import { spawnSync } from "node:child_process";
 const steps = [
   { id: "CI-LINT", cmd: "npm", args: ["run", "lint"] },
   { id: "CI-TYPES", cmd: "npm", args: ["run", "typecheck"] },
-  { id: "CI-BUILD", cmd: "npm", args: ["run", "build"] },
+  { id: "CI-BUILD", cmd: "npm", args: ["run", "build:clean"] },
   { id: "CI-MIGRATIONS", cmd: "node", args: ["scripts/verify-migrations.mjs"] },
   { id: "CI-UNIT", cmd: "npm", args: ["run", "test:unit"] },
   { id: "CI-RLS", cmd: "npm", args: ["run", "test:rls"] },

@@ -8,9 +8,12 @@ import type { QuizCarouselItem } from "@/types/database";
 import {
   formatDurationAr,
   getQuizCardStatus,
+  getQuizListAction,
   isRecentlyCreatedQuiz,
 } from "@/lib/student-quiz-ui";
 import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
+import { quizPlayerHref } from "@/lib/quiz-route-prefetch";
+import { usePrefetchOnIntent } from "@/hooks/use-prefetch-on-intent";
 import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +33,7 @@ import {
   HelpCircle,
   Lock,
   Play,
+  RotateCcw,
   Sparkles,
 } from "lucide-react";
 
@@ -99,13 +103,15 @@ function StatusBadge({ quiz }: { quiz: QuizCarouselItem }) {
 }
 
 export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
+  const href = quiz.isLocked ? null : quizPlayerHref(quiz.id);
+  const { ref, intentProps } = usePrefetchOnIntent(href);
+
   if (quiz.isLocked) {
     return <LockedStudentQuizGridCard quiz={quiz} />;
   }
 
-  const completed = quiz.hasSubmission;
-  const showRetake = completed && quiz.canRetake;
-  const showReview = completed && !quiz.canRetake;
+  const action = getQuizListAction(quiz);
+  const playerHref = quizPlayerHref(quiz.id);
   const attemptLabel =
     quiz.maxAttempts > 0 && quiz.hasSubmission
       ? formatAttemptProgressAr(quiz.usedAttempts, quiz.maxAttempts)
@@ -113,8 +119,10 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
 
   return (
     <Card
+      ref={ref}
       className="group flex flex-col justify-between rounded-2xl border bg-card transition-all hover:border-emerald-500/50 hover:shadow-lg"
       data-spekit={SPEKIT.studentQuizItem}
+      {...intentProps}
     >
       <CardHeader className="p-5 pb-3">
         <div className="mb-2 flex items-center justify-between gap-2">
@@ -148,48 +156,44 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
       </CardContent>
 
       <CardFooter className="p-5 pt-3">
-        {showReview ? (
+        {action.kind === "start" ? (
           <Link
-            href={`/quiz/${quiz.id}`}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
-            )}
-          >
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>
-              مراجعة النتيجة
-              {quiz.lastScore != null ? ` (${quiz.lastScore}%)` : ""}
-            </span>
-          </Link>
-        ) : showRetake ? (
-          <Link
-            href={`/quiz/${quiz.id}`}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
-            )}
-            data-spekit={SPEKIT.quizRetakeCta}
-          >
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>
-              إعادة الاختبار
-              {quiz.lastScore != null ? ` (${quiz.lastScore}%)` : ""}
-            </span>
-          </Link>
-        ) : completed ? null : (
-          <Link
-            href={`/quiz/${quiz.id}`}
+            href={playerHref}
+            prefetch
             className={cn(
               buttonVariants({ size: "lg" }),
               "h-10 w-full gap-1.5 rounded-xl bg-emerald-600 text-xs font-bold text-white transition-all hover:bg-emerald-700 group-hover:shadow-md"
             )}
           >
             <Play className="h-3.5 w-3.5 fill-white" />
-            <span>ابدأ الاختبار الآن</span>
+            <span>{action.label}</span>
+          </Link>
+        ) : (
+          <Link
+            href={playerHref}
+            prefetch
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
+            )}
+            {...(action.kind === "retake"
+              ? spekit(SPEKIT.quizRetakeCta)
+              : {})}
+          >
+            {action.kind === "retake" ? (
+              <RotateCcw className="h-4 w-4 text-emerald-600" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            )}
+            <span>
+              {action.label}
+              {action.kind === "review" && quiz.lastScore != null
+                ? ` (${quiz.lastScore}%)`
+                : ""}
+            </span>
           </Link>
         )}
-        {attemptLabel && showRetake ? (
+        {attemptLabel && action.kind === "retake" ? (
           <p
             className="mt-2 text-center text-[11px] text-muted-foreground"
             {...spekit(SPEKIT.quizAttemptBadge)}

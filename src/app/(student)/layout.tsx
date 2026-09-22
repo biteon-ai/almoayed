@@ -1,11 +1,12 @@
-import { StudentBottomNav } from "@/components/layout/StudentBottomNav";
-import { StudentHeader } from "@/components/layout/StudentHeader";
+import { StudentAppChrome } from "@/components/layout/StudentAppChrome";
 import { StudentPortalShell } from "@/components/layout/StudentPortalShell";
 import { OfflineSyncProvider } from "@/components/pwa/OfflineSyncProvider";
-import { PwaInstallSheet } from "@/components/pwa/PwaInstallSheet";
 import { APP_SLOGAN } from "@/lib/constants";
 import { requireStudent } from "@/lib/auth";
 import { enforceStudentOnboardingComplete } from "@/lib/student-onboarding-guard";
+
+/** Session-scoped chrome — personalized; never statically prerender. */
+export const dynamic = "force-dynamic";
 
 export default async function StudentLayout({
   children,
@@ -18,15 +19,12 @@ export default async function StudentLayout({
   return (
     <StudentPortalShell>
       <OfflineSyncProvider>
-        <div className="min-h-dvh bg-background">
-          <StudentHeader
-            slogan={APP_SLOGAN}
-            currentTeacherId={session.currentTeacherId}
-          />
-          <main className="pb-28 md:pb-0">{children}</main>
-          <StudentBottomNav />
-          <PwaInstallSheet />
-        </div>
+        <StudentAppChrome
+          slogan={APP_SLOGAN}
+          currentTeacherId={session.currentTeacherId}
+        >
+          {children}
+        </StudentAppChrome>
       </OfflineSyncProvider>
     </StudentPortalShell>
   );

@@ -14,9 +14,16 @@ export function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
+  /** False until the client has evaluated display-mode / iOS standalone. */
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setInstalled(isPwaStandalone());
+    const syncInstalled = () => setInstalled(isPwaStandalone());
+    syncInstalled();
+    setReady(true);
+
+    const media = window.matchMedia("(display-mode: standalone)");
+    media.addEventListener("change", syncInstalled);
 
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
@@ -31,6 +38,7 @@ export function usePwaInstall() {
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
+      media.removeEventListener("change", syncInstalled);
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);
     };
@@ -53,6 +61,7 @@ export function usePwaInstall() {
   return {
     canPrompt: deferredPrompt !== null && !installed,
     installed,
+    ready,
     promptInstall,
   };
 }

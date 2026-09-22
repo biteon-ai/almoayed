@@ -1,4 +1,4 @@
-import type { QuizCarouselItem } from "@/types/database";
+import type { QuizCarouselItem, RecentScoreRow } from "@/types/database";
 
 export const QUIZ_CATEGORY_FILTERS = [
   "الكل",
@@ -15,6 +15,9 @@ export const STUDENT_EXAMS_PAGE_SIZE = 4;
 
 /** Student /results page — attempt result cards per pagination page (2×2 grid). */
 export const STUDENT_RESULTS_PAGE_SIZE = 4;
+
+/** Dashboard «نتائجي» tab — recent attempts before «عرض كل النتائج». */
+export const STUDENT_DASHBOARD_RECENT_SCORES_LIMIT = 3;
 
 export type QuizCardStatus = "locked" | "completed" | "in_progress" | "new";
 
@@ -35,6 +38,21 @@ export function getQuizCardStatus(
   if (quiz.hasSubmission && quiz.canRetake) return "in_progress";
   if (isRecentlyCreated) return "new";
   return "new";
+}
+
+/** Primary CTA on /quizzes cards — start or retake when attempts remain; review only when exhausted. */
+export type QuizListActionKind = "start" | "retake" | "review";
+
+export function getQuizListAction(
+  quiz: Pick<QuizCarouselItem, "hasSubmission" | "canRetake">
+): { kind: QuizListActionKind; label: string } {
+  if (!quiz.hasSubmission) {
+    return { kind: "start", label: "ابدأ الاختبار" };
+  }
+  if (quiz.canRetake) {
+    return { kind: "retake", label: "إعادة المحاولة" };
+  }
+  return { kind: "review", label: "مراجعة النتيجة" };
 }
 
 export function isRecentlyCreatedQuiz(createdAt: string, days = 7): boolean {
@@ -110,10 +128,55 @@ export function scoreRingDashOffset(score: number, circumference: number): numbe
 export function gradePillClassName(tone: ScoreGradeTone): string {
   switch (tone) {
     case "green":
-      return "border-emerald-200/80 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+      return "border-emerald-200/80 bg-emerald-500/10 text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-300";
     case "amber":
-      return "border-amber-200/80 bg-amber-500/10 text-amber-800 dark:text-amber-300";
+      return "border-amber-200/80 bg-amber-500/10 text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300";
     case "red":
-      return "border-rose-200/80 bg-rose-500/10 text-rose-700 dark:text-rose-300";
+      return "border-rose-200/80 bg-rose-500/10 text-rose-700 dark:border-rose-700/60 dark:bg-rose-950/40 dark:text-rose-300";
   }
+}
+
+/** One quiz bucket: latest attempt + older attempts (newest first). */
+export type QuizResultGroup = {
+  quizId: string;
+  quizTitle: string;
+  categoryName: string;
+  latest: RecentScoreRow;
+  /** Past attempts only (excludes `latest`), already DESC by submittedAt. */
+  archive: RecentScoreRow[];
+};
+
+/**
+ * Collapse attempt rows into one group per quiz.
+ * Input may be unsorted; output groups are ordered by latest attempt DESC.
+ */
+export function groupResultsByQuiz(scores: RecentScoreRow[]): QuizResultGroup[] {
+  const sorted = [...scores].sort((a, b) =>
+    b.submittedAt.localeCompare(a.submittedAt)
+  );
+  const byQuiz = new Map<string, RecentScoreRow[]>();
+
+  for (const row of sorted) {
+    const list = byQuiz.get(row.quizId);
+    if (list) list.push(row);
+    else byQuiz.set(row.quizId, [row]);
+  }
+
+  const groups: QuizResultGroup[] = [];
+  for (const attempts of Array.from(byQuiz.values())) {
+    const [latest, ...archive] = attempts;
+    if (!latest) continue;
+    groups.push({
+      quizId: latest.quizId,
+      quizTitle: latest.quizTitle,
+      categoryName: latest.categoryName,
+      latest,
+      archive,
+    });
+  }
+
+  groups.sort((a, b) =>
+    b.latest.submittedAt.localeCompare(a.latest.submittedAt)
+  );
+  return groups;
 }

@@ -16,22 +16,29 @@ import { Input } from "@/components/ui/input";
 import { PercentText } from "@/components/ui/rtl-num";
 import { Progress } from "@/components/ui/progress";
 import {
+  StudentPageHero,
+  StudentPageHeroBadge,
+  studentPageHeroTitleClassName,
+} from "@/components/student/StudentPageHero";
+import {
   QUIZ_CATEGORY_FILTERS,
   STUDENT_EXAMS_PAGE_SIZE,
   type QuizCategoryFilter,
   filterQuizzesByCategory,
   filterQuizzesBySearch,
   formatDurationAr,
+  getQuizListAction,
 } from "@/lib/student-quiz-ui";
 import { PendingSyncBadge } from "@/components/quiz/PendingSyncBadge";
-import { SPEKIT } from "@/lib/spekit-targets";
-import { cn } from "@/lib/utils";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
+import { cn, scrollbarHideClass } from "@/lib/utils";
 import {
   BookOpen,
   Search,
   Clock,
   HelpCircle,
   Play,
+  RotateCcw,
   Sparkles,
   Target,
   CheckCircle2,
@@ -101,89 +108,103 @@ export function StudentQuizzesView({
       ? 100
       : 0
     : 0;
+  const continueAction = continueQuiz
+    ? getQuizListAction(continueQuiz)
+    : null;
 
   return (
     <div
-      className="container mx-auto max-w-7xl space-y-8 p-4 sm:p-6"
+      className="container mx-auto max-w-7xl space-y-4 p-4 sm:space-y-6 sm:p-6"
       data-spekit={SPEKIT.studentQuizzesPage}
     >
       <PendingSyncBadge />
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-800 p-6 text-white shadow-xl sm:p-8">
-        <div className="relative z-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div className="space-y-1.5">
-            <Badge className="rounded-full border-white/20 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-md">
-              <Sparkles className="ml-1 h-3.5 w-3.5 text-amber-300" />
-              مركز الاختبارات
-            </Badge>
-            <h1 className="text-2xl font-black sm:text-3xl">الاختبارات المتاحة</h1>
-            <p className="text-xs text-emerald-100 sm:text-sm">
-              اختر اختبارك وابدأ التحدي لتقييم مستواك وتطوير مهاراتك اليومية.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-md sm:gap-3 sm:p-3.5">
-            <QuickStat
-              icon={BookOpen}
-              value={total}
-              label="متاح"
-            />
-            <QuickStat
-              icon={CheckCircle2}
-              value={stats.completedQuizCount}
-              label="مكتمل"
-            />
-            <QuickStat
-              icon={Target}
-              value={<PercentText value={stats.overallAverageScore} />}
-              label="المعدل"
-            />
-          </div>
-        </div>
-      </section>
-
-      <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border bg-card p-4 shadow-xs sm:flex-row">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute end-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="h-10 rounded-xl border-muted bg-muted/30 pe-10 text-xs focus-visible:ring-emerald-500"
-            placeholder="ابحث عن اختبار..."
-            value={searchQuery}
-            onChange={(event) => {
-              setSearchQuery(event.target.value);
-              resetPage();
-            }}
-            aria-label="بحث في الاختبارات"
+      <StudentPageHero
+        badge={
+          <StudentPageHeroBadge>
+            <Sparkles className="h-3 w-3 shrink-0 text-amber-300" />
+            <span className="truncate">مركز الاختبارات</span>
+          </StudentPageHeroBadge>
+        }
+        title={
+          <h1 className={studentPageHeroTitleClassName()}>
+            الاختبارات المتاحة
+          </h1>
+        }
+        subtitle="اختر اختبارك وابدأ التحدي لتقييم مستواك وتطوير مهاراتك اليومية."
+      >
+        <div className="grid w-full min-w-0 grid-cols-3 items-center justify-items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-2 py-2 backdrop-blur-md sm:w-auto sm:min-w-[12rem] sm:gap-3 sm:px-3 sm:py-2.5">
+          <QuickStat icon={BookOpen} value={total} label="متاح" />
+          <QuickStat
+            icon={CheckCircle2}
+            value={stats.completedQuizCount}
+            label="مكتمل"
+          />
+          <QuickStat
+            icon={Target}
+            value={<PercentText value={stats.overallAverageScore} />}
+            label="المعدل"
           />
         </div>
+      </StudentPageHero>
 
-        <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
-          {QUIZ_CATEGORY_FILTERS.map((category) => (
-            <Button
-              key={category}
-              type="button"
-              size="sm"
-              variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => {
-                setSelectedCategory(category);
+      <div className="min-w-0 overflow-hidden rounded-2xl border bg-card px-4 py-3 shadow-xs">
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="relative w-full min-w-0">
+            <Search className="pointer-events-none absolute end-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="h-9 w-full rounded-xl border-muted bg-muted/25 py-1.5 pe-9 text-sm focus-visible:ring-emerald-500"
+              placeholder="ابحث عن اختبار..."
+              value={searchQuery}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
                 resetPage();
               }}
-              className={cn(
-                "h-9 shrink-0 rounded-xl px-4 text-xs",
-                selectedCategory === category &&
-                  "bg-emerald-600 font-bold text-white hover:bg-emerald-700"
-              )}
-            >
-              {category}
-            </Button>
-          ))}
+              aria-label="بحث في الاختبارات"
+            />
+          </div>
+
+          <div
+            className={cn(
+              "flex min-w-0 w-full items-center gap-1.5 overflow-x-auto overscroll-x-contain whitespace-nowrap [-webkit-overflow-scrolling:touch]",
+              scrollbarHideClass
+            )}
+            role="toolbar"
+            aria-label="تصفية حسب التصنيف"
+          >
+            {QUIZ_CATEGORY_FILTERS.map((category) => (
+              <Button
+                key={category}
+                type="button"
+                size="sm"
+                variant={selectedCategory === category ? "default" : "outline"}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  resetPage();
+                }}
+                className={cn(
+                  "h-8 shrink-0 rounded-full px-3 text-xs font-semibold",
+                  selectedCategory === category &&
+                    "bg-emerald-600 font-bold text-white hover:bg-emerald-700"
+                )}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {continueQuiz ? (
+      {continueQuiz && continueAction ? (
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
             <Play className="h-4 w-4 fill-emerald-600/20 text-emerald-600" />
-            <span>تابع من حيث توقفت</span>
+            <span>
+              {continueAction.kind === "retake"
+                ? "جاهز لمحاولة جديدة"
+                : continueAction.kind === "review"
+                  ? "آخر نتيجة للمراجعة"
+                  : "تابع من حيث توقفت"}
+            </span>
           </h2>
 
           <Card className="overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-50/30 via-background to-teal-50/20 shadow-md dark:from-emerald-950/20">
@@ -191,8 +212,11 @@ export function StudentQuizzesView({
               <div className="w-full max-w-xl space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className="rounded-full border-amber-200 bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-                    {continueQuiz.hasSubmission ? "للمراجعة" : "قيد التقدم"} (
-                    <PercentText value={continueProgress} />)
+                    {continueAction.kind === "retake"
+                      ? "يمكن الإعادة"
+                      : continueAction.kind === "review"
+                        ? "مكتمل"
+                        : "قيد التقدم"}
                   </Badge>
                   <Badge className="text-xs" variant="outline">
                     {continueQuiz.categoryName}
@@ -217,25 +241,30 @@ export function StudentQuizzesView({
                   </p>
                 </div>
 
-                <Progress
-                  className="h-2 rounded-full bg-emerald-100 dark:bg-emerald-950"
-                  value={continueProgress}
-                />
+                {continueAction.kind === "start" ? (
+                  <Progress
+                    className="h-2 rounded-full bg-emerald-100 dark:bg-emerald-950"
+                    value={continueProgress}
+                  />
+                ) : null}
               </div>
 
               <Link
                 href={`/quiz/${continueQuiz.id}`}
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "h-11 shrink-0 gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-md hover:bg-emerald-700 sm:w-auto w-full"
+                  "h-11 w-full shrink-0 gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-md hover:bg-emerald-700 sm:w-auto"
                 )}
+                {...(continueAction.kind === "retake"
+                  ? spekit(SPEKIT.quizRetakeCta)
+                  : {})}
               >
-                <span>
-                  {continueQuiz.hasSubmission
-                    ? "مراجعة الاختبار"
-                    : "متابعة الاختبار"}
-                </span>
-                <Play className="h-4 w-4 fill-white" />
+                <span>{continueAction.label}</span>
+                {continueAction.kind === "retake" ? (
+                  <RotateCcw className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4 fill-white" />
+                )}
               </Link>
             </CardContent>
           </Card>
@@ -312,10 +341,14 @@ function QuickStat({
   label: string;
 }) {
   return (
-    <div className="min-w-[72px] text-center">
-      <Icon className="mx-auto mb-1 h-4 w-4 text-amber-300" />
-      <div className="text-lg font-black leading-none">{value}</div>
-      <p className="mt-1 text-[10px] font-medium text-emerald-100">{label}</p>
+    <div className="flex w-full min-w-0 flex-col items-center justify-center px-1 text-center">
+      <Icon className="mb-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
+      <div className="w-full overflow-visible text-sm font-black leading-none tabular-nums sm:text-base">
+        {value}
+      </div>
+      <p className="mt-0.5 w-full truncate text-[10px] font-medium text-emerald-100">
+        {label}
+      </p>
     </div>
   );
 }

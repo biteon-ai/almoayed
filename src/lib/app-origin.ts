@@ -13,12 +13,6 @@ export function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
 }
 
-export function getAppUrl(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (fromEnv) return stripTrailingSlash(fromEnv);
-  return LOCAL_ORIGIN;
-}
-
 export function hostnameOf(urlOrHost: string): string {
   const trimmed = urlOrHost.trim().toLowerCase();
   if (!trimmed) return "";
@@ -30,6 +24,61 @@ export function hostnameOf(urlOrHost: string): string {
   } catch {
     return trimmed.split("/")[0] ?? "";
   }
+}
+
+export function isLocalOrigin(urlOrHost: string): boolean {
+  const host = hostnameOf(urlOrHost);
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "[::1]" ||
+    host.endsWith(".localhost")
+  );
+}
+
+/**
+ * Configured public origin from env (no trailing slash).
+ * Prefers `NEXT_PUBLIC_SITE_URL`, then `NEXT_PUBLIC_APP_URL`.
+ * Falls back to local origin when unset (dev default).
+ */
+export function getAppUrl(): string {
+  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const app = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const fromEnv = site || app;
+  if (fromEnv) return stripTrailingSlash(fromEnv);
+  return LOCAL_ORIGIN;
+}
+
+/**
+ * Origin safe for share / invite / WhatsApp links.
+ * Never returns localhost in production builds; prefers a live
+ * `window.location.origin` when the configured env still points at local.
+ */
+export function resolvePublicOrigin(clientOrigin?: string): string {
+  const configured = getAppUrl();
+
+  if (!isLocalOrigin(configured)) {
+    return configured;
+  }
+
+  if (clientOrigin && !isLocalOrigin(clientOrigin)) {
+    return stripTrailingSlash(clientOrigin);
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return PRODUCTION_CANONICAL_ORIGIN;
+  }
+
+  return configured;
+}
+
+/**
+ * Origin for outbound share text (WhatsApp / Web Share).
+ * Never emits localhost — recipients cannot open local URLs.
+ */
+export function resolveShareOrigin(clientOrigin?: string): string {
+  const resolved = resolvePublicOrigin(clientOrigin);
+  return isLocalOrigin(resolved) ? PRODUCTION_CANONICAL_ORIGIN : resolved;
 }
 
 export function isProductionWwwHost(host: string): boolean {

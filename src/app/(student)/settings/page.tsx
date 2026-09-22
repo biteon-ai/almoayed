@@ -11,6 +11,7 @@ export default async function StudentSettingsPage() {
       backHref="/dashboard"
       backLabel="لوحة الطالب"
       hideBackLink
+      hideTitleOnMobile
     />
   );
 }

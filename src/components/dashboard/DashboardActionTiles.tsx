@@ -60,7 +60,7 @@ export function DashboardActionTiles({
   return (
     <section
       data-spekit={SPEKIT.dashboardActionTiles}
-      className="grid grid-cols-2 gap-3"
+      className="grid grid-cols-2 gap-2.5 sm:gap-3"
       aria-label="اختصارات الدراسة"
     >
       {TILES.map((tile) => {
@@ -80,13 +80,13 @@ export function DashboardActionTiles({
             href={href}
             data-spekit={tile.spekit}
             className={cn(
-              "flex min-h-24 flex-col justify-between gap-3 rounded-2xl border border-border/80",
-              "bg-card p-5 shadow-sm transition-transform active:scale-[0.99]",
-              "hover:border-brand-400/50 hover:shadow-md"
+              "flex min-h-[5.25rem] flex-col justify-between gap-2 rounded-2xl border border-border/80",
+              "bg-card p-3.5 shadow-sm transition-transform active:scale-[0.99]",
+              "hover:border-brand-400/50 hover:shadow-md sm:min-h-24 sm:gap-3 sm:p-5"
             )}
           >
-            <span className="flex size-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300">
-              <Icon className="size-5" aria-hidden />
+            <span className="flex size-9 items-center justify-center rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300 sm:size-10">
+              <Icon className="size-4 sm:size-5" aria-hidden />
             </span>
             <span>
               <span className="block text-sm font-black text-foreground">

@@ -27,14 +27,15 @@ function StatCard({
     <div
       className={cn(
         "flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white shadow-sm",
-        "transition-shadow duration-200 hover:shadow-md",
+        "dark:border-slate-700 dark:bg-slate-900 dark:shadow-none",
+        "transition-shadow duration-200 hover:shadow-md dark:hover:shadow-none",
         compact ? "px-3 py-3" : "p-6"
       )}
     >
       <div className="min-w-0 space-y-1 text-start">
         <span
           className={cn(
-            "block font-bold leading-tight text-slate-600",
+            "block font-bold leading-tight text-slate-600 dark:text-slate-300",
             compact ? "text-[10px]" : "text-xs"
           )}
         >
@@ -42,7 +43,7 @@ function StatCard({
         </span>
         <div
           className={cn(
-            "font-black tabular-nums text-slate-800",
+            "font-black tabular-nums text-slate-800 dark:text-white",
             compact ? "text-base" : "text-2xl"
           )}
         >

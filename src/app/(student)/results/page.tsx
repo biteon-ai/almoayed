@@ -6,16 +6,15 @@ import { requireStudent } from "@/lib/auth";
 import { APP_DESCRIPTION } from "@/lib/constants";
 import { StudentResultsView } from "@/components/student/StudentResultsView";
 
+/** Auth + live scores — request-scoped; route JS prefetched from login/chrome. */
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "نتائجي | المؤيد",
   description: APP_DESCRIPTION,
 };
 
-interface PageProps {
-  searchParams: Promise<{ page?: string }>;
-}
-
-export default async function StudentResultsPage({ searchParams }: PageProps) {
+export default async function StudentResultsPage() {
   await requireStudent();
 
   const profile = await getStudentProfile();
@@ -23,11 +22,8 @@ export default async function StudentResultsPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  const params = await searchParams;
-  const page = Number(params.page) || 1;
-
   const [data, teacherGamification] = await Promise.all([
-    getStudentResultsPageData({ page }),
+    getStudentResultsPageData(),
     getStudentGamificationStatus(),
   ]);
 
@@ -41,7 +37,7 @@ export default async function StudentResultsPage({ searchParams }: PageProps) {
     >
       <StudentResultsView
         stats={data.stats}
-        scoresPage={data.scores}
+        scores={data.scores}
         totalQuizzes={data.totalQuizzes}
         teacherGamification={teacherGamification}
       />

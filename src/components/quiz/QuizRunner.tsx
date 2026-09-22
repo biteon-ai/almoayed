@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { submitQuiz } from "@/actions/quiz";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
 import { QuizPlayerHeader } from "@/components/quiz/QuizPlayerHeader";
-import { QuizExitDialog } from "@/components/quiz/QuizExitDialog";
-import { QuizSubmitDialog } from "@/components/quiz/QuizSubmitDialog";
 import { QuestionPager } from "@/components/quiz/QuestionPager";
 import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
-import { QuestionJumpSheet } from "@/components/quiz/QuestionJumpSheet";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
-import { WhatsAppShare } from "@/components/quiz/WhatsAppShare";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -37,6 +34,7 @@ import {
   answeredProgress,
   isQuizComplete,
   isStaleInProgressDraft,
+  quizPlayerExitHref,
   QUIZ_AUTO_ADVANCE_MS,
   remainingUnanswered,
   shouldConfirmQuizExit,
@@ -48,11 +46,30 @@ import {
 import { flushPendingSubmissions } from "@/lib/offline/sync-processor";
 import {
   padAnswersForQuestions,
-  remainingSecondsFromEndsAt,
+  remainingSecondsMonotonic,
   type TimedQuizSessionView,
 } from "@/lib/quiz-timer";
 import { hapticPulse } from "@/lib/haptic";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
+
+const QuizExitDialog = dynamic(
+  () =>
+    import("@/components/quiz/QuizExitDialog").then((m) => m.QuizExitDialog)
+);
+const QuizSubmitDialog = dynamic(
+  () =>
+    import("@/components/quiz/QuizSubmitDialog").then((m) => m.QuizSubmitDialog)
+);
+const QuestionJumpSheet = dynamic(
+  () =>
+    import("@/components/quiz/QuestionJumpSheet").then(
+      (m) => m.QuestionJumpSheet
+    )
+);
+const WhatsAppShare = dynamic(
+  () =>
+    import("@/components/quiz/WhatsAppShare").then((m) => m.WhatsAppShare)
+);
 
 const TIME_EXPIRED_NOTICE =
   "انتهى الوقت المحدد للاختبار! جاري تسليم إجاباتك تلقائياً...";
@@ -84,7 +101,7 @@ export function QuizRunner({
   const [error, setError] = useState<string | null>(null);
   const [timeExpiredNotice, setTimeExpiredNotice] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(() =>
-    timer ? remainingSecondsFromEndsAt(timer.endsAt) : 0
+    timer ? timer.remainingSeconds : 0
   );
   const [draftReady, setDraftReady] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
@@ -93,18 +110,41 @@ export function QuizRunner({
   const [isPending, startTransition] = useTransition();
   useStudentLoadingBarSync(isPending);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const reviewSubmissionId = searchParams.get("review");
 
   const autoSubmitStarted = useRef(false);
   const advanceTimer = useRef<number | null>(null);
   const answersRef = useRef(answers);
   answersRef.current = answers;
+  const timerHydratedAtPerf = useRef<number | null>(null);
+  const timerServerRemaining = useRef(0);
 
   useEffect(() => {
-    if (!timer) return;
-    setRemainingSeconds(remainingSecondsFromEndsAt(timer.endsAt));
+    if (!timer) {
+      timerHydratedAtPerf.current = null;
+      timerServerRemaining.current = 0;
+      setRemainingSeconds(0);
+      return;
+    }
+
+    // Prefer server remaining + monotonic clock so changing the device
+    // wall clock mid-attempt cannot stretch the countdown.
+    timerHydratedAtPerf.current = performance.now();
+    timerServerRemaining.current = timer.remainingSeconds;
+    setRemainingSeconds(timer.remainingSeconds);
+
     const id = window.setInterval(() => {
-      setRemainingSeconds(remainingSecondsFromEndsAt(timer.endsAt));
-    }, 1000);
+      const hydratedAt = timerHydratedAtPerf.current;
+      if (hydratedAt == null) return;
+      setRemainingSeconds(
+        remainingSecondsMonotonic({
+          serverRemainingSeconds: timerServerRemaining.current,
+          hydratedAtPerfMs: hydratedAt,
+          nowPerfMs: performance.now(),
+        })
+      );
+    }, 250);
     return () => window.clearInterval(id);
   }, [timer]);
 
@@ -182,6 +222,10 @@ export function QuizRunner({
     pendingSync,
     questionCount: questions.length,
     timeExpiredNotice,
+  });
+  const exitHref = quizPlayerExitHref({
+    isSubmitted,
+    reviewSubmissionId,
   });
 
   const activeQuestion = questions[activeIndex];
@@ -349,7 +393,7 @@ export function QuizRunner({
       setExitOpen(true);
       return;
     }
-    router.replace("/quizzes");
+    router.replace(exitHref);
   };
 
   const handleExitConfirm = () => {
@@ -369,13 +413,15 @@ export function QuizRunner({
 
   return (
     <div
-      className="mx-auto max-w-3xl px-4 py-3 pb-4 md:py-5"
+      className="mx-auto max-w-3xl px-4 py-1.5 pb-4 md:py-4"
       {...spekit(SPEKIT.quizPage)}
     >
       <QuizPlayerHeader
+        title={quiz.title}
         showTimer={Boolean(timer) && !isSubmitted}
         remainingSeconds={remainingSeconds}
         durationMinutes={timer?.durationMinutes}
+        attemptSubmittedAt={isSubmitted ? results?.submittedAt : null}
         onExit={handleExitRequest}
         onOpenJump={
           questions.length > 0 && !pendingSync
@@ -383,27 +429,33 @@ export function QuizRunner({
             : undefined
         }
       />
-      <QuizExitDialog
-        open={exitOpen}
-        onOpenChange={setExitOpen}
-        onConfirm={handleExitConfirm}
-      />
-      <QuizSubmitDialog
-        open={submitConfirmOpen}
-        onOpenChange={setSubmitConfirmOpen}
-        onConfirm={handleSubmitConfirm}
-      />
-      <QuestionJumpSheet
-        open={jumpOpen}
-        onOpenChange={setJumpOpen}
-        count={questions.length}
-        activeIndex={activeIndex}
-        isSubmitted={isSubmitted}
-        answers={answers}
-        questionIds={questionIds}
-        results={results}
-        onNavigate={goToQuestion}
-      />
+      {exitOpen ? (
+        <QuizExitDialog
+          open={exitOpen}
+          onOpenChange={setExitOpen}
+          onConfirm={handleExitConfirm}
+        />
+      ) : null}
+      {submitConfirmOpen ? (
+        <QuizSubmitDialog
+          open={submitConfirmOpen}
+          onOpenChange={setSubmitConfirmOpen}
+          onConfirm={handleSubmitConfirm}
+        />
+      ) : null}
+      {jumpOpen ? (
+        <QuestionJumpSheet
+          open={jumpOpen}
+          onOpenChange={setJumpOpen}
+          count={questions.length}
+          activeIndex={activeIndex}
+          isSubmitted={isSubmitted}
+          answers={answers}
+          questionIds={questionIds}
+          results={results}
+          onNavigate={goToQuestion}
+        />
+      ) : null}
 
       {!online && !isSubmitted && !pendingSync && <OfflineStatusBanner />}
 
@@ -498,9 +550,6 @@ export function QuizRunner({
                       showResult={isSubmitted}
                       correctAnswer={
                         isSubmitted ? activeResult?.correctAnswer : undefined
-                      }
-                      categoryTag={
-                        isSubmitted ? activeResult?.categoryTag : undefined
                       }
                       explanationText={
                         isSubmitted ? activeResult?.explanationText : undefined

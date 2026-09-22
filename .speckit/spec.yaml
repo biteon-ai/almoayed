@@ -547,6 +547,7 @@ features:
       - /quiz/[id]
     files:
       - supabase/migrations/013_quiz_timer.sql
+      - supabase/migrations/022_quiz_timer_ends_at.sql
       - src/lib/quiz-timer.ts
       - src/actions/teacher.ts
       - src/actions/quiz.ts
@@ -559,9 +560,10 @@ features:
       - tests/features/quiz-004-countdown-timer.test.ts
     acceptance:
       - Teacher enables تفعيل التوقيت with duration 1–180 minutes on create/edit
-      - Timed attempt snapshots duration at first open; teacher edits do not change in-progress sessions
-      - Student sticky MM:SS badge (minutes may be ≥ 60); warning style at ≤ 2 minutes
-      - At 00:00 or late reopen: lock answers, Arabic notice, auto-submit with padded blanks; server allows post-deadline submit
+      - Timed attempt snapshots duration + absolute ends_at at first open; teacher edits do not change in-progress sessions
+      - Refresh / cleared storage reuses the same DB session for the current attempt (no clock reset); retakes get a fresh session only after submit
+      - Student sticky MM:SS badge (minutes may be ≥ 60); warning style at ≤ 2 minutes; client countdown is monotonic from server remaining
+      - At 00:00 or late reopen: lock answers, Arabic notice, auto-submit with padded blanks; server allows post-deadline submit using DB ends_at
       - Untimed quizzes show no timer badge; QUIZ-001 gatekeeper selects unchanged
     spekit: [quiz-timer, quiz-timer-settings, quiz-timer-card]
 
@@ -1327,7 +1329,8 @@ partial_features:
       - theme_color teal and background_color match the light shell
       - Viewport remains unscalable; OS text scaling still applies
       - Student chrome uses semantic tokens for dark/light appearance
-    spekit: [native-app-version]
+      - Mobile header uses contextual back + page title; gear/logout remain md+ only
+    spekit: [native-app-version, student-header-back]
 
   - id: UI-013
     name: Native Student Profile Drawer
@@ -1336,15 +1339,17 @@ partial_features:
     files:
       - src/components/student/StudentProfileDrawer.tsx
       - src/components/student/OfflineSavedQuizzesList.tsx
+      - src/components/layout/StudentHeader.tsx
       - src/lib/native-share.ts
       - src/lib/offline/quiz-cache.ts
       - tests/features/ui-013-appearance-drawer.test.ts
     acceptance:
-      - Header gear opens RTL start-side drawer without leaving the page
+      - Desktop (md+) header «الحساب» gear opens RTL start-side drawer without leaving the page
+      - Mobile header replaces gear/logout with contextual back (`student-header-back`); bottom-tab الإعدادات is the sole settings route entry
+      - Student `/settings` hides the duplicate page title on mobile (chrome already shows الإعدادات)
       - Dark/Light/System appearance persists on the device
       - Offline saved quizzes list is filtered by currentTeacherId
       - Share, contact, settings/upgrade, and version footer are present
-      - Bottom-tab الإعدادات still opens PROFILE-001
     spekit:
       - native-profile-drawer
       - native-drawer-close
@@ -1353,6 +1358,7 @@ partial_features:
       - native-drawer-settings
       - native-share-app
       - native-contact-us
+      - student-header-back
 
   - id: DASH-002
     name: Dashboard Native Action Tiles
@@ -1432,10 +1438,11 @@ partial_features:
       - tests/features/ui-016-quiz-player.test.ts
       - e2e/ui-016-quiz-player.spec.ts
     acceptance:
-      - Slim sticky header with Arabic exit confirm and MM:SS «الوقت المتبقي» for timed quizzes
+      - Single quiz chrome on `/quiz/[id]`: global student header/bottom nav hidden; QuizPlayerHeader is sole sticky top bar
+      - Header shows dynamic quiz title (truncated on narrow screens), Arabic exit confirm, and MM:SS «الوقت المتبقي» when timed
       - One immersive question card with A/B/C/D rows; selected state #065f46; no solutions until submit
       - Horizontal pager + all-questions sheet replace the taking sidebar grid
-      - Sticky progress + «تسليم الإجابات وإنهاء الاختبار» above the student tab bar
+      - Compact «تسليم» separated under the stepper while taking
     spekit:
       - quiz-player-header
       - quiz-exit-button
@@ -1504,7 +1511,7 @@ partial_features:
       - Submit stays disabled until every question is answered; tap does not grade while disabled
       - Number stepper stays on the visual right of the card header
       - Timed quizzes show a thin remaining-time bar under MM:SS «الوقت المتبقي»
-      - «كل الأسئلة» stays tappable and opens the jump sheet
+      - Compact «كل الأسئلة» icon pill opens a bottom-sheet question map (centered card on sm+)
     spekit:
       - quiz-submit-button
       - quiz-question-pager
@@ -1514,6 +1521,37 @@ partial_features:
       - quiz-jump-sheet
       - quiz-submit-confirm
       - quiz-progress
+
+  - id: UI-019
+    name: Compact Welcome Hero
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/dashboard"]
+    extends: [UI-001, GAMIF-001]
+    spec: specs/034-compact-welcome-hero/
+    files:
+      - src/components/student/StudentPageHero.tsx
+      - src/components/dashboard/StudentDashboardHero.tsx
+      - src/components/dashboard/StudentDashboardView.tsx
+      - src/components/student/StudentQuizzesView.tsx
+      - src/components/student/StudentResultsView.tsx
+      - src/components/settings/SettingsPageShell.tsx
+      - src/lib/format-local-datetime.ts
+      - src/components/ui/local-datetime.tsx
+      - tests/features/ui-019-compact-welcome-hero.test.ts
+      - tests/features/ui-019-local-datetime.test.ts
+      - e2e/ui-019-compact-welcome-hero.spec.ts
+    acceptance:
+      - Shared StudentPageHero shell: p-3 / sm:p-4, badge+title tight, subtitle hidden on phone
+      - Dashboard / quizzes / results / settings headers use the same mobile density pattern
+      - Stats grids use text-sm–text-base with gap-2; no overflow on ~320px
+      - Results submission timestamps format in the viewer local timezone (not SSR UTC)
+      - Results card actions stack below ~380px and sit side-by-side with gap-2 without overflow
+      - Spekit student-welcome and #student-welcome preserved
+    spekit:
+      - student-welcome
+      - student-quizzes-page
+      - student-results-page
 
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel
@@ -1545,16 +1583,34 @@ partial_features:
     files:
       - src/lib/auth.ts
       - src/lib/perf-selects.ts
+      - src/lib/post-login-navigation.ts
+      - src/lib/quiz-route-prefetch.ts
+      - src/hooks/use-prefetch-on-intent.ts
       - src/middleware.ts
       - src/actions/quiz.ts
       - src/actions/teacher.ts
       - src/actions/gamification.ts
+      - src/app/(student)/layout.tsx
       - src/app/(student)/dashboard/page.tsx
+      - src/app/(student)/quizzes/page.tsx
+      - src/app/(student)/results/page.tsx
+      - src/app/(student)/quiz/[id]/page.tsx
+      - src/app/login/login-form.tsx
+      - src/components/layout/StudentAppChrome.tsx
+      - src/components/student/StudentQuizGridCard.tsx
+      - src/components/quiz/QuizRunnerContainer.tsx
+      - src/components/quiz/QuizRunner.tsx
+      - tests/features/perf-001-post-login-prefetch.test.ts
+      - tests/features/perf-001-quiz-route-prefetch.test.ts
     acceptance:
       - requireStudent/requireTeacher + AUTH-003 device lock are request-scoped via React cache()
       - Middleware stays iron-session decrypt only (no Supabase)
       - Student/teacher list and dashboard paths use explicit column selects (no select *)
       - Student dashboard parallelizes dashboard + gamification fetches
+      - Login success prefetches /dashboard /quizzes /results then soft-pushes (router.prefetch + push)
+      - Student layout/pages use force-dynamic (session data); hub JS warmed via prefetch
+      - Quiz cards / results review links prefetch /quiz/[id] on hover + viewport and warm QuizRunner chunk
+      - QuizRunner + leaderboard + share + dialogs/sheets are next/dynamic code-split
       - QUIZ-001 exam select lists unchanged (gatekeeper intact)
       - MT-002 currentTeacherId scoping preserved; teacher switch revalidatePath clears hubs
     spekit: []

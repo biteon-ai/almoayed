@@ -324,6 +324,8 @@ export interface QuizSubmitResult {
   score: number;
   totalQuestions: number;
   correctCount: number;
+  /** ISO timestamp of this attempt (local display in review header). */
+  submittedAt: string;
   answers: Array<{
     questionId: string;
     studentAnswer: string;

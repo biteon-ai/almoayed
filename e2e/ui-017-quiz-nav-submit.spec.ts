@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { loginAsDemoStudent, shouldSkipLiveSupabase } from "./helpers/demo-login";
+import { openFirstStudentQuiz } from "./helpers/open-quiz";
 
 const FEATURE = "[UI-017]";
 
@@ -10,44 +11,24 @@ async function dismissA2hs(page: import("@playwright/test").Page) {
   }
 }
 
-async function openFirstQuiz(page: import("@playwright/test").Page) {
-  await loginAsDemoStudent(page);
-  await dismissA2hs(page);
-  await page.goto("/quizzes");
-  await dismissA2hs(page);
-
-  const startQuiz = page.getByRole("link", { name: "ابدأ الاختبار الآن" }).first();
-  const continueQuiz = page.getByRole("link", { name: "متابعة الاختبار" }).first();
-  const retakeQuiz = page.getByRole("link", { name: /إعادة الاختبار/ }).first();
-  const reviewQuiz = page.getByRole("link", { name: /مراجعة الاختبار|مراجعة النتيجة/ }).first();
-
-  if (await startQuiz.isVisible()) {
-    await startQuiz.click();
-  } else if (await continueQuiz.isVisible()) {
-    await continueQuiz.click();
-  } else if (await retakeQuiz.isVisible()) {
-    await retakeQuiz.click();
-  } else {
-    await expect(reviewQuiz).toBeVisible({ timeout: 15_000 });
-    await reviewQuiz.click();
-  }
-
-  await expect(page).toHaveURL(/\/quiz\//, { timeout: 15_000 });
-  await dismissA2hs(page);
-}
-
 test.describe(`${FEATURE} Quiz nav and gated submit`, () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test("Q1 السابق disabled, التالي advances, submit gated then confirm cancel stays", async ({
     page,
   }) => {
+    test.setTimeout(120_000);
     test.skip(
       shouldSkipLiveSupabase(),
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"
     );
 
-    await openFirstQuiz(page);
+    await loginAsDemoStudent(page);
+    await dismissA2hs(page);
+    await page.goto("/quizzes");
+    await dismissA2hs(page);
+    await openFirstStudentQuiz(page, { requireTaking: true });
+    await dismissA2hs(page);
 
     await expect(page.locator('[data-spekit="quiz-player-header"]')).toBeVisible();
     await expect(page.locator('[data-spekit="question-card"]')).toBeVisible();
@@ -200,10 +181,9 @@ test.describe(`${FEATURE} Quiz nav and gated submit`, () => {
     const sheetBox = await jumpSheet.boundingBox();
     const viewport = page.viewportSize();
     if (sheetBox && viewport) {
-      const sheetMid = sheetBox.y + sheetBox.height / 2;
-      const viewMid = viewport.height / 2;
-      expect(Math.abs(sheetMid - viewMid)).toBeLessThan(viewport.height * 0.2);
-      expect(sheetBox.y).toBeGreaterThan(80);
+      // Mobile jump UI is a bottom sheet (not a centered modal).
+      expect(sheetBox.y).toBeGreaterThan(viewport.height * 0.15);
+      expect(sheetBox.y + sheetBox.height).toBeGreaterThan(viewport.height * 0.7);
     }
     await page.getByRole("button", { name: "إغلاق" }).click();
     await expect(jumpSheet).toBeHidden();

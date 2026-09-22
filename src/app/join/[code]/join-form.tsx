@@ -13,6 +13,7 @@ import {
   EDUCATION_STAGES,
   EDUCATION_STAGE_LABELS,
 } from "@/lib/student-profile";
+import { navigateAfterLogin } from "@/lib/post-login-navigation";
 import { TRIAL_JOIN_MESSAGES } from "@/lib/trial-join-messages";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { choiceChipClass } from "@/lib/ui-chrome";
@@ -61,8 +62,7 @@ export function JoinForm({ teacherCode, teacherName }: JoinFormProps) {
   useEffect(() => {
     if (!state) return;
     if (state.status === "success") {
-      router.replace("/dashboard");
-      router.refresh();
+      navigateAfterLogin(router, "STUDENT");
       return;
     }
     if (state.status === "redirect") {

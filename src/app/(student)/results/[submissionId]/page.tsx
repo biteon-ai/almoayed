@@ -9,6 +9,9 @@ interface ResultReviewPageProps {
 /**
  * [UI-007] Review entry — verifies ownership then opens the quiz review
  * surface with this submission (answers/explanations only after submission — QUIZ-001).
+ *
+ * Deep links and bookmarks still use `/results/[submissionId]`. The results list
+ * prefers `/quiz/[id]?review=` to skip this hop when quizId is already known.
  */
 export default async function ResultReviewPage({
   params,

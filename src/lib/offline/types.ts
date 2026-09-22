@@ -21,6 +21,7 @@ export type QuizPackageRecord = {
     durationMinutes: number;
     endsAt: string;
     remainingSeconds: number;
+    serverNow?: string;
   } | null;
 };
 

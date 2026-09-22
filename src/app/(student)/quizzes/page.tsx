@@ -4,6 +4,9 @@ import { requireStudent } from "@/lib/auth";
 import { APP_DESCRIPTION } from "@/lib/constants";
 import { StudentQuizzesView } from "@/components/student/StudentQuizzesView";
 
+/** Auth + paged quiz list — request-scoped; route JS prefetched from login/chrome. */
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "الاختبارات | المؤيد",
   description: APP_DESCRIPTION,

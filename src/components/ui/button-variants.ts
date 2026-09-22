@@ -10,11 +10,11 @@ export const buttonVariants = cva(
         brand:
           "bg-brand-600 text-white shadow-lg shadow-brand-900/15 hover:bg-brand-700",
         outline:
-          "border-border bg-background text-foreground hover:bg-muted/80 dark:border-input dark:bg-card/50",
+          "border-border bg-background text-foreground hover:bg-muted/80 dark:border-slate-600 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-800",
         secondary:
-          "border-brand-200/80 bg-white text-brand-800 hover:bg-brand-50 dark:border-brand-900/40 dark:bg-slate-900/30 dark:text-brand-300",
+          "border-brand-200/80 bg-white text-brand-800 hover:bg-brand-50 dark:border-brand-800/50 dark:bg-slate-900 dark:text-brand-200 dark:hover:bg-slate-800",
         ghost:
-          "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          "text-muted-foreground hover:bg-muted/60 hover:text-foreground dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         link: "text-brand-600 underline-offset-4 hover:underline active:scale-100",

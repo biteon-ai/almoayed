@@ -4,11 +4,11 @@ import {
   getQuizForStudent,
   getSubmissionResults,
 } from "@/actions/quiz";
-import { ChallengeLeaderboard } from "@/components/quiz/ChallengeLeaderboard";
 import {
   countUniqueCompletedQuizzes,
   getStudentProfileState,
 } from "@/actions/profile";
+import { ChallengeLeaderboardLazy } from "@/components/quiz/ChallengeLeaderboardLazy";
 import { QuizRunnerContainer } from "@/components/quiz/QuizRunnerContainer";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ArrowRight, AlertCircle } from "lucide-react";
@@ -17,6 +17,9 @@ import { shouldBlockNewQuiz } from "@/lib/student-profile";
 import { AppError, ErrorCode, toUserMessage } from "@/lib/app-errors";
 import { getActiveTeacherId, requireStudent } from "@/lib/auth";
 import { applyPresentation, presentationFromSubmitResult } from "@/lib/quiz-presentation";
+
+/** Auth quiz player — request-scoped; runner JS warmed via card prefetch. */
+export const dynamic = "force-dynamic";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
@@ -121,7 +124,7 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
     <div data-spekit={SPEKIT.quizPage} className="space-y-4">
       {quiz.assessment_category === "challenge" ? (
         <div className="px-4 pt-4">
-          <ChallengeLeaderboard
+          <ChallengeLeaderboardLazy
             entries={leaderboard.entries}
             viewerEntry={leaderboard.viewerEntry}
           />

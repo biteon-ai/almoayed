@@ -22,6 +22,8 @@ interface SettingsPageShellProps {
   backLabel: string;
   navItems: SettingsNavItem[];
   hideBackLink?: boolean;
+  /** Hide the page «الإعدادات» title block on small screens (global chrome already shows it). */
+  hideTitleOnMobile?: boolean;
   children: ReactNode;
 }
 
@@ -59,6 +61,7 @@ export function SettingsPageShell({
   backLabel,
   navItems,
   hideBackLink = false,
+  hideTitleOnMobile = false,
   children,
 }: SettingsPageShellProps) {
   const [activeId, setActiveId] = useState(navItems[0]?.id ?? "");
@@ -100,10 +103,17 @@ export function SettingsPageShell({
     return () => observer.disconnect();
   }, [navItems]);
 
+  const hideHeaderOnMobile = hideBackLink && hideTitleOnMobile;
+
   return (
-    <div dir="rtl" className="mx-auto w-full max-w-6xl px-4 py-6 pb-12 md:px-6 md:py-8">
-      {/* Page header */}
-      <header className="mb-6 space-y-5 md:mb-8">
+    <div dir="rtl" className="mx-auto w-full max-w-6xl px-4 py-4 pb-12 md:px-6 md:py-6">
+      {/* Page header — compact on mobile PWA (UI-019 density) */}
+      <header
+        className={cn(
+          "mb-4 space-y-3 md:mb-6 md:space-y-4",
+          hideHeaderOnMobile && "max-md:hidden"
+        )}
+      >
         {!hideBackLink && (
           <Link
             href={backHref}
@@ -116,15 +126,20 @@ export function SettingsPageShell({
             {backLabel}
           </Link>
         )}
-        <div className="flex items-center gap-3.5 text-start md:gap-4">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-100/80 text-brand-700 ring-1 ring-brand-200/60 md:size-14">
-            <Settings className="size-5 md:size-6" aria-hidden />
+        <div
+          className={cn(
+            "flex items-center gap-3 text-start",
+            hideTitleOnMobile && "max-md:hidden"
+          )}
+        >
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-100/80 text-brand-700 ring-1 ring-brand-200/60 md:size-12">
+            <Settings className="size-4 md:size-5" aria-hidden />
           </div>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          <div className="min-w-0 space-y-0.5">
+            <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               الإعدادات
             </h1>
-            <p className="text-sm leading-relaxed tracking-wide text-slate-500 md:text-base">
+            <p className="hidden text-sm leading-snug tracking-wide text-slate-500 sm:block md:text-base">
               إدارة حسابك وجلساتك
             </p>
           </div>

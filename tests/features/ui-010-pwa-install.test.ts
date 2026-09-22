@@ -22,6 +22,19 @@ describe("[UI-010] PWA install helpers", () => {
     expect(isPwaStandalone()).toBe(true);
   });
 
+  it("[UI-010] isPwaStandalone detects iOS navigator.standalone", () => {
+    vi.stubGlobal("window", {
+      matchMedia: () => ({
+        matches: false,
+        media: "",
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+    });
+    vi.stubGlobal("navigator", { standalone: true });
+    expect(isPwaStandalone()).toBe(true);
+  });
+
   it("[UI-010] isPwaStandalone is false in normal browser tab", () => {
     vi.stubGlobal("window", {
       matchMedia: () => ({

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { AlertCircle } from "lucide-react";
-import { QuizRunner } from "@/components/quiz/QuizRunner";
+import { useParams, useSearchParams } from "next/navigation";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { useOnlineStatus } from "@/lib/offline/connectivity";
 import { getQuizPackage, saveQuizPackage } from "@/lib/offline/quiz-cache";
@@ -17,6 +17,36 @@ import type {
   QuizAttemptState,
   QuizSubmitResult,
 } from "@/types/database";
+
+const QuizRunner = dynamic(
+  () =>
+    import("@/components/quiz/QuizRunner").then((mod) => mod.QuizRunner),
+  {
+    loading: () => <QuizRunnerLoadingShell isReview={false} />,
+  }
+);
+
+function QuizRunnerLoadingShell({ isReview }: { isReview: boolean }) {
+  return (
+    <div
+      className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 py-12"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <Loader2
+        className="size-8 animate-spin text-brand-600 dark:text-brand-400"
+        aria-hidden
+      />
+      <p className="text-sm font-bold text-foreground">
+        {isReview ? "جاري تحميل تفاصيل النتيجة..." : "جاري تحميل الاختبار..."}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {isReview ? "نحضّر مراجعة إجاباتك" : "نحضّر الأسئلة"}
+      </p>
+    </div>
+  );
+}
 
 interface QuizRunnerContainerProps {
   teacherId: string;
@@ -36,7 +66,10 @@ export function QuizRunnerContainer({
   attemptState,
 }: QuizRunnerContainerProps) {
   const params = useParams();
+  const searchParams = useSearchParams();
   const quizId = (params.id as string) ?? quiz.id;
+  const isReviewEntry =
+    Boolean(initialResults) || Boolean(searchParams.get("review")?.trim());
   const online = useOnlineStatus();
   const [loadedQuiz, setLoadedQuiz] = useState(quiz);
   const [loadedQuestions, setLoadedQuestions] = useState(questions);
@@ -96,11 +129,7 @@ export function QuizRunnerContainer({
   }, [quiz, questions, initialResults, online, quizId, teacherId, timer]);
 
   if (!hydrated) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center px-6">
-        <p className="text-sm font-bold text-slate-500">جاري تحميل الاختبار...</p>
-      </div>
-    );
+    return <QuizRunnerLoadingShell isReview={isReviewEntry} />;
   }
 
   if (unavailable) {
