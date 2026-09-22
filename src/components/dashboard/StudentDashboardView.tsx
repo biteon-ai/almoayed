@@ -78,20 +78,22 @@ export function StudentDashboardView({
 
   return (
     <div
-      className="container mx-auto max-w-7xl space-y-4 p-4 sm:space-y-6 sm:p-6"
+      className="container mx-auto max-w-7xl space-y-3 p-3 sm:space-y-5 sm:p-6"
       data-spekit={SPEKIT.studentDashboard}
     >
       <PendingSyncBadge />
-      <StudentDashboardHero studentName={studentName} gamification={gamification} />
-      <DashboardActionTiles
-        gamification={gamification}
-        lastScore={recentScores[0]?.score ?? null}
-      />
 
-      <StudentDashboardStatsRow stats={stats} gamification={gamification} />
+      <div className="space-y-2.5 sm:space-y-4">
+        <StudentDashboardHero studentName={studentName} gamification={gamification} />
+        <DashboardActionTiles
+          gamification={gamification}
+          lastScore={recentScores[0]?.score ?? null}
+        />
+        <StudentDashboardStatsRow stats={stats} gamification={gamification} />
+      </div>
 
       {teacherGamification ? (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:gap-6">
           <div className="lg:col-span-7">
             <LevelProgressCard status={teacherGamification} />
           </div>
@@ -101,8 +103,8 @@ export function StudentDashboardView({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-7">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:gap-6">
+        <div className="min-w-0 lg:col-span-7">
           <StudentDashboardActiveQuizSection
             continueQuiz={continueQuiz}
             continueProgress={continueProgress}
@@ -110,19 +112,19 @@ export function StudentDashboardView({
         </div>
 
         <Card className="rounded-2xl border bg-card shadow-xs lg:col-span-5">
-          <CardHeader className="border-b bg-muted/20 px-6 py-4">
+          <CardHeader className="border-b bg-muted/20 px-4 py-3 sm:px-6 sm:py-4">
             <CardTitle className="flex items-center gap-2 text-base font-bold">
               <Trophy className="h-4 w-4 text-amber-500" />
               <span>وسامات وإنجازات</span>
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="space-y-3 p-5">
+          <CardContent className="space-y-2.5 p-3.5 sm:space-y-3 sm:p-5">
             {visibleAchievements.map((achievement) => (
               <div
                 key={achievement.id}
                 className={cn(
-                  "flex items-center gap-3.5 rounded-xl border p-3",
+                  "flex items-center gap-3 rounded-xl border p-2.5 sm:gap-3.5 sm:p-3",
                   achievement.earned
                     ? "bg-muted/20"
                     : "border-dashed bg-muted/10 opacity-70"
@@ -130,7 +132,7 @@ export function StudentDashboardView({
               >
                 <div
                   className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10",
                     achievement.earned
                       ? "bg-amber-500/15 text-amber-600"
                       : "bg-muted text-muted-foreground"

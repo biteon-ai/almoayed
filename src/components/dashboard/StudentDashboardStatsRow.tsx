@@ -29,19 +29,19 @@ export function StudentDashboardStatsRow({
   const isPro = stats.tier === "pro";
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-4">
       <Card className="group rounded-2xl border bg-card shadow-xs transition-all hover:border-emerald-500/40">
-        <CardContent className="flex items-center justify-between gap-4 p-6">
-          <div className="min-w-0 space-y-1.5 text-start">
+        <CardContent className="flex items-center justify-between gap-3 p-4 sm:gap-4 sm:p-6">
+          <div className="min-w-0 space-y-1 text-start sm:space-y-1.5">
             <p className="text-xs font-medium text-muted-foreground">
               اختبارات مكتملة
             </p>
             <div className="flex flex-wrap items-baseline gap-2">
-              <h3 className="text-3xl font-black tabular-nums text-foreground">
+              <h3 className="text-2xl font-black tabular-nums text-foreground sm:text-3xl">
                 {stats.completedQuizCount}
               </h3>
               {gamification.completedThisWeek > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200 sm:px-3 sm:py-1 sm:text-xs">
                   <CheckCircle2 className="size-3.5" />+
                   {gamification.completedThisWeek} هذا الأسبوع
                 </span>
@@ -60,20 +60,20 @@ export function StudentDashboardStatsRow({
       </Card>
 
       <Card className="group rounded-2xl border bg-card shadow-xs transition-all hover:border-teal-500/40">
-        <CardContent className="flex items-center justify-between gap-4 p-6">
-          <div className="min-w-0 space-y-1.5 text-start">
+        <CardContent className="flex items-center justify-between gap-3 p-4 sm:gap-4 sm:p-6">
+          <div className="min-w-0 space-y-1 text-start sm:space-y-1.5">
             <p className="text-xs font-medium text-muted-foreground">
               المعدل العام
             </p>
             <div className="flex flex-wrap items-baseline gap-2">
-              <h3 className="text-3xl font-black text-foreground">
+              <h3 className="text-2xl font-black text-foreground sm:text-3xl">
                 <PercentText value={stats.overallAverageScore} />
               </h3>
               {gamification.scoreTrendPercent !== null &&
                 gamification.scoreTrendPercent !== 0 && (
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium",
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium sm:px-3 sm:py-1 sm:text-xs",
                       gamification.scoreTrendPercent > 0
                         ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
                         : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-200"
@@ -99,12 +99,12 @@ export function StudentDashboardStatsRow({
       </Card>
 
       <Card className="group rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/40 to-yellow-50/20 shadow-xs transition-all hover:border-amber-500/50 dark:border-amber-800/50 dark:from-amber-950/20 dark:to-background">
-        <CardContent className="flex items-center justify-between gap-4 p-6">
-          <div className="min-w-0 space-y-1.5 text-start">
+        <CardContent className="flex items-center justify-between gap-3 p-4 sm:gap-4 sm:p-6">
+          <div className="min-w-0 space-y-1 text-start sm:space-y-1.5">
             <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
               مستوى الاشتراك
             </p>
-            <h3 className="text-2xl font-black text-amber-900 dark:text-amber-200">
+            <h3 className="text-xl font-black text-amber-900 dark:text-amber-200 sm:text-2xl">
               {isPro ? "باقة Pro 👑" : "مجاني"}
             </h3>
           </div>

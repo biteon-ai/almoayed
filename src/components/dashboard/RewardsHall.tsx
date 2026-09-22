@@ -87,13 +87,13 @@ export function RewardsHall({ status }: RewardsHallProps) {
       className="space-y-3 rounded-2xl border bg-card p-4 shadow-sm"
       {...spekit(SPEKIT.gamifBadgeGallery)}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <h3 className="truncate text-base font-bold text-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-base font-bold leading-snug text-foreground">
             قاعة المكافآت
           </h3>
           <span
-            className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium tabular-nums text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+            className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium tabular-nums text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
             {...spekit(SPEKIT.gamifRewardsCount)}
           >
             <CountOfText current={unlockedCount} total={totalCount} />
@@ -106,7 +106,7 @@ export function RewardsHall({ status }: RewardsHallProps) {
           variant="ghost"
           onClick={() => setIsExpanded((prev) => !prev)}
           aria-expanded={isExpanded}
-          className="h-8 shrink-0 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+          className="h-8 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
           {...spekit(SPEKIT.gamifRewardsExpand)}
         >
           {isExpanded ? (

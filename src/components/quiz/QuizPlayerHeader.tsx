@@ -74,19 +74,20 @@ export function QuizPlayerHeader({
           {showAttemptMeta && attemptSubmittedAt ? (
             <div
               className={cn(
-                "inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1",
-                "text-xs font-medium text-amber-800",
+                "inline-flex w-fit max-w-full items-start gap-1.5 rounded-2xl border border-amber-200 bg-amber-50 px-2.5 py-1",
+                "text-center text-xs font-medium leading-snug text-amber-800",
                 "dark:border-amber-800/60 dark:bg-amber-950/50 dark:text-amber-100"
               )}
               data-spekit={SPEKIT.quizAttemptMeta}
             >
-              <CalendarClock className="size-3.5 shrink-0 opacity-80" aria-hidden />
-              <span className="shrink-0 whitespace-nowrap">محاولة أرشيفية:</span>
-              <LocalDateTime
-                iso={attemptSubmittedAt}
-                mode="datetime"
-                className="min-w-0 truncate"
+              <CalendarClock
+                className="mt-0.5 size-3.5 shrink-0 opacity-80"
+                aria-hidden
               />
+              <span className="min-w-0 text-balance break-words">
+                <span>محاولة أرشيفية: </span>
+                <LocalDateTime iso={attemptSubmittedAt} mode="datetime" />
+              </span>
             </div>
           ) : null}
         </div>
