@@ -11,15 +11,6 @@ async function dismissA2hs(page: import("@playwright/test").Page) {
   }
 }
 
-async function openFirstQuiz(page: import("@playwright/test").Page) {
-  await loginAsDemoStudent(page);
-  await dismissA2hs(page);
-  await page.goto("/quizzes");
-  await dismissA2hs(page);
-  await openFirstStudentQuiz(page);
-  await dismissA2hs(page);
-}
-
 test.describe(`${FEATURE} Quiz header polish`, () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
@@ -31,7 +22,12 @@ test.describe(`${FEATURE} Quiz header polish`, () => {
       "Skipped without live Supabase (set E2E_SKIP_AUTHED=false + real NEXT_PUBLIC_SUPABASE_URL to enable)"
     );
 
-    await openFirstQuiz(page);
+    await loginAsDemoStudent(page);
+    await dismissA2hs(page);
+    await page.goto("/quizzes");
+    await dismissA2hs(page);
+    await openFirstStudentQuiz(page, { requireTaking: true });
+    await dismissA2hs(page);
 
     await expect(page.locator('[data-spekit="quiz-player-header"]')).toBeVisible();
     await expect(page.locator('[data-spekit="question-card"]')).toBeVisible();
