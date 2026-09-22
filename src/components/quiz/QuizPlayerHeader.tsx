@@ -26,19 +26,23 @@ export function QuizPlayerHeader({
       )}
       {...spekit(SPEKIT.quizPlayerHeader)}
     >
-      {/* Action row — exit / title / jump sheet (never shares space with the timer bar) */}
+      {/* Action row — back / title / jump sheet (never shares space with the timer bar) */}
       <div className="flex min-w-0 items-center justify-between gap-2">
         <button
           type="button"
           onClick={onExit}
           className={cn(
-            "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl",
-            "text-foreground transition-colors hover:bg-muted"
+            "inline-flex h-10 shrink-0 items-center justify-center gap-1 rounded-full px-2.5 sm:gap-1.5 sm:px-3",
+            "border border-border/70 bg-muted/40 text-foreground shadow-sm",
+            "transition-colors hover:bg-muted active:scale-[0.98]",
+            "dark:border-slate-600 dark:bg-slate-800/80 dark:text-white",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30"
           )}
-          aria-label="خروج"
+          aria-label="رجوع"
           {...spekit(SPEKIT.quizExitButton)}
         >
-          <ArrowRight className="size-5" aria-hidden />
+          <ArrowRight className="size-4 shrink-0 sm:size-5" aria-hidden />
+          <span className="text-xs font-bold leading-none">رجوع</span>
         </button>
 
         {!showTimer ? (
@@ -53,20 +57,20 @@ export function QuizPlayerHeader({
           <button
             type="button"
             className={cn(
-              "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl",
-              "border border-border/80 bg-muted/40 px-2.5 text-xs font-bold text-foreground sm:px-3",
-              "transition-colors hover:bg-muted dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              "inline-flex size-11 shrink-0 items-center justify-center gap-1.5 rounded-full sm:h-10 sm:w-auto sm:rounded-xl sm:px-3",
+              "border border-border/80 bg-muted/40 text-foreground shadow-sm",
+              "transition-colors hover:bg-muted active:scale-[0.98]",
+              "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             )}
             onClick={onOpenJump}
+            aria-label="كل الأسئلة"
             data-spekit={SPEKIT.quizAllQuestions}
           >
             <LayoutGrid className="size-4 shrink-0" aria-hidden />
-            <span className="max-w-[6.5rem] truncate sm:max-w-none">
-              كل الأسئلة
-            </span>
+            <span className="hidden text-xs font-bold sm:inline">كل الأسئلة</span>
           </button>
         ) : (
-          <span className="inline-block min-h-11 min-w-11 shrink-0" aria-hidden />
+          <span className="inline-block size-11 shrink-0" aria-hidden />
         )}
       </div>
 

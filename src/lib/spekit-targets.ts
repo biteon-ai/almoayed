@@ -51,6 +51,7 @@ export const SPEKIT = {
   studentQuizItem: "student-quiz-item",
   studentQuizEmpty: "student-quiz-empty",
   studentLogout: "student-logout",
+  studentHeaderBack: "student-header-back",
 
   // ── QUIZ-001 ─────────────────────────────────────────────────
   quizPage: "quiz-page",

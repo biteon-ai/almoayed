@@ -25,8 +25,10 @@ export function QuizExitDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent dir="rtl" data-spekit={SPEKIT.quizExitDialog}>
         <AlertDialogHeader>
-          <AlertDialogTitle>هل أنت متأكد أنك تريد الخروج؟</AlertDialogTitle>
-          <AlertDialogDescription>سيتم حفظ تقدّمك.</AlertDialogDescription>
+          <AlertDialogTitle>هل تريد الخروج من الاختبار؟</AlertDialogTitle>
+          <AlertDialogDescription>
+            سيتم حفظ تقدّمك ويمكنك المتابعة لاحقاً من قائمة الاختبارات.
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className="min-h-11">بقاء</AlertDialogCancel>

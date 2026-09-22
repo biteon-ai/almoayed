@@ -1327,7 +1327,8 @@ partial_features:
       - theme_color teal and background_color match the light shell
       - Viewport remains unscalable; OS text scaling still applies
       - Student chrome uses semantic tokens for dark/light appearance
-    spekit: [native-app-version]
+      - Mobile header uses contextual back + page title; gear/logout remain md+ only
+    spekit: [native-app-version, student-header-back]
 
   - id: UI-013
     name: Native Student Profile Drawer
@@ -1336,15 +1337,17 @@ partial_features:
     files:
       - src/components/student/StudentProfileDrawer.tsx
       - src/components/student/OfflineSavedQuizzesList.tsx
+      - src/components/layout/StudentHeader.tsx
       - src/lib/native-share.ts
       - src/lib/offline/quiz-cache.ts
       - tests/features/ui-013-appearance-drawer.test.ts
     acceptance:
-      - Header gear opens RTL start-side drawer without leaving the page
+      - Desktop (md+) header «الحساب» gear opens RTL start-side drawer without leaving the page
+      - Mobile header replaces gear/logout with contextual back (`student-header-back`); bottom-tab الإعدادات is the sole settings route entry
+      - Student `/settings` hides the duplicate page title on mobile (chrome already shows الإعدادات)
       - Dark/Light/System appearance persists on the device
       - Offline saved quizzes list is filtered by currentTeacherId
       - Share, contact, settings/upgrade, and version footer are present
-      - Bottom-tab الإعدادات still opens PROFILE-001
     spekit:
       - native-profile-drawer
       - native-drawer-close
@@ -1353,6 +1356,7 @@ partial_features:
       - native-drawer-settings
       - native-share-app
       - native-contact-us
+      - student-header-back
 
   - id: DASH-002
     name: Dashboard Native Action Tiles
@@ -1504,7 +1508,7 @@ partial_features:
       - Submit stays disabled until every question is answered; tap does not grade while disabled
       - Number stepper stays on the visual right of the card header
       - Timed quizzes show a thin remaining-time bar under MM:SS «الوقت المتبقي»
-      - «كل الأسئلة» stays tappable and opens the jump sheet
+      - Compact «كل الأسئلة» icon pill opens a bottom-sheet question map (centered card on sm+)
     spekit:
       - quiz-submit-button
       - quiz-question-pager

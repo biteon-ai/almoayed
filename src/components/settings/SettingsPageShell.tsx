@@ -22,6 +22,8 @@ interface SettingsPageShellProps {
   backLabel: string;
   navItems: SettingsNavItem[];
   hideBackLink?: boolean;
+  /** Hide the page «الإعدادات» title block on small screens (global chrome already shows it). */
+  hideTitleOnMobile?: boolean;
   children: ReactNode;
 }
 
@@ -59,6 +61,7 @@ export function SettingsPageShell({
   backLabel,
   navItems,
   hideBackLink = false,
+  hideTitleOnMobile = false,
   children,
 }: SettingsPageShellProps) {
   const [activeId, setActiveId] = useState(navItems[0]?.id ?? "");
@@ -100,10 +103,17 @@ export function SettingsPageShell({
     return () => observer.disconnect();
   }, [navItems]);
 
+  const hideHeaderOnMobile = hideBackLink && hideTitleOnMobile;
+
   return (
     <div dir="rtl" className="mx-auto w-full max-w-6xl px-4 py-4 pb-12 md:px-6 md:py-6">
       {/* Page header — compact on mobile PWA (UI-019 density) */}
-      <header className="mb-4 space-y-3 md:mb-6 md:space-y-4">
+      <header
+        className={cn(
+          "mb-4 space-y-3 md:mb-6 md:space-y-4",
+          hideHeaderOnMobile && "max-md:hidden"
+        )}
+      >
         {!hideBackLink && (
           <Link
             href={backHref}
@@ -116,7 +126,12 @@ export function SettingsPageShell({
             {backLabel}
           </Link>
         )}
-        <div className="flex items-center gap-3 text-start">
+        <div
+          className={cn(
+            "flex items-center gap-3 text-start",
+            hideTitleOnMobile && "max-md:hidden"
+          )}
+        >
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-100/80 text-brand-700 ring-1 ring-brand-200/60 md:size-12">
             <Settings className="size-4 md:size-5" aria-hidden />
           </div>

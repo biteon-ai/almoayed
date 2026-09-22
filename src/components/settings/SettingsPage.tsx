@@ -23,6 +23,7 @@ interface SettingsPageProps {
   backHref: string;
   backLabel?: string;
   hideBackLink?: boolean;
+  hideTitleOnMobile?: boolean;
 }
 
 const STUDENT_NAV: SettingsNavItem[] = [
@@ -46,6 +47,7 @@ export async function SettingsPage({
   backHref,
   backLabel = "رجوع",
   hideBackLink = false,
+  hideTitleOnMobile = false,
 }: SettingsPageProps) {
   await requireAuthenticated();
   const profile = await getSettingsProfile();
@@ -57,6 +59,7 @@ export async function SettingsPage({
       backLabel={backLabel}
       navItems={navItems}
       hideBackLink={hideBackLink}
+      hideTitleOnMobile={hideTitleOnMobile}
     >
       <SettingsSection id="profile">
         <ProfileForm
