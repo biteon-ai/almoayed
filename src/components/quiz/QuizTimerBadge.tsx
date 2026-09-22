@@ -83,7 +83,7 @@ export function QuizTimerBadge({
     <div
       className={cn(
         compact
-          ? "w-full rounded-xl px-2.5 py-2"
+          ? "w-full rounded-xl px-2 py-1.5"
           : "sticky top-0 z-40 -mx-4 mb-4 border-b px-4 py-2.5 backdrop-blur-md sm:-mx-0 sm:rounded-2xl sm:border",
         compact
           ? chrome.shell
@@ -139,7 +139,7 @@ export function QuizTimerBadge({
       </div>
       {showBar ? (
         <div
-          className="mt-2 w-full"
+          className={cn("w-full", compact ? "mt-1.5" : "mt-2")}
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}

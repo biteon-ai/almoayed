@@ -1436,10 +1436,11 @@ partial_features:
       - tests/features/ui-016-quiz-player.test.ts
       - e2e/ui-016-quiz-player.spec.ts
     acceptance:
-      - Slim sticky header with Arabic exit confirm and MM:SS «الوقت المتبقي» for timed quizzes
+      - Single quiz chrome on `/quiz/[id]`: global student header/bottom nav hidden; QuizPlayerHeader is sole sticky top bar
+      - Header shows dynamic quiz title (truncated on narrow screens), Arabic exit confirm, and MM:SS «الوقت المتبقي» when timed
       - One immersive question card with A/B/C/D rows; selected state #065f46; no solutions until submit
       - Horizontal pager + all-questions sheet replace the taking sidebar grid
-      - Sticky progress + «تسليم الإجابات وإنهاء الاختبار» above the student tab bar
+      - Compact «تسليم» separated under the stepper while taking
     spekit:
       - quiz-player-header
       - quiz-exit-button

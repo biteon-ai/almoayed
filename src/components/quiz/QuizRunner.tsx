@@ -369,10 +369,11 @@ export function QuizRunner({
 
   return (
     <div
-      className="mx-auto max-w-3xl px-4 py-3 pb-4 md:py-5"
+      className="mx-auto max-w-3xl px-4 py-1.5 pb-4 md:py-4"
       {...spekit(SPEKIT.quizPage)}
     >
       <QuizPlayerHeader
+        title={quiz.title}
         showTimer={Boolean(timer) && !isSubmitted}
         remainingSeconds={remainingSeconds}
         durationMinutes={timer?.durationMinutes}

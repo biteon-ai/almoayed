@@ -56,9 +56,12 @@ function DesktopNavLink({
 export function StudentHeader({
   slogan,
   currentTeacherId,
+  chromeMode = "full",
 }: {
   slogan: string;
   currentTeacherId: string | null;
+  /** `progress-only` — quiz taking: no brand/nav so QuizPlayerHeader is sole chrome. */
+  chromeMode?: "full" | "progress-only";
 }) {
   const pathname = usePathname();
   const hash = useStudentRouteHash();
@@ -68,12 +71,22 @@ export function StudentHeader({
   const isHome =
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
 
+  if (chromeMode === "progress-only") {
+    // Keep route progress without brand/nav chrome (quiz owns the sticky header).
+    return (
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-1">
+        <div className="relative h-full w-full">
+          <NavbarProgress />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-md">
       <NavbarProgress />
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:gap-4 md:py-4">
         <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-10">
-          {/* Mobile: contextual back — hidden on dashboard & live quiz */}
           {backHref ? (
             <div className="md:hidden">
               <StudentBackButton fallbackHref={backHref} />
@@ -116,7 +129,6 @@ export function StudentHeader({
           </nav>
         </div>
 
-        {/* Desktop: profile drawer + logout. Settings route lives in drawer + mobile bottom nav. */}
         <div className="hidden shrink-0 items-center gap-1 md:flex">
           <button
             type="button"
