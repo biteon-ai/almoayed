@@ -86,7 +86,8 @@ export function ScoreRingBadge({
       </svg>
       <span
         className={cn(
-          "relative z-10 inline-flex items-baseline gap-px whitespace-nowrap leading-none",
+          "pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-px",
+          "whitespace-nowrap leading-none",
           styles.text
         )}
       >

@@ -43,10 +43,15 @@ export function MyScoresTab({ scores }: MyScoresTabProps) {
           return (
             <li
               key={`${row.quizId}-${row.submittedAt}`}
-              className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-700 dark:bg-slate-800/70"
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3.5 dark:border-slate-700 dark:bg-slate-800/70 sm:gap-4 sm:py-4"
             >
-              <div className="min-w-0 flex-1 space-y-1">
-                <span className="block text-start text-sm font-semibold text-slate-800 dark:text-white">
+              <ScoreRingBadge
+                score={row.score}
+                size="sm"
+                className="shrink-0 self-center"
+              />
+              <div className="min-w-0 flex-1 space-y-1 text-start">
+                <span className="block text-sm font-semibold leading-snug text-slate-800 dark:text-white">
                   {row.quizTitle}
                 </span>
                 <span
@@ -58,7 +63,6 @@ export function MyScoresTab({ scores }: MyScoresTabProps) {
                   {grade.label} {grade.emoji}
                 </span>
               </div>
-              <ScoreRingBadge score={row.score} size="sm" />
             </li>
           );
         })}

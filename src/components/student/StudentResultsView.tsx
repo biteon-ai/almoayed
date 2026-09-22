@@ -262,10 +262,15 @@ function ResultCard({ row }: { row: RecentScoreRow }) {
       className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:shadow-none"
     >
       <CardContent className="flex h-full flex-col gap-3 p-4 sm:gap-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <ScoreRingBadge score={row.score} size="sm" className="mt-0.5" />
+        <div className="flex items-center justify-between gap-3 sm:gap-4">
+          {/* RTL start = visual right: score ring stays aligned with the title block */}
+          <ScoreRingBadge
+            score={row.score}
+            size="md"
+            className="shrink-0 self-center"
+          />
 
-          <div className="min-w-0 flex-1 space-y-2">
+          <div className="min-w-0 flex-1 space-y-1.5 text-start">
             <h3 className="line-clamp-2 text-sm font-extrabold leading-snug text-foreground sm:text-base">
               {row.quizTitle}
             </h3>
