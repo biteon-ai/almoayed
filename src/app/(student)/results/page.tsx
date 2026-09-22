@@ -6,6 +6,9 @@ import { requireStudent } from "@/lib/auth";
 import { APP_DESCRIPTION } from "@/lib/constants";
 import { StudentResultsView } from "@/components/student/StudentResultsView";
 
+/** Auth + live scores — request-scoped; route JS prefetched from login/chrome. */
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "نتائجي | المؤيد",
   description: APP_DESCRIPTION,

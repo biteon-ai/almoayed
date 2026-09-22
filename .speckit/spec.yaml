@@ -1583,16 +1583,25 @@ partial_features:
     files:
       - src/lib/auth.ts
       - src/lib/perf-selects.ts
+      - src/lib/post-login-navigation.ts
       - src/middleware.ts
       - src/actions/quiz.ts
       - src/actions/teacher.ts
       - src/actions/gamification.ts
+      - src/app/(student)/layout.tsx
       - src/app/(student)/dashboard/page.tsx
+      - src/app/(student)/quizzes/page.tsx
+      - src/app/(student)/results/page.tsx
+      - src/app/login/login-form.tsx
+      - src/components/layout/StudentAppChrome.tsx
+      - tests/features/perf-001-post-login-prefetch.test.ts
     acceptance:
       - requireStudent/requireTeacher + AUTH-003 device lock are request-scoped via React cache()
       - Middleware stays iron-session decrypt only (no Supabase)
       - Student/teacher list and dashboard paths use explicit column selects (no select *)
       - Student dashboard parallelizes dashboard + gamification fetches
+      - Login success prefetches /dashboard /quizzes /results then soft-pushes (router.prefetch + push)
+      - Student layout/pages use force-dynamic (session data); hub JS warmed via prefetch
       - QUIZ-001 exam select lists unchanged (gatekeeper intact)
       - MT-002 currentTeacherId scoping preserved; teacher switch revalidatePath clears hubs
     spekit: []

@@ -5,6 +5,9 @@ import { APP_SLOGAN } from "@/lib/constants";
 import { requireStudent } from "@/lib/auth";
 import { enforceStudentOnboardingComplete } from "@/lib/student-onboarding-guard";
 
+/** Session-scoped chrome — personalized; never statically prerender. */
+export const dynamic = "force-dynamic";
+
 export default async function StudentLayout({
   children,
 }: {

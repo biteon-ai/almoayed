@@ -6,6 +6,9 @@ import { APP_DESCRIPTION } from "@/lib/constants";
 import { computeStudentGamification } from "@/lib/student-gamification";
 import { StudentDashboardView } from "@/components/dashboard/StudentDashboardView";
 
+/** Auth + live stats — request-scoped; JS shell still warmed via router.prefetch. */
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "لوحة الطالب | المؤيد",
   description: APP_DESCRIPTION,

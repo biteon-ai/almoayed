@@ -9,6 +9,7 @@ import {
   REFERRAL_SOURCE_LABELS,
   REFERRAL_SOURCES,
 } from "@/lib/student-profile";
+import { prefetchStudentCoreRoutes } from "@/lib/post-login-navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
@@ -48,6 +49,7 @@ export function OnboardingWizard() {
         setError(result.error);
         return;
       }
+      prefetchStudentCoreRoutes(router);
       router.replace("/dashboard");
       router.refresh();
     });

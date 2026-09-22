@@ -1,9 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { StudentBottomNav } from "@/components/layout/StudentBottomNav";
 import { StudentHeader } from "@/components/layout/StudentHeader";
 import { PwaInstallSheet } from "@/components/pwa/PwaInstallSheet";
+import { prefetchStudentCoreRoutes } from "@/lib/post-login-navigation";
 import { cn } from "@/lib/utils";
 
 /**
@@ -20,7 +22,13 @@ export function StudentAppChrome({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isQuizTaking = pathname.startsWith("/quiz/");
+
+  // Warm hub bundles while the student is already authenticated.
+  useEffect(() => {
+    prefetchStudentCoreRoutes(router);
+  }, [router]);
 
   return (
     <div className="min-h-dvh bg-background">

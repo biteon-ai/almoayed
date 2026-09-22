@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   registerStudentAndRequestOTP,
   loginDemoAccount,
@@ -17,6 +17,7 @@ import {
   loginMessageForQueryError,
 } from "@/lib/login-ui-messages";
 import { DEMO_STUDENT, DEMO_TEACHER, APP_FOOTER_COPYRIGHT } from "@/lib/constants";
+import { navigateAfterLogin } from "@/lib/post-login-navigation";
 import { AuthField, AuthInputShell } from "@/components/login/AuthField";
 import { LoginLoadingOverlay } from "@/components/login/LoginLoadingOverlay";
 import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
@@ -246,6 +247,7 @@ export function LoginForm({
   pendingWhatsapp,
   biteonHostedLoginHref,
 }: LoginFormProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryError = loginMessageForQueryError(searchParams.get("error"));
   const tabFromQuery = searchParams.get("tab");
@@ -387,9 +389,7 @@ export function LoginForm({
           : null;
     if (success && role) {
       setOverlay(true);
-      window.location.assign(
-        role === "TEACHER" ? "/teacher/dashboard" : "/dashboard"
-      );
+      navigateAfterLogin(router, role);
       return;
     }
     if (demoState?.status === "error" || linkState?.status === "error") {
@@ -397,7 +397,7 @@ export function LoginForm({
       setOverlay(false);
       setDemoPending(null);
     }
-  }, [demoState, linkState]);
+  }, [demoState, linkState, router]);
 
   useEffect(() => {
     if (otpState?.status === "error") {
@@ -519,11 +519,7 @@ export function LoginForm({
                     whatsapp={fixedOtp.whatsapp}
                     onSuccess={(role) => {
                       setOverlay(true);
-                      window.location.assign(
-                        role === "TEACHER"
-                          ? "/teacher/dashboard"
-                          : "/dashboard"
-                      );
+                      navigateAfterLogin(router, role);
                     }}
                   />
                 ) : showLinkPanel ? (
