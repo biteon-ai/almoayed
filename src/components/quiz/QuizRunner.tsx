@@ -49,7 +49,7 @@ import {
 import { flushPendingSubmissions } from "@/lib/offline/sync-processor";
 import {
   padAnswersForQuestions,
-  remainingSecondsFromEndsAt,
+  remainingSecondsMonotonic,
   type TimedQuizSessionView,
 } from "@/lib/quiz-timer";
 import { hapticPulse } from "@/lib/haptic";
@@ -85,7 +85,7 @@ export function QuizRunner({
   const [error, setError] = useState<string | null>(null);
   const [timeExpiredNotice, setTimeExpiredNotice] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(() =>
-    timer ? remainingSecondsFromEndsAt(timer.endsAt) : 0
+    timer ? timer.remainingSeconds : 0
   );
   const [draftReady, setDraftReady] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
@@ -101,13 +101,34 @@ export function QuizRunner({
   const advanceTimer = useRef<number | null>(null);
   const answersRef = useRef(answers);
   answersRef.current = answers;
+  const timerHydratedAtPerf = useRef<number | null>(null);
+  const timerServerRemaining = useRef(0);
 
   useEffect(() => {
-    if (!timer) return;
-    setRemainingSeconds(remainingSecondsFromEndsAt(timer.endsAt));
+    if (!timer) {
+      timerHydratedAtPerf.current = null;
+      timerServerRemaining.current = 0;
+      setRemainingSeconds(0);
+      return;
+    }
+
+    // Prefer server remaining + monotonic clock so changing the device
+    // wall clock mid-attempt cannot stretch the countdown.
+    timerHydratedAtPerf.current = performance.now();
+    timerServerRemaining.current = timer.remainingSeconds;
+    setRemainingSeconds(timer.remainingSeconds);
+
     const id = window.setInterval(() => {
-      setRemainingSeconds(remainingSecondsFromEndsAt(timer.endsAt));
-    }, 1000);
+      const hydratedAt = timerHydratedAtPerf.current;
+      if (hydratedAt == null) return;
+      setRemainingSeconds(
+        remainingSecondsMonotonic({
+          serverRemainingSeconds: timerServerRemaining.current,
+          hydratedAtPerfMs: hydratedAt,
+          nowPerfMs: performance.now(),
+        })
+      );
+    }, 250);
     return () => window.clearInterval(id);
   }, [timer]);
 
@@ -507,9 +528,6 @@ export function QuizRunner({
                       showResult={isSubmitted}
                       correctAnswer={
                         isSubmitted ? activeResult?.correctAnswer : undefined
-                      }
-                      categoryTag={
-                        isSubmitted ? activeResult?.categoryTag : undefined
                       }
                       explanationText={
                         isSubmitted ? activeResult?.explanationText : undefined

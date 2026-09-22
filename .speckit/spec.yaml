@@ -547,6 +547,7 @@ features:
       - /quiz/[id]
     files:
       - supabase/migrations/013_quiz_timer.sql
+      - supabase/migrations/022_quiz_timer_ends_at.sql
       - src/lib/quiz-timer.ts
       - src/actions/teacher.ts
       - src/actions/quiz.ts
@@ -559,9 +560,10 @@ features:
       - tests/features/quiz-004-countdown-timer.test.ts
     acceptance:
       - Teacher enables تفعيل التوقيت with duration 1–180 minutes on create/edit
-      - Timed attempt snapshots duration at first open; teacher edits do not change in-progress sessions
-      - Student sticky MM:SS badge (minutes may be ≥ 60); warning style at ≤ 2 minutes
-      - At 00:00 or late reopen: lock answers, Arabic notice, auto-submit with padded blanks; server allows post-deadline submit
+      - Timed attempt snapshots duration + absolute ends_at at first open; teacher edits do not change in-progress sessions
+      - Refresh / cleared storage reuses the same DB session for the current attempt (no clock reset); retakes get a fresh session only after submit
+      - Student sticky MM:SS badge (minutes may be ≥ 60); warning style at ≤ 2 minutes; client countdown is monotonic from server remaining
+      - At 00:00 or late reopen: lock answers, Arabic notice, auto-submit with padded blanks; server allows post-deadline submit using DB ends_at
       - Untimed quizzes show no timer badge; QUIZ-001 gatekeeper selects unchanged
     spekit: [quiz-timer, quiz-timer-settings, quiz-timer-card]
 

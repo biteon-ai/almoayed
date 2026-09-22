@@ -19,7 +19,6 @@ interface QuestionCardProps {
   disabled?: boolean;
   showResult?: boolean;
   correctAnswer?: string;
-  categoryTag?: string;
   explanationText?: string;
   explanationMediaUrl?: string | null;
   header?: React.ReactNode;
@@ -53,7 +52,6 @@ export function QuestionCard({
   disabled,
   showResult,
   correctAnswer,
-  categoryTag,
   explanationText,
   explanationMediaUrl,
   header,
@@ -78,11 +76,6 @@ export function QuestionCard({
             السؤال {index + 1}
           </span>
         )}
-        {showResult && categoryTag ? (
-          <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-            {categoryTag}
-          </span>
-        ) : null}
       </div>
 
       <div className="space-y-5 p-4 md:space-y-6 md:p-8">

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Crown, FileText, Lock } from "lucide-react";
 import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
+import { getQuizListAction } from "@/lib/student-quiz-ui";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -122,6 +123,7 @@ export function QuizCarouselCard({
   }
 
   const featured = variant === "featured";
+  const action = getQuizListAction(quiz);
 
   return (
     <article
@@ -152,17 +154,11 @@ export function QuizCarouselCard({
         <Link
           href={`/quiz/${quiz.id}`}
           className={ctaClasses}
-          {...(quiz.hasSubmission && quiz.canRetake
-            ? spekit(SPEKIT.quizRetakeCta)
-            : {})}
+          {...(action.kind === "retake" ? spekit(SPEKIT.quizRetakeCta) : {})}
         >
-          {quiz.hasSubmission
-            ? quiz.canRetake
-              ? "إعادة الاختبار"
-              : "مراجعة النتيجة"
-            : "ابدأ الآن"}
+          {action.label}
         </Link>
-        {quiz.hasSubmission && quiz.canRetake && quiz.maxAttempts > 0 ? (
+        {action.kind === "retake" && quiz.maxAttempts > 0 ? (
           <p className="mt-2 text-center text-[11px] text-muted-foreground">
             {formatAttemptProgressAr(quiz.usedAttempts, quiz.maxAttempts)}
           </p>

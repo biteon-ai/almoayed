@@ -8,6 +8,7 @@ import type { QuizCarouselItem } from "@/types/database";
 import {
   formatDurationAr,
   getQuizCardStatus,
+  getQuizListAction,
   isRecentlyCreatedQuiz,
 } from "@/lib/student-quiz-ui";
 import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
@@ -30,6 +31,7 @@ import {
   HelpCircle,
   Lock,
   Play,
+  RotateCcw,
   Sparkles,
 } from "lucide-react";
 
@@ -103,9 +105,7 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
     return <LockedStudentQuizGridCard quiz={quiz} />;
   }
 
-  const completed = quiz.hasSubmission;
-  const showRetake = completed && quiz.canRetake;
-  const showReview = completed && !quiz.canRetake;
+  const action = getQuizListAction(quiz);
   const attemptLabel =
     quiz.maxAttempts > 0 && quiz.hasSubmission
       ? formatAttemptProgressAr(quiz.usedAttempts, quiz.maxAttempts)
@@ -148,36 +148,7 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
       </CardContent>
 
       <CardFooter className="p-5 pt-3">
-        {showReview ? (
-          <Link
-            href={`/quiz/${quiz.id}`}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
-            )}
-          >
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>
-              مراجعة النتيجة
-              {quiz.lastScore != null ? ` (${quiz.lastScore}%)` : ""}
-            </span>
-          </Link>
-        ) : showRetake ? (
-          <Link
-            href={`/quiz/${quiz.id}`}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
-            )}
-            data-spekit={SPEKIT.quizRetakeCta}
-          >
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>
-              إعادة الاختبار
-              {quiz.lastScore != null ? ` (${quiz.lastScore}%)` : ""}
-            </span>
-          </Link>
-        ) : completed ? null : (
+        {action.kind === "start" ? (
           <Link
             href={`/quiz/${quiz.id}`}
             className={cn(
@@ -186,10 +157,33 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
             )}
           >
             <Play className="h-3.5 w-3.5 fill-white" />
-            <span>ابدأ الاختبار الآن</span>
+            <span>{action.label}</span>
+          </Link>
+        ) : (
+          <Link
+            href={`/quiz/${quiz.id}`}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
+            )}
+            {...(action.kind === "retake"
+              ? spekit(SPEKIT.quizRetakeCta)
+              : {})}
+          >
+            {action.kind === "retake" ? (
+              <RotateCcw className="h-4 w-4 text-emerald-600" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            )}
+            <span>
+              {action.label}
+              {action.kind === "review" && quiz.lastScore != null
+                ? ` (${quiz.lastScore}%)`
+                : ""}
+            </span>
           </Link>
         )}
-        {attemptLabel && showRetake ? (
+        {attemptLabel && action.kind === "retake" ? (
           <p
             className="mt-2 text-center text-[11px] text-muted-foreground"
             {...spekit(SPEKIT.quizAttemptBadge)}

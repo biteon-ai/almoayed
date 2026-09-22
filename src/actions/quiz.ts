@@ -30,10 +30,14 @@ import {
   SUBMISSION_RESULT_SELECT,
 } from "@/lib/perf-selects";
 import {
-  computeRemainingSeconds,
+  computeEndsAt,
   padAnswersForQuestions,
-  toTimedQuizSessionView,
+  remainingSecondsFromEndsAt,
+  resolveSessionEndsAt,
+  shouldReuseTimedSession,
+  timedSessionViewFromRow,
   type TimedQuizSessionView,
+  type TimedSessionRow,
   validateDurationMinutes,
 } from "@/lib/quiz-timer";
 import { getStudentTeachers } from "@/actions/student";
@@ -162,22 +166,25 @@ export async function ensureTimedQuizSession(
 
   const { data: existingSession } = await supabase
     .from("quiz_timed_sessions")
-    .select("started_at, duration_minutes")
+    .select("started_at, duration_minutes, ends_at, used_attempts_at_start")
     .eq("student_id", session.profileId)
     .eq("quiz_id", quizId)
     .maybeSingle();
 
-  if (used > 0) {
+  const existingRow = existingSession as TimedSessionRow | null;
+
+  // Reuse the in-flight absolute clock — never recreate on refresh (cheat vector).
+  if (shouldReuseTimedSession(existingRow, used)) {
+    return timedSessionViewFromRow(existingRow!);
+  }
+
+  // Stale session from a prior attempt (or missing attempt stamp mismatch).
+  if (existingRow) {
     await supabase
       .from("quiz_timed_sessions")
       .delete()
       .eq("student_id", session.profileId)
       .eq("quiz_id", quizId);
-  } else if (existingSession) {
-    return toTimedQuizSessionView(
-      existingSession.started_at as string,
-      existingSession.duration_minutes as number
-    );
   }
 
   if (!quiz.is_timed) return null;
@@ -185,29 +192,32 @@ export async function ensureTimedQuizSession(
   const validated = validateDurationMinutes(quiz.duration_minutes);
   if (!validated.ok) return null;
 
+  const now = new Date();
+  const endsAt = computeEndsAt(now, validated.value);
+
   const { data: inserted, error: insertError } = await supabase
     .from("quiz_timed_sessions")
     .insert({
       student_id: session.profileId,
       quiz_id: quizId,
       duration_minutes: validated.value,
+      started_at: now.toISOString(),
+      ends_at: endsAt.toISOString(),
+      used_attempts_at_start: used,
     })
-    .select("started_at, duration_minutes")
+    .select("started_at, duration_minutes, ends_at, used_attempts_at_start")
     .single();
 
   if (insertError) {
     const { data: raced } = await supabase
       .from("quiz_timed_sessions")
-      .select("started_at, duration_minutes")
+      .select("started_at, duration_minutes, ends_at, used_attempts_at_start")
       .eq("student_id", session.profileId)
       .eq("quiz_id", quizId)
       .maybeSingle();
 
-    if (raced) {
-      return toTimedQuizSessionView(
-        raced.started_at as string,
-        raced.duration_minutes as number
-      );
+    if (raced && shouldReuseTimedSession(raced as TimedSessionRow, used)) {
+      return timedSessionViewFromRow(raced as TimedSessionRow);
     }
 
     logRequestError("QUIZ_TIMED_SESSION_CREATE_FAILED", insertError);
@@ -216,10 +226,7 @@ export async function ensureTimedQuizSession(
 
   if (!inserted) return null;
 
-  return toTimedQuizSessionView(
-    inserted.started_at as string,
-    inserted.duration_minutes as number
-  );
+  return timedSessionViewFromRow(inserted as TimedSessionRow, now);
 }
 
 function snapshotFromSubmissionRow(row: {
@@ -513,16 +520,15 @@ export async function submitQuiz(
 
   const { data: timedSession } = await supabase
     .from("quiz_timed_sessions")
-    .select("started_at, duration_minutes")
+    .select("started_at, duration_minutes, ends_at")
     .eq("student_id", session.profileId)
     .eq("quiz_id", quizId)
     .maybeSingle();
 
-  // Deadline from DB session only — never reject submit solely for being past deadline.
+  // Deadline from DB absolute ends_at only — never reject submit solely for being past deadline.
   const pastDeadline = timedSession
-    ? computeRemainingSeconds(
-        timedSession.started_at as string,
-        timedSession.duration_minutes as number
+    ? remainingSecondsFromEndsAt(
+        resolveSessionEndsAt(timedSession as TimedSessionRow).toISOString()
       ) <= 0
     : false;
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   estimateQuizDurationMinutes,
   filterQuizzesByCategory,
+  getQuizListAction,
   getScoreGrade,
   matchesCategoryFilter,
   scoreRingDashOffset,
@@ -39,5 +40,17 @@ describe("student-quiz-ui", () => {
     expect(filterQuizzesByCategory(quizzes, "الكل")).toHaveLength(2);
     expect(filterQuizzesByCategory(quizzes, "رياضيات")).toHaveLength(1);
     expect(matchesCategoryFilter("عام", "عام")).toBe(true);
+  });
+
+  it("labels list CTAs as start / retake / review (not archive review for retakes)", () => {
+    expect(
+      getQuizListAction({ hasSubmission: false, canRetake: true })
+    ).toEqual({ kind: "start", label: "ابدأ الاختبار" });
+    expect(
+      getQuizListAction({ hasSubmission: true, canRetake: true })
+    ).toEqual({ kind: "retake", label: "إعادة المحاولة" });
+    expect(
+      getQuizListAction({ hasSubmission: true, canRetake: false })
+    ).toEqual({ kind: "review", label: "مراجعة النتيجة" });
   });
 });

@@ -2,14 +2,21 @@
 
 import Link from "next/link";
 import type { QuizCarouselItem } from "@/types/database";
-import { formatDurationAr } from "@/lib/student-quiz-ui";
+import { formatDurationAr, getQuizListAction } from "@/lib/student-quiz-ui";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { SPEKIT } from "@/lib/spekit-targets";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
-import { Play, ArrowLeft, BookOpen, Clock, HelpCircle } from "lucide-react";
+import {
+  Play,
+  ArrowLeft,
+  BookOpen,
+  Clock,
+  HelpCircle,
+  RotateCcw,
+} from "lucide-react";
 
 interface StudentDashboardActiveQuizSectionProps {
   continueQuiz: QuizCarouselItem | null;
@@ -20,12 +27,20 @@ export function StudentDashboardActiveQuizSection({
   continueQuiz,
   continueProgress,
 }: StudentDashboardActiveQuizSectionProps) {
+  const action = continueQuiz ? getQuizListAction(continueQuiz) : null;
+
   return (
     <div className="space-y-4" data-spekit={SPEKIT.studentQuizList}>
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
           <Play className="h-4 w-4 fill-emerald-600/20 text-emerald-600" />
-          <span>تابع من حيث توقفت</span>
+          <span>
+            {action?.kind === "retake"
+              ? "جاهز لمحاولة جديدة"
+              : action?.kind === "review"
+                ? "آخر نتيجة للمراجعة"
+                : "تابع من حيث توقفت"}
+          </span>
         </h2>
 
         <Link
@@ -40,14 +55,17 @@ export function StudentDashboardActiveQuizSection({
         </Link>
       </div>
 
-      {continueQuiz ? (
+      {continueQuiz && action ? (
         <Card className="overflow-hidden rounded-2xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-50/40 via-background to-teal-50/20 shadow-xs dark:from-emerald-950/20 dark:to-background">
           <CardContent className="flex flex-col items-start justify-between gap-6 p-5 sm:flex-row sm:items-center sm:p-6">
             <div className="w-full max-w-xl space-y-3">
               <div className="flex items-center gap-2">
                 <Badge className="border-amber-200/60 bg-amber-500/15 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                  {continueQuiz.hasSubmission ? "للمراجعة" : "قيد التقدم"} (
-                  {continueProgress}%)
+                  {action.kind === "retake"
+                    ? "يمكن الإعادة"
+                    : action.kind === "review"
+                      ? "مكتمل"
+                      : `قيد التقدم (${continueProgress}%)`}
                 </Badge>
               </div>
 
@@ -69,10 +87,12 @@ export function StudentDashboardActiveQuizSection({
                 </p>
               </div>
 
-              <Progress
-                className="h-2 rounded-full bg-emerald-100 dark:bg-emerald-950"
-                value={continueProgress}
-              />
+              {action.kind === "start" ? (
+                <Progress
+                  className="h-2 rounded-full bg-emerald-100 dark:bg-emerald-950"
+                  value={continueProgress}
+                />
+              ) : null}
             </div>
 
             <Link
@@ -81,13 +101,16 @@ export function StudentDashboardActiveQuizSection({
                 buttonVariants({ size: "lg" }),
                 "h-11 w-full shrink-0 gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-md hover:bg-emerald-700 sm:w-auto"
               )}
+              {...(action.kind === "retake"
+                ? spekit(SPEKIT.quizRetakeCta)
+                : {})}
             >
-              <span>
-                {continueQuiz.hasSubmission
-                  ? "مراجعة الاختبار"
-                  : "متابعة الاختبار"}
-              </span>
-              <ArrowLeft className="h-4 w-4" />
+              <span>{action.label}</span>
+              {action.kind === "retake" ? (
+                <RotateCcw className="h-4 w-4" />
+              ) : (
+                <ArrowLeft className="h-4 w-4" />
+              )}
             </Link>
           </CardContent>
         </Card>

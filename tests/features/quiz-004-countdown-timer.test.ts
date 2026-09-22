@@ -6,6 +6,9 @@ import {
   isWarningRemaining,
   padAnswersForQuestions,
   remainingSecondsFromEndsAt,
+  remainingSecondsMonotonic,
+  shouldReuseTimedSession,
+  timedSessionViewFromRow,
   validateDurationMinutes,
 } from "@/lib/quiz-timer";
 
@@ -56,6 +59,63 @@ describe(`${FEATURE} display + remaining math`, () => {
     expect(remainingSecondsFromEndsAt(endsAt, now)).toBe(50);
     expect(
       remainingSecondsFromEndsAt(endsAt, new Date("2026-07-24T10:06:00.000Z"))
+    ).toBe(0);
+  });
+
+  it("uses stored ends_at as absolute expiry source of truth", () => {
+    const view = timedSessionViewFromRow(
+      {
+        started_at: "2026-07-24T10:00:00.000Z",
+        duration_minutes: 5,
+        ends_at: "2026-07-24T10:05:00.000Z",
+        used_attempts_at_start: 0,
+      },
+      new Date("2026-07-24T10:02:00.000Z")
+    );
+    expect(view.endsAt).toBe("2026-07-24T10:05:00.000Z");
+    expect(view.remainingSeconds).toBe(180);
+    expect(view.serverNow).toBe("2026-07-24T10:02:00.000Z");
+  });
+});
+
+describe(`${FEATURE} session reuse + monotonic countdown`, () => {
+  it("reuses only when used_attempts_at_start matches current used count", () => {
+    expect(
+      shouldReuseTimedSession({ used_attempts_at_start: 0 }, 0)
+    ).toBe(true);
+    expect(
+      shouldReuseTimedSession({ used_attempts_at_start: 1 }, 1)
+    ).toBe(true);
+    expect(
+      shouldReuseTimedSession({ used_attempts_at_start: 0 }, 1)
+    ).toBe(false);
+    expect(shouldReuseTimedSession(null, 0)).toBe(false);
+    // Legacy rows without stamp default to attempt 0
+    expect(shouldReuseTimedSession({}, 0)).toBe(true);
+    expect(shouldReuseTimedSession({}, 1)).toBe(false);
+  });
+
+  it("monotonic remaining ignores wall-clock jumps after hydrate", () => {
+    expect(
+      remainingSecondsMonotonic({
+        serverRemainingSeconds: 120,
+        hydratedAtPerfMs: 1_000,
+        nowPerfMs: 1_000,
+      })
+    ).toBe(120);
+    expect(
+      remainingSecondsMonotonic({
+        serverRemainingSeconds: 120,
+        hydratedAtPerfMs: 1_000,
+        nowPerfMs: 31_000,
+      })
+    ).toBe(90);
+    expect(
+      remainingSecondsMonotonic({
+        serverRemainingSeconds: 10,
+        hydratedAtPerfMs: 0,
+        nowPerfMs: 20_000,
+      })
     ).toBe(0);
   });
 });

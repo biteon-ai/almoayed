@@ -11,9 +11,36 @@ export type TimerProgressTone = "green" | "amber" | "red";
 export type TimedQuizSessionView = {
   startedAt: string;
   durationMinutes: number;
+  /** Absolute server expiry ISO — source of truth across refresh. */
   endsAt: string;
   remainingSeconds: number;
+  /** Server wall clock when this view was built (optional for offline cache). */
+  serverNow?: string;
 };
+
+export type TimedSessionRow = {
+  started_at: string;
+  duration_minutes: number;
+  ends_at?: string | null;
+  used_attempts_at_start?: number | null;
+};
+
+/**
+ * Decide whether an existing DB timed session still belongs to the open attempt.
+ * Stale rows (wrong attempt stamp) must be replaced — never silently reused.
+ */
+export function shouldReuseTimedSession(
+  existing: Pick<TimedSessionRow, "used_attempts_at_start"> | null | undefined,
+  usedAttempts: number
+): boolean {
+  if (!existing) return false;
+  const stamp =
+    typeof existing.used_attempts_at_start === "number" &&
+    Number.isFinite(existing.used_attempts_at_start)
+      ? existing.used_attempts_at_start
+      : 0;
+  return stamp === usedAttempts;
+}
 
 export function validateDurationMinutes(
   value: unknown
@@ -67,18 +94,69 @@ export function computeRemainingSeconds(
   return Math.max(0, Math.floor((ends.getTime() - now.getTime()) / 1000));
 }
 
+export function resolveSessionEndsAt(
+  row: Pick<TimedSessionRow, "started_at" | "duration_minutes" | "ends_at">
+): Date {
+  if (row.ends_at) {
+    const parsed = new Date(row.ends_at);
+    if (Number.isFinite(parsed.getTime())) return parsed;
+  }
+  return computeEndsAt(row.started_at, row.duration_minutes);
+}
+
 export function toTimedQuizSessionView(
   startedAt: string,
   durationMinutes: number,
-  now: Date = new Date()
+  now: Date = new Date(),
+  endsAt?: string | Date | null
 ): TimedQuizSessionView {
-  const endsAt = computeEndsAt(startedAt, durationMinutes);
+  const ends =
+    endsAt instanceof Date
+      ? endsAt
+      : typeof endsAt === "string" && endsAt.trim()
+        ? new Date(endsAt)
+        : computeEndsAt(startedAt, durationMinutes);
+  const endsMs = ends.getTime();
+  const safeEnds = Number.isFinite(endsMs)
+    ? ends
+    : computeEndsAt(startedAt, durationMinutes);
   return {
     startedAt,
     durationMinutes,
-    endsAt: endsAt.toISOString(),
-    remainingSeconds: computeRemainingSeconds(startedAt, durationMinutes, now),
+    endsAt: safeEnds.toISOString(),
+    remainingSeconds: Math.max(
+      0,
+      Math.floor((safeEnds.getTime() - now.getTime()) / 1000)
+    ),
+    serverNow: now.toISOString(),
   };
+}
+
+export function timedSessionViewFromRow(
+  row: TimedSessionRow,
+  now: Date = new Date()
+): TimedQuizSessionView {
+  return toTimedQuizSessionView(
+    row.started_at,
+    row.duration_minutes,
+    now,
+    resolveSessionEndsAt(row)
+  );
+}
+
+/**
+ * Countdown that ignores wall-clock changes after load.
+ * Uses server remaining at hydration + monotonic `performance.now()` elapsed.
+ */
+export function remainingSecondsMonotonic(args: {
+  serverRemainingSeconds: number;
+  hydratedAtPerfMs: number;
+  nowPerfMs: number;
+}): number {
+  const elapsedSec = Math.floor(
+    (args.nowPerfMs - args.hydratedAtPerfMs) / 1000
+  );
+  return Math.max(0, Math.floor(args.serverRemainingSeconds) - elapsedSec);
 }
 
 /** After deadline, answer mutations must be rejected; submit remains allowed. */

@@ -37,6 +37,21 @@ export function getQuizCardStatus(
   return "new";
 }
 
+/** Primary CTA on /quizzes cards — start or retake when attempts remain; review only when exhausted. */
+export type QuizListActionKind = "start" | "retake" | "review";
+
+export function getQuizListAction(
+  quiz: Pick<QuizCarouselItem, "hasSubmission" | "canRetake">
+): { kind: QuizListActionKind; label: string } {
+  if (!quiz.hasSubmission) {
+    return { kind: "start", label: "ابدأ الاختبار" };
+  }
+  if (quiz.canRetake) {
+    return { kind: "retake", label: "إعادة المحاولة" };
+  }
+  return { kind: "review", label: "مراجعة النتيجة" };
+}
+
 export function isRecentlyCreatedQuiz(createdAt: string, days = 7): boolean {
   const created = new Date(createdAt).getTime();
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;

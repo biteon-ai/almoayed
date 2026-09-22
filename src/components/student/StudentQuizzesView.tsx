@@ -27,9 +27,10 @@ import {
   filterQuizzesByCategory,
   filterQuizzesBySearch,
   formatDurationAr,
+  getQuizListAction,
 } from "@/lib/student-quiz-ui";
 import { PendingSyncBadge } from "@/components/quiz/PendingSyncBadge";
-import { SPEKIT } from "@/lib/spekit-targets";
+import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { cn, scrollbarHideClass } from "@/lib/utils";
 import {
   BookOpen,
@@ -37,6 +38,7 @@ import {
   Clock,
   HelpCircle,
   Play,
+  RotateCcw,
   Sparkles,
   Target,
   CheckCircle2,
@@ -106,6 +108,9 @@ export function StudentQuizzesView({
       ? 100
       : 0
     : 0;
+  const continueAction = continueQuiz
+    ? getQuizListAction(continueQuiz)
+    : null;
 
   return (
     <div
@@ -189,11 +194,17 @@ export function StudentQuizzesView({
         </div>
       </div>
 
-      {continueQuiz ? (
+      {continueQuiz && continueAction ? (
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
             <Play className="h-4 w-4 fill-emerald-600/20 text-emerald-600" />
-            <span>تابع من حيث توقفت</span>
+            <span>
+              {continueAction.kind === "retake"
+                ? "جاهز لمحاولة جديدة"
+                : continueAction.kind === "review"
+                  ? "آخر نتيجة للمراجعة"
+                  : "تابع من حيث توقفت"}
+            </span>
           </h2>
 
           <Card className="overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-50/30 via-background to-teal-50/20 shadow-md dark:from-emerald-950/20">
@@ -201,8 +212,11 @@ export function StudentQuizzesView({
               <div className="w-full max-w-xl space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className="rounded-full border-amber-200 bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-                    {continueQuiz.hasSubmission ? "للمراجعة" : "قيد التقدم"} (
-                    <PercentText value={continueProgress} />)
+                    {continueAction.kind === "retake"
+                      ? "يمكن الإعادة"
+                      : continueAction.kind === "review"
+                        ? "مكتمل"
+                        : "قيد التقدم"}
                   </Badge>
                   <Badge className="text-xs" variant="outline">
                     {continueQuiz.categoryName}
@@ -227,25 +241,30 @@ export function StudentQuizzesView({
                   </p>
                 </div>
 
-                <Progress
-                  className="h-2 rounded-full bg-emerald-100 dark:bg-emerald-950"
-                  value={continueProgress}
-                />
+                {continueAction.kind === "start" ? (
+                  <Progress
+                    className="h-2 rounded-full bg-emerald-100 dark:bg-emerald-950"
+                    value={continueProgress}
+                  />
+                ) : null}
               </div>
 
               <Link
                 href={`/quiz/${continueQuiz.id}`}
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "h-11 shrink-0 gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-md hover:bg-emerald-700 sm:w-auto w-full"
+                  "h-11 w-full shrink-0 gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-md hover:bg-emerald-700 sm:w-auto"
                 )}
+                {...(continueAction.kind === "retake"
+                  ? spekit(SPEKIT.quizRetakeCta)
+                  : {})}
               >
-                <span>
-                  {continueQuiz.hasSubmission
-                    ? "مراجعة الاختبار"
-                    : "متابعة الاختبار"}
-                </span>
-                <Play className="h-4 w-4 fill-white" />
+                <span>{continueAction.label}</span>
+                {continueAction.kind === "retake" ? (
+                  <RotateCcw className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4 fill-white" />
+                )}
               </Link>
             </CardContent>
           </Card>
