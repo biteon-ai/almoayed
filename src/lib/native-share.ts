@@ -1,28 +1,24 @@
 import { EMAIL_SUPPORT_EMAIL } from "@/lib/email-brand";
-import { APP_NAME, APP_URL, TEACHER_WHATSAPP } from "@/lib/constants";
+import { APP_NAME, TEACHER_WHATSAPP } from "@/lib/constants";
+import {
+  PRODUCTION_CANONICAL_ORIGIN,
+  resolveShareOrigin,
+} from "@/lib/app-origin";
 
 export const APP_SHARE_TEXT =
   "جرّب تطبيق المؤيد للاختبارات والتقييم الدراسي — حلّ بإيدك، ما حدا بيفيدك.";
 
-export const APP_SHARE_PUBLIC_URL = "https://almoayed.app";
+export const APP_SHARE_PUBLIC_URL = PRODUCTION_CANONICAL_ORIGIN;
 
 export function buildAppSharePayload(origin?: string): {
   title: string;
   text: string;
   url: string;
 } {
-  const raw = (origin ?? APP_URL).replace(/\/+$/, "");
-  const url =
-    !raw || raw.includes("localhost") || raw.includes("127.0.0.1")
-      ? APP_SHARE_PUBLIC_URL
-      : raw.includes("almoayed.app")
-        ? raw
-        : APP_SHARE_PUBLIC_URL;
-
   return {
     title: APP_NAME,
     text: APP_SHARE_TEXT,
-    url,
+    url: resolveShareOrigin(origin),
   };
 }
 

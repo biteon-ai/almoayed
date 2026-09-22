@@ -44,7 +44,7 @@ export function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) 
     <AlertDialogContext.Provider value={{ close }}>
       <dialog
         ref={dialogRef}
-        className="fixed inset-0 z-50 m-auto w-[min(100%-2rem,24rem)] rounded-2xl border border-border bg-background p-0 shadow-xl backdrop:bg-black/50 open:animate-in"
+        className="fixed inset-0 z-50 m-auto w-[min(100%-2rem,24rem)] rounded-2xl border border-border bg-card p-0 text-card-foreground shadow-xl backdrop:bg-black/60 open:animate-in dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
         onClose={() => onOpenChange(false)}
       >
         {children}
@@ -87,7 +87,12 @@ export function AlertDialogTitle({
   children: ReactNode;
 }) {
   return (
-    <h2 className={cn("text-lg font-bold text-foreground", className)}>
+    <h2
+      className={cn(
+        "text-lg font-bold text-foreground dark:text-slate-50",
+        className
+      )}
+    >
       {children}
     </h2>
   );
@@ -101,7 +106,12 @@ export function AlertDialogDescription({
   children: ReactNode;
 }) {
   return (
-    <p className={cn("text-sm leading-relaxed text-muted-foreground", className)}>
+    <p
+      className={cn(
+        "text-sm leading-relaxed text-muted-foreground dark:text-slate-300",
+        className
+      )}
+    >
       {children}
     </p>
   );
@@ -143,7 +153,7 @@ export function AlertDialogCancel({
       type="button"
       disabled={disabled}
       className={cn(
-        "inline-flex h-11 items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex h-11 items-center justify-center rounded-xl border border-border bg-muted/40 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
         className
       )}
       onClick={() => {

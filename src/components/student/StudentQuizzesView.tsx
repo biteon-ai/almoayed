@@ -142,47 +142,50 @@ export function StudentQuizzesView({
         </div>
       </StudentPageHero>
 
-      <div className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-2xl border bg-card px-4 py-3 shadow-xs sm:flex-row sm:items-center sm:gap-3 sm:px-5 sm:py-4">
-        <div className="relative w-full min-w-0 sm:max-w-xs sm:shrink-0">
-          <Search className="absolute end-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="h-10 w-full rounded-xl border-muted bg-muted/30 pe-10 text-xs focus-visible:ring-emerald-500"
-            placeholder="ابحث عن اختبار..."
-            value={searchQuery}
-            onChange={(event) => {
-              setSearchQuery(event.target.value);
-              resetPage();
-            }}
-            aria-label="بحث في الاختبارات"
-          />
-        </div>
-
-        <div
-          className={cn(
-            "flex min-w-0 w-full items-center gap-2 overflow-x-auto overscroll-x-contain whitespace-nowrap [-webkit-overflow-scrolling:touch] sm:flex-1",
-            "scroll-ps-0.5 scroll-pe-0.5",
-            scrollbarHideClass
-          )}
-        >
-          {QUIZ_CATEGORY_FILTERS.map((category) => (
-            <Button
-              key={category}
-              type="button"
-              size="sm"
-              variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => {
-                setSelectedCategory(category);
+      <div className="min-w-0 overflow-hidden rounded-2xl border bg-card px-4 py-3 shadow-xs">
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="relative w-full min-w-0">
+            <Search className="pointer-events-none absolute end-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="h-9 w-full rounded-xl border-muted bg-muted/25 py-1.5 pe-9 text-sm focus-visible:ring-emerald-500"
+              placeholder="ابحث عن اختبار..."
+              value={searchQuery}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
                 resetPage();
               }}
-              className={cn(
-                "h-9 shrink-0 rounded-xl px-4 text-xs",
-                selectedCategory === category &&
-                  "bg-emerald-600 font-bold text-white hover:bg-emerald-700"
-              )}
-            >
-              {category}
-            </Button>
-          ))}
+              aria-label="بحث في الاختبارات"
+            />
+          </div>
+
+          <div
+            className={cn(
+              "flex min-w-0 w-full items-center gap-1.5 overflow-x-auto overscroll-x-contain whitespace-nowrap [-webkit-overflow-scrolling:touch]",
+              scrollbarHideClass
+            )}
+            role="toolbar"
+            aria-label="تصفية حسب التصنيف"
+          >
+            {QUIZ_CATEGORY_FILTERS.map((category) => (
+              <Button
+                key={category}
+                type="button"
+                size="sm"
+                variant={selectedCategory === category ? "default" : "outline"}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  resetPage();
+                }}
+                className={cn(
+                  "h-8 shrink-0 rounded-full px-3 text-xs font-semibold",
+                  selectedCategory === category &&
+                    "bg-emerald-600 font-bold text-white hover:bg-emerald-700"
+                )}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 

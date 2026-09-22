@@ -65,7 +65,7 @@ export function Dialog({ open, onOpenChange, children, className }: DialogProps)
         // `open:flex` only — bare `flex` overrides UA `dialog:not([open]){display:none}`
         // and stacks every closed Dialog on screen (modal collision / focus freeze).
         className={cn(
-          "fixed inset-0 z-50 m-auto max-h-[90vh] w-[95vw] max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-background p-0 shadow-xl backdrop:bg-black/50 open:flex",
+          "fixed inset-0 z-50 m-auto max-h-[90vh] w-[95vw] max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-card p-0 text-card-foreground shadow-xl backdrop:bg-black/60 open:flex dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50",
           className
         )}
         onClose={() => onOpenChange(false)}
@@ -117,7 +117,12 @@ export function DialogTitle({
   children: ReactNode;
 }) {
   return (
-    <h2 className={cn("text-lg font-bold text-foreground", className)}>
+    <h2
+      className={cn(
+        "text-lg font-bold text-foreground dark:text-slate-50",
+        className
+      )}
+    >
       {children}
     </h2>
   );
@@ -131,7 +136,12 @@ export function DialogDescription({
   children: ReactNode;
 }) {
   return (
-    <p className={cn("text-sm leading-relaxed text-muted-foreground", className)}>
+    <p
+      className={cn(
+        "text-sm leading-relaxed text-muted-foreground dark:text-slate-300",
+        className
+      )}
+    >
       {children}
     </p>
   );
@@ -147,7 +157,7 @@ export function DialogFooter({
   return (
     <div
       className={cn(
-        "mt-4 flex shrink-0 flex-col-reverse gap-2 border-t border-border/60 bg-background pt-4 sm:mt-6 sm:flex-row sm:justify-end",
+        "mt-4 flex shrink-0 flex-col-reverse gap-2 border-t border-border/60 bg-card pt-4 sm:mt-6 sm:flex-row sm:justify-end dark:border-slate-700 dark:bg-slate-950",
         className
       )}
     >
@@ -170,7 +180,7 @@ export function DialogClose({
     <button
       type="button"
       className={cn(
-        "inline-flex h-11 items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-muted",
+        "inline-flex h-11 items-center justify-center rounded-xl border border-border bg-muted/40 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
         className
       )}
       onClick={() => {

@@ -67,7 +67,9 @@ export function StudentProfileDrawer({
   }, [open, close]);
 
   const shareApp = async () => {
-    const payload = buildAppSharePayload();
+    const payload = buildAppSharePayload(
+      typeof window !== "undefined" ? window.location.origin : undefined
+    );
     try {
       if (typeof navigator.share === "function") {
         await navigator.share(payload);
