@@ -466,6 +466,7 @@ export async function getSubmissionResults(
     score: submission.score,
     totalQuestions: ordered.length,
     correctCount,
+    submittedAt: submission.submitted_at as string,
     answers: ordered,
   };
 }
@@ -655,6 +656,7 @@ export async function submitQuiz(
     score,
     totalQuestions: orderedGraded.length,
     correctCount,
+    submittedAt: (submission.submitted_at as string) ?? new Date().toISOString(),
     answers: orderedGraded.map((g) => ({
       questionId: g.id as string,
       studentAnswer: g.studentAnswer,

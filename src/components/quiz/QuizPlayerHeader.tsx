@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, LayoutGrid } from "lucide-react";
+import { ArrowRight, CalendarClock, LayoutGrid } from "lucide-react";
 import { QuizTimerBadge } from "@/components/quiz/QuizTimerBadge";
+import { LocalDateTime } from "@/components/ui/local-datetime";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ export function QuizPlayerHeader({
   showTimer,
   remainingSeconds,
   durationMinutes,
+  attemptSubmittedAt,
   onExit,
   onOpenJump,
 }: {
@@ -17,10 +19,13 @@ export function QuizPlayerHeader({
   showTimer: boolean;
   remainingSeconds: number;
   durationMinutes?: number;
+  /** When set (review / post-submit), show attempt date under the title. */
+  attemptSubmittedAt?: string | null;
   onExit: () => void;
   onOpenJump?: () => void;
 }) {
   const displayTitle = title.trim() || "الاختبار";
+  const showAttemptMeta = Boolean(attemptSubmittedAt?.trim());
 
   return (
     <header
@@ -31,7 +36,12 @@ export function QuizPlayerHeader({
       )}
       {...spekit(SPEKIT.quizPlayerHeader)}
     >
-      <div className="flex min-w-0 items-center justify-between gap-1.5">
+      <div
+        className={cn(
+          "flex min-w-0 items-center justify-between gap-1.5",
+          showAttemptMeta && "items-start"
+        )}
+      >
         <button
           type="button"
           onClick={onExit}
@@ -49,15 +59,38 @@ export function QuizPlayerHeader({
           <span className="text-xs font-bold leading-none">رجوع</span>
         </button>
 
-        <h1
-          className={cn(
-            "min-w-0 flex-1 truncate text-center text-sm font-bold text-foreground dark:text-slate-100",
-            "max-w-[12.5rem] sm:max-w-[18rem] md:max-w-md"
-          )}
-          title={displayTitle}
-        >
-          {displayTitle}
-        </h1>
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-1 px-1">
+          <h1
+            className={cn(
+              "w-full truncate text-center text-sm font-bold text-foreground dark:text-slate-100",
+              "max-w-[12.5rem] sm:max-w-[18rem] md:max-w-md"
+            )}
+            title={displayTitle}
+          >
+            {displayTitle}
+          </h1>
+
+          {showAttemptMeta && attemptSubmittedAt ? (
+            <div
+              className={cn(
+                "inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-0.5",
+                "border border-amber-200/80 bg-amber-50 text-[10px] font-semibold leading-tight text-amber-900",
+                "dark:border-amber-800/50 dark:bg-amber-950/50 dark:text-amber-100"
+              )}
+              data-spekit={SPEKIT.quizAttemptMeta}
+            >
+              <CalendarClock className="size-3 shrink-0 opacity-80" aria-hidden />
+              <span className="shrink-0 whitespace-nowrap">
+                محاولة أرشيفية بتاريخ:
+              </span>
+              <span className="min-w-0 truncate">
+                <LocalDateTime iso={attemptSubmittedAt} mode="date" />
+                <span aria-hidden>، </span>
+                <LocalDateTime iso={attemptSubmittedAt} mode="time" />
+              </span>
+            </div>
+          ) : null}
+        </div>
 
         {onOpenJump ? (
           <button

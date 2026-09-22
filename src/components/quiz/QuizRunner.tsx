@@ -377,6 +377,7 @@ export function QuizRunner({
         showTimer={Boolean(timer) && !isSubmitted}
         remainingSeconds={remainingSeconds}
         durationMinutes={timer?.durationMinutes}
+        attemptSubmittedAt={isSubmitted ? results?.submittedAt : null}
         onExit={handleExitRequest}
         onOpenJump={
           questions.length > 0 && !pendingSync
