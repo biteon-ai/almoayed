@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useRef,
+  type MouseEvent,
   type ReactNode,
 } from "react";
 import { cn } from "@/lib/utils";
@@ -176,7 +177,7 @@ export function AlertDialogAction({
 }: {
   className?: string;
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: (event?: MouseEvent<HTMLButtonElement>) => void;
   type?: "button" | "submit";
   disabled?: boolean;
   /** When false, keeps the dialog open after click (multi-step flows). */
@@ -191,8 +192,8 @@ export function AlertDialogAction({
         "inline-flex h-11 items-center justify-center rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-50",
         className
       )}
-      onClick={() => {
-        onClick?.();
+      onClick={(event) => {
+        onClick?.(event);
         if (type === "button" && closeOnClick) {
           ctx?.close();
         }

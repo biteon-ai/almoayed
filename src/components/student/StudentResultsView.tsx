@@ -2,6 +2,7 @@
 
 import type { ComponentType } from "react";
 import { useCallback, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { DashboardStats, RecentScoreRow } from "@/types/database";
@@ -14,12 +15,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScoreRingBadge } from "@/components/ui/score-ring-badge";
 import { LocalDateTime } from "@/components/ui/local-datetime";
-import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
 import {
   StudentPageHero,
   StudentPageHeroBadge,
   studentPageHeroTitleClassName,
 } from "@/components/student/StudentPageHero";
+
+const LevelProgressCard = dynamic(
+  () =>
+    import("@/components/dashboard/LevelProgressCard").then(
+      (mod) => mod.LevelProgressCard
+    ),
+  {
+    loading: () => (
+      <div className="h-16 animate-pulse rounded-2xl border bg-muted/30" />
+    ),
+  }
+);
 import {
   QUIZ_CATEGORY_FILTERS,
   STUDENT_RESULTS_PAGE_SIZE,
@@ -32,6 +44,11 @@ import {
   groupResultsByQuiz,
 } from "@/lib/student-quiz-ui";
 import { SPEKIT } from "@/lib/spekit-targets";
+import {
+  prefetchQuizRoute,
+  quizPlayerHref,
+} from "@/lib/quiz-route-prefetch";
+import { usePrefetchOnIntent } from "@/hooks/use-prefetch-on-intent";
 import { cn, scrollbarHideClass } from "@/lib/utils";
 import {
   BarChart3,
@@ -270,11 +287,19 @@ function QuizResultGroupCard({ group }: { group: QuizResultGroup }) {
   const grade = getScoreGrade(latest.score);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const attemptCount = archive.length + 1;
+  const router = useRouter();
+  const reviewHref = quizPlayerHref(latest.quizId, {
+    reviewSubmissionId: latest.submissionId,
+  });
+  const retakeHref = quizPlayerHref(latest.quizId);
+  const { ref, intentProps } = usePrefetchOnIntent(reviewHref);
 
   return (
     <Card
+      ref={ref}
       data-spekit={`${SPEKIT.resultsCard}-${latest.submissionId}`}
       className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:shadow-none"
+      {...intentProps}
     >
       <CardContent className="flex h-full flex-col gap-3 p-4 sm:gap-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 sm:gap-4">
@@ -338,7 +363,7 @@ function QuizResultGroupCard({ group }: { group: QuizResultGroup }) {
         <div className="mt-auto flex flex-col gap-2.5 border-t border-border/50 pt-3 dark:border-slate-700/80">
           <div className="flex flex-col gap-2.5 min-[380px]:flex-row min-[380px]:gap-3">
             <Link
-              href={`/quiz/${latest.quizId}?review=${encodeURIComponent(latest.submissionId)}`}
+              href={reviewHref}
               prefetch
               className={cn(
                 buttonVariants({ size: "sm" }),
@@ -349,7 +374,10 @@ function QuizResultGroupCard({ group }: { group: QuizResultGroup }) {
               <span className="truncate">مراجعة الإجابات</span>
             </Link>
             <Link
-              href={`/quiz/${latest.quizId}`}
+              href={retakeHref}
+              prefetch
+              onMouseEnter={() => prefetchQuizRoute(router, retakeHref)}
+              onFocus={() => prefetchQuizRoute(router, retakeHref)}
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-border px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-800 sm:py-3"
@@ -398,8 +426,18 @@ function QuizResultGroupCard({ group }: { group: QuizResultGroup }) {
                   {archive.map((row, index) => (
                     <li key={row.submissionId}>
                       <Link
-                        href={`/quiz/${row.quizId}?review=${encodeURIComponent(row.submissionId)}`}
+                        href={quizPlayerHref(row.quizId, {
+                          reviewSubmissionId: row.submissionId,
+                        })}
                         prefetch
+                        onMouseEnter={() =>
+                          prefetchQuizRoute(
+                            router,
+                            quizPlayerHref(row.quizId, {
+                              reviewSubmissionId: row.submissionId,
+                            })
+                          )
+                        }
                         className={cn(
                           "flex items-center justify-between gap-3 rounded-lg px-2.5 py-2",
                           "transition-colors hover:bg-background dark:hover:bg-slate-900"

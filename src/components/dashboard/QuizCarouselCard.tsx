@@ -10,6 +10,8 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Crown, FileText, Lock } from "lucide-react";
 import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
 import { getQuizListAction } from "@/lib/student-quiz-ui";
+import { quizPlayerHref } from "@/lib/quiz-route-prefetch";
+import { usePrefetchOnIntent } from "@/hooks/use-prefetch-on-intent";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -118,15 +120,20 @@ export function QuizCarouselCard({
   quiz,
   variant = "default",
 }: QuizCarouselCardProps) {
+  const href = quiz.isLocked ? null : quizPlayerHref(quiz.id);
+  const { ref, intentProps } = usePrefetchOnIntent(href);
+
   if (quiz.isLocked) {
     return <LockedQuizCarouselCard quiz={quiz} />;
   }
 
   const featured = variant === "featured";
   const action = getQuizListAction(quiz);
+  const playerHref = quizPlayerHref(quiz.id);
 
   return (
     <article
+      ref={ref}
       className={cn(
         "flex min-h-[190px] flex-col rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md",
         "dark:bg-slate-900 dark:shadow-none dark:hover:shadow-none",
@@ -135,6 +142,7 @@ export function QuizCarouselCard({
           : "border-slate-100 dark:border-slate-700"
       )}
       data-spekit={SPEKIT.studentQuizItem}
+      {...intentProps}
     >
       <div className="flex flex-1 flex-col gap-2">
         <StatusBadgeRow quiz={quiz} />
@@ -152,7 +160,8 @@ export function QuizCarouselCard({
 
       <div className="mt-auto pt-5">
         <Link
-          href={`/quiz/${quiz.id}`}
+          href={playerHref}
+          prefetch
           className={ctaClasses}
           {...(action.kind === "retake" ? spekit(SPEKIT.quizRetakeCta) : {})}
         >

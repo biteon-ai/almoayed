@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { submitQuiz } from "@/actions/quiz";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
 import { QuizPlayerHeader } from "@/components/quiz/QuizPlayerHeader";
-import { QuizExitDialog } from "@/components/quiz/QuizExitDialog";
-import { QuizSubmitDialog } from "@/components/quiz/QuizSubmitDialog";
 import { QuestionPager } from "@/components/quiz/QuestionPager";
 import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
-import { QuestionJumpSheet } from "@/components/quiz/QuestionJumpSheet";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
-import { WhatsAppShare } from "@/components/quiz/WhatsAppShare";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -54,6 +51,25 @@ import {
 } from "@/lib/quiz-timer";
 import { hapticPulse } from "@/lib/haptic";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
+
+const QuizExitDialog = dynamic(
+  () =>
+    import("@/components/quiz/QuizExitDialog").then((m) => m.QuizExitDialog)
+);
+const QuizSubmitDialog = dynamic(
+  () =>
+    import("@/components/quiz/QuizSubmitDialog").then((m) => m.QuizSubmitDialog)
+);
+const QuestionJumpSheet = dynamic(
+  () =>
+    import("@/components/quiz/QuestionJumpSheet").then(
+      (m) => m.QuestionJumpSheet
+    )
+);
+const WhatsAppShare = dynamic(
+  () =>
+    import("@/components/quiz/WhatsAppShare").then((m) => m.WhatsAppShare)
+);
 
 const TIME_EXPIRED_NOTICE =
   "انتهى الوقت المحدد للاختبار! جاري تسليم إجاباتك تلقائياً...";
@@ -413,27 +429,33 @@ export function QuizRunner({
             : undefined
         }
       />
-      <QuizExitDialog
-        open={exitOpen}
-        onOpenChange={setExitOpen}
-        onConfirm={handleExitConfirm}
-      />
-      <QuizSubmitDialog
-        open={submitConfirmOpen}
-        onOpenChange={setSubmitConfirmOpen}
-        onConfirm={handleSubmitConfirm}
-      />
-      <QuestionJumpSheet
-        open={jumpOpen}
-        onOpenChange={setJumpOpen}
-        count={questions.length}
-        activeIndex={activeIndex}
-        isSubmitted={isSubmitted}
-        answers={answers}
-        questionIds={questionIds}
-        results={results}
-        onNavigate={goToQuestion}
-      />
+      {exitOpen ? (
+        <QuizExitDialog
+          open={exitOpen}
+          onOpenChange={setExitOpen}
+          onConfirm={handleExitConfirm}
+        />
+      ) : null}
+      {submitConfirmOpen ? (
+        <QuizSubmitDialog
+          open={submitConfirmOpen}
+          onOpenChange={setSubmitConfirmOpen}
+          onConfirm={handleSubmitConfirm}
+        />
+      ) : null}
+      {jumpOpen ? (
+        <QuestionJumpSheet
+          open={jumpOpen}
+          onOpenChange={setJumpOpen}
+          count={questions.length}
+          activeIndex={activeIndex}
+          isSubmitted={isSubmitted}
+          answers={answers}
+          questionIds={questionIds}
+          results={results}
+          onNavigate={goToQuestion}
+        />
+      ) : null}
 
       {!online && !isSubmitted && !pendingSync && <OfflineStatusBanner />}
 

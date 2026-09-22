@@ -1584,6 +1584,8 @@ partial_features:
       - src/lib/auth.ts
       - src/lib/perf-selects.ts
       - src/lib/post-login-navigation.ts
+      - src/lib/quiz-route-prefetch.ts
+      - src/hooks/use-prefetch-on-intent.ts
       - src/middleware.ts
       - src/actions/quiz.ts
       - src/actions/teacher.ts
@@ -1592,9 +1594,14 @@ partial_features:
       - src/app/(student)/dashboard/page.tsx
       - src/app/(student)/quizzes/page.tsx
       - src/app/(student)/results/page.tsx
+      - src/app/(student)/quiz/[id]/page.tsx
       - src/app/login/login-form.tsx
       - src/components/layout/StudentAppChrome.tsx
+      - src/components/student/StudentQuizGridCard.tsx
+      - src/components/quiz/QuizRunnerContainer.tsx
+      - src/components/quiz/QuizRunner.tsx
       - tests/features/perf-001-post-login-prefetch.test.ts
+      - tests/features/perf-001-quiz-route-prefetch.test.ts
     acceptance:
       - requireStudent/requireTeacher + AUTH-003 device lock are request-scoped via React cache()
       - Middleware stays iron-session decrypt only (no Supabase)
@@ -1602,6 +1609,8 @@ partial_features:
       - Student dashboard parallelizes dashboard + gamification fetches
       - Login success prefetches /dashboard /quizzes /results then soft-pushes (router.prefetch + push)
       - Student layout/pages use force-dynamic (session data); hub JS warmed via prefetch
+      - Quiz cards / results review links prefetch /quiz/[id] on hover + viewport and warm QuizRunner chunk
+      - QuizRunner + leaderboard + share + dialogs/sheets are next/dynamic code-split
       - QUIZ-001 exam select lists unchanged (gatekeeper intact)
       - MT-002 currentTeacherId scoping preserved; teacher switch revalidatePath clears hubs
     spekit: []

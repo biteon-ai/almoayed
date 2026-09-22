@@ -163,7 +163,7 @@ export function groupResultsByQuiz(scores: RecentScoreRow[]): QuizResultGroup[] 
   }
 
   const groups: QuizResultGroup[] = [];
-  for (const attempts of byQuiz.values()) {
+  for (const attempts of Array.from(byQuiz.values())) {
     const [latest, ...archive] = attempts;
     if (!latest) continue;
     groups.push({

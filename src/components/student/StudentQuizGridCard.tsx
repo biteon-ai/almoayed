@@ -12,6 +12,8 @@ import {
   isRecentlyCreatedQuiz,
 } from "@/lib/student-quiz-ui";
 import { formatAttemptProgressAr } from "@/lib/quiz-attempts";
+import { quizPlayerHref } from "@/lib/quiz-route-prefetch";
+import { usePrefetchOnIntent } from "@/hooks/use-prefetch-on-intent";
 import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Badge } from "@/components/ui/badge";
@@ -101,11 +103,15 @@ function StatusBadge({ quiz }: { quiz: QuizCarouselItem }) {
 }
 
 export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
+  const href = quiz.isLocked ? null : quizPlayerHref(quiz.id);
+  const { ref, intentProps } = usePrefetchOnIntent(href);
+
   if (quiz.isLocked) {
     return <LockedStudentQuizGridCard quiz={quiz} />;
   }
 
   const action = getQuizListAction(quiz);
+  const playerHref = quizPlayerHref(quiz.id);
   const attemptLabel =
     quiz.maxAttempts > 0 && quiz.hasSubmission
       ? formatAttemptProgressAr(quiz.usedAttempts, quiz.maxAttempts)
@@ -113,8 +119,10 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
 
   return (
     <Card
+      ref={ref}
       className="group flex flex-col justify-between rounded-2xl border bg-card transition-all hover:border-emerald-500/50 hover:shadow-lg"
       data-spekit={SPEKIT.studentQuizItem}
+      {...intentProps}
     >
       <CardHeader className="p-5 pb-3">
         <div className="mb-2 flex items-center justify-between gap-2">
@@ -150,7 +158,8 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
       <CardFooter className="p-5 pt-3">
         {action.kind === "start" ? (
           <Link
-            href={`/quiz/${quiz.id}`}
+            href={playerHref}
+            prefetch
             className={cn(
               buttonVariants({ size: "lg" }),
               "h-10 w-full gap-1.5 rounded-xl bg-emerald-600 text-xs font-bold text-white transition-all hover:bg-emerald-700 group-hover:shadow-md"
@@ -161,7 +170,8 @@ export function StudentQuizGridCard({ quiz }: StudentQuizGridCardProps) {
           </Link>
         ) : (
           <Link
-            href={`/quiz/${quiz.id}`}
+            href={playerHref}
+            prefetch
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
               "h-10 w-full gap-1.5 rounded-xl border-emerald-200 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
