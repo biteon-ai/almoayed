@@ -16,10 +16,10 @@ export default async function AdminLayout({
 
   return (
     <div
-      className="min-h-dvh bg-gradient-to-b from-brand-50/40 to-background"
+      className="min-h-dvh bg-gradient-to-b from-brand-50/40 to-background dark:from-slate-950 dark:to-background"
       data-spekit={spekitAttr(SPEKIT.adminLayout)}
     >
-      <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur-md dark:bg-background/90">
+      <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3">
             <Logo size="sm" />

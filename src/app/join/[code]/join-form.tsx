@@ -85,7 +85,7 @@ export function JoinForm({ teacherCode, teacherName }: JoinFormProps) {
 
   return (
     <LoginPageShell>
-      <div className="flex flex-1 flex-col justify-center px-4 py-8 sm:px-8">
+      <div className="flex flex-1 flex-col items-stretch justify-start px-4 pb-6 pt-3 sm:px-8 sm:pb-8 sm:pt-4 lg:justify-center lg:py-8">
         {state?.status === "fixed_otp_required" ? (
           <div className="mx-auto w-full max-w-md space-y-5">
             <h1 className="text-xl font-bold">تأكيد رقم واتساب</h1>

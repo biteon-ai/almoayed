@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { PageLoadingView } from "@/components/ui/page-loading-view";
 import { useOnlineStatus } from "@/lib/offline/connectivity";
 import { getQuizPackage, saveQuizPackage } from "@/lib/offline/quiz-cache";
 import type { TimedQuizSessionView } from "@/lib/quiz-timer";
@@ -18,6 +19,17 @@ import type {
   QuizSubmitResult,
 } from "@/types/database";
 
+function QuizRunnerLoadingShell({ isReview }: { isReview: boolean }) {
+  return (
+    <PageLoadingView
+      message={
+        isReview ? "جاري تحميل تفاصيل النتيجة..." : "جاري تحميل الاختبار..."
+      }
+      subMessage={isReview ? "نحضّر مراجعة إجاباتك" : "نحضّر الأسئلة"}
+    />
+  );
+}
+
 const QuizRunner = dynamic(
   () =>
     import("@/components/quiz/QuizRunner").then((mod) => mod.QuizRunner),
@@ -25,28 +37,6 @@ const QuizRunner = dynamic(
     loading: () => <QuizRunnerLoadingShell isReview={false} />,
   }
 );
-
-function QuizRunnerLoadingShell({ isReview }: { isReview: boolean }) {
-  return (
-    <div
-      className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 py-12"
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
-      <Loader2
-        className="size-8 animate-spin text-brand-600 dark:text-brand-400"
-        aria-hidden
-      />
-      <p className="text-sm font-bold text-foreground">
-        {isReview ? "جاري تحميل تفاصيل النتيجة..." : "جاري تحميل الاختبار..."}
-      </p>
-      <p className="text-xs text-muted-foreground">
-        {isReview ? "نحضّر مراجعة إجاباتك" : "نحضّر الأسئلة"}
-      </p>
-    </div>
-  );
-}
 
 interface QuizRunnerContainerProps {
   teacherId: string;

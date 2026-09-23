@@ -10,7 +10,6 @@ export function QuizRouteLoadingBody() {
 
   return (
     <PageLoadingView
-      compact
       message={
         isReview
           ? "جاري تحميل تفاصيل النتيجة..."

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { remainingTimeFraction, timerProgressTone } from "@/lib/quiz-timer";
 
 const FEATURE = "[UI-018]";
+const root = process.cwd();
 
 describe(`${FEATURE} remainingTimeFraction`, () => {
   it("is 1 at the start of a timed attempt", () => {
@@ -57,5 +60,45 @@ describe(`${FEATURE} timerProgressTone`, () => {
   it("is red when expired", () => {
     expect(timerProgressTone(0, 10)).toBe("red");
     expect(timerProgressTone(-1, 10)).toBe("red");
+  });
+});
+
+describe(`${FEATURE} question jump sheet mobile shell`, () => {
+  it("uses a full-viewport dialog shell with bottom-aligned panel (not dialog-as-sheet)", () => {
+    const sheet = readFileSync(
+      join(root, "src/components/quiz/QuestionJumpSheet.tsx"),
+      "utf8"
+    );
+    expect(sheet).toContain("open:items-end");
+    expect(sheet).toContain("bg-transparent");
+    expect(sheet).toContain("h-dvh");
+    expect(sheet).toContain("quizJumpSheet");
+    expect(sheet).toContain("QuestionNavGrid");
+  });
+
+  it("keeps the jump sheet mounted and opens via header grid control", () => {
+    const runner = readFileSync(
+      join(root, "src/components/quiz/QuizRunner.tsx"),
+      "utf8"
+    );
+    const header = readFileSync(
+      join(root, "src/components/quiz/QuizPlayerHeader.tsx"),
+      "utf8"
+    );
+    expect(runner).toContain("<QuestionJumpSheet");
+    expect(runner).not.toMatch(/\{jumpOpen\s*\?\s*\(\s*<QuestionJumpSheet/);
+    expect(header).toContain("touch-manipulation");
+    expect(header).toContain("quizAllQuestions");
+    expect(header).toContain("aria-haspopup");
+  });
+
+  it("guards Dialog against ghost cancel right after showModal", () => {
+    const dialog = readFileSync(
+      join(root, "src/components/ui/dialog.tsx"),
+      "utf8"
+    );
+    expect(dialog).toContain("onCancel");
+    expect(dialog).toContain("openedAtRef");
+    expect(dialog).toContain("showModal");
   });
 });

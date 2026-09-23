@@ -39,6 +39,7 @@ export function Dialog({ open, onOpenChange, children, className }: DialogProps)
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
     null
   );
+  const openedAtRef = useRef(0);
 
   const close = useCallback(() => {
     dialogRef.current?.close();
@@ -50,6 +51,7 @@ export function Dialog({ open, onOpenChange, children, className }: DialogProps)
     if (!el) return;
     setPortalContainer(el);
     if (open && !el.open) {
+      openedAtRef.current = Date.now();
       el.showModal();
     } else if (!open && el.open) {
       el.close();
@@ -68,6 +70,13 @@ export function Dialog({ open, onOpenChange, children, className }: DialogProps)
           "fixed inset-0 z-50 m-auto max-h-[90vh] w-[95vw] max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-card p-0 text-card-foreground shadow-xl backdrop:bg-black/60 open:flex dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50",
           className
         )}
+        onCancel={(event) => {
+          // Swallow the synthetic cancel from the same touch that opened the
+          // dialog on mobile (ghost backdrop close within ~1 frame).
+          if (Date.now() - openedAtRef.current < 320) {
+            event.preventDefault();
+          }
+        }}
         onClose={() => onOpenChange(false)}
       >
         {children}

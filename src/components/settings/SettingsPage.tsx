@@ -14,6 +14,8 @@ import {
   StudentTeacherCodeCard,
 } from "@/components/settings/StudentProfileExtras";
 import { TeacherCodeSection } from "@/components/settings/TeacherCodeSection";
+import { AppVersion } from "@/components/brand/AppVersion";
+import { APP_NAME } from "@/lib/constants";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
@@ -33,6 +35,7 @@ const STUDENT_NAV: SettingsNavItem[] = [
   { id: "teacher-code", label: "رمز الأستاذ" },
   { id: "sessions", label: "الجلسات النشطة" },
   { id: "logout", label: "تسجيل الخروج" },
+  { id: "about", label: "حول التطبيق" },
 ];
 
 const TEACHER_NAV: SettingsNavItem[] = [
@@ -41,6 +44,7 @@ const TEACHER_NAV: SettingsNavItem[] = [
   { id: "gamification", label: "المستويات" },
   { id: "sessions", label: "الجلسات النشطة" },
   { id: "logout", label: "تسجيل الخروج" },
+  { id: "about", label: "حول التطبيق" },
 ];
 
 export async function SettingsPage({
@@ -127,6 +131,26 @@ export async function SettingsPage({
 
       <SettingsSection id="logout">
         <LogoutConfirmButton />
+      </SettingsSection>
+
+      <SettingsSection id="about">
+        <div className="space-y-3 rounded-2xl border bg-card p-4 shadow-xs">
+          <h2 id="about-heading" className="text-base font-bold">
+            حول التطبيق
+          </h2>
+          <dl className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-sm text-muted-foreground">التطبيق</dt>
+              <dd className="text-sm font-semibold">{APP_NAME}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-sm text-muted-foreground">الإصدار</dt>
+              <dd>
+                <AppVersion className="text-sm font-medium text-slate-500 dark:text-slate-400" />
+              </dd>
+            </div>
+          </dl>
+        </div>
       </SettingsSection>
     </SettingsPageShell>
   );
