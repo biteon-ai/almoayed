@@ -50,10 +50,10 @@ function ProgressRing({ value }: { value: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-black tabular-nums text-slate-800">
+        <span className="text-lg font-black tabular-nums text-slate-800 dark:text-white">
           {Math.round(value)}%
         </span>
-        <span className="text-[10px] font-semibold text-slate-500">تقدم</span>
+        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-300">تقدم</span>
       </div>
     </div>
   );
@@ -81,12 +81,12 @@ export function QuizSidebar({
     >
       {/* Quiz header card */}
       <div
-        className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+        className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
         {...spekit(SPEKIT.quizGatekeeper)}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-2">
-            <h1 className="text-start text-lg font-extrabold leading-tight text-slate-900 md:text-xl">
+            <h1 className="text-start text-lg font-extrabold leading-tight text-slate-900 dark:text-white md:text-xl">
               {quiz.title}
             </h1>
             <div className="flex items-center gap-1.5 text-xs font-semibold">
@@ -150,17 +150,17 @@ export function QuizSidebar({
       {/* Progress card */}
       {!isSubmitted && questionCount > 0 && (
         <div
-          className="rounded-2xl border border-slate-100 bg-gradient-to-br from-brand-50/50 to-white p-5 shadow-sm"
+          className="rounded-2xl border border-slate-100 bg-gradient-to-br from-brand-50/50 to-white p-5 shadow-sm dark:border-slate-700 dark:from-brand-950/40 dark:to-slate-900"
           {...spekit(SPEKIT.quizProgress)}
         >
           <div className="flex items-center gap-4">
             <ProgressRing value={progress} />
             <div className="min-w-0 flex-1 space-y-2">
-              <p className="text-sm font-bold text-slate-800">تقدمك بالاختبار</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-sm font-bold text-slate-800 dark:text-white">تقدمك بالاختبار</p>
+              <p className="text-xs text-slate-500 dark:text-slate-300">
                 {answeredCount} من {questionCount} أسئلة محلولة
               </p>
-              <Progress value={progress} className="h-1.5 bg-slate-100" />
+              <Progress value={progress} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
             </div>
           </div>
         </div>
