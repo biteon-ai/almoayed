@@ -18,6 +18,7 @@ import {
 } from "@/lib/login-ui-messages";
 import { DEMO_STUDENT, DEMO_TEACHER, APP_FOOTER_COPYRIGHT } from "@/lib/constants";
 import { navigateAfterLogin } from "@/lib/post-login-navigation";
+import { AppVersion } from "@/components/brand/AppVersion";
 import { AuthField, AuthInputShell } from "@/components/login/AuthField";
 import { LoginLoadingOverlay } from "@/components/login/LoginLoadingOverlay";
 import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
@@ -801,9 +802,12 @@ export function LoginForm({
 
             <PwaInstallPrompt />
 
-            <p className="text-center text-[11px] leading-snug text-muted-foreground sm:text-xs lg:hidden">
-              {APP_FOOTER_COPYRIGHT}
-            </p>
+            <div className="flex flex-col items-center gap-1 text-center lg:hidden">
+              <p className="text-[11px] leading-snug text-muted-foreground sm:text-xs">
+                {APP_FOOTER_COPYRIGHT}
+              </p>
+              <AppVersion />
+            </div>
           </div>
         </div>
     </>

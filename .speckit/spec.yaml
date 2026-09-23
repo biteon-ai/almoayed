@@ -1578,6 +1578,7 @@ partial_features:
       - Number stepper stays on the visual right of the card header
       - Timed quizzes show a thin remaining-time bar under MM:SS «الوقت المتبقي»
       - Compact «كل الأسئلة» icon pill opens a bottom-sheet question map (centered card on sm+)
+      - Jump sheet uses full-viewport transparent dialog + inner panel so mobile touch opens reliably (no dialog-as-sheet / ghost-cancel race)
     spekit:
       - quiz-submit-button
       - quiz-question-pager
@@ -1624,17 +1625,20 @@ partial_features:
     name: App Version Indicator
     status: implemented
     persona: [STUDENT, TEACHER]
-    routes: ["/settings", "/teacher/settings"]
+    routes: ["/settings", "/teacher/settings", "/login"]
     files:
       - package.json
       - src/lib/constants.ts
       - src/components/brand/AppVersion.tsx
       - src/components/settings/SettingsPage.tsx
+      - src/app/login/login-form.tsx
+      - src/components/login/LoginBrandingPanel.tsx
       - tests/features/ui-020-app-version.test.ts
     acceptance:
       - APP_VERSION is read from package.json and rendered as v{version} (synced with GitHub release tags)
-      - Version appears only in Settings «حول التطبيق» (student and teacher); not on landing, login, results, or portal footers
+      - Version appears in Settings «حول التطبيق» (student and teacher) and beneath login copyright (mobile form + desktop branding panel)
       - Profile drawer links to /settings#about instead of showing the version inline
+      - Not shown on landing, results, or portal footers
     spekit: [app-version]
 
   - id: GAMIF-004

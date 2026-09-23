@@ -12,6 +12,7 @@ import {
   APP_PLATFORM_BADGE,
   APP_SLOGAN,
 } from "@/lib/constants";
+import { AppVersion } from "@/components/brand/AppVersion";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -123,9 +124,12 @@ export function LoginBrandingPanel({
             </ul>
           </div>
 
-          <div className="relative z-10 flex items-center gap-2 text-xs font-medium text-emerald-100/75">
-            <GraduationCap className="h-4 w-4 shrink-0" />
-            <span>{APP_FOOTER_COPYRIGHT}</span>
+          <div className="relative z-10 flex flex-col gap-1.5 text-xs font-medium text-emerald-100/75">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 shrink-0" />
+              <span>{APP_FOOTER_COPYRIGHT}</span>
+            </div>
+            <AppVersion className="ms-6 text-emerald-100/55 dark:text-emerald-100/55" />
           </div>
         </>
       )}

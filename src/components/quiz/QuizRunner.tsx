@@ -9,6 +9,7 @@ import { useQuizPlayerChrome } from "@/components/layout/StudentChromeContext";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
 import { QuizPlayerHeader } from "@/components/quiz/QuizPlayerHeader";
+import { QuestionJumpSheet } from "@/components/quiz/QuestionJumpSheet";
 import { QuestionPager } from "@/components/quiz/QuestionPager";
 import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
 import type { ExamQuestion, Quiz, QuizSubmitResult } from "@/types/database";
@@ -61,12 +62,6 @@ const QuizExitDialog = dynamic(
 const QuizSubmitDialog = dynamic(
   () =>
     import("@/components/quiz/QuizSubmitDialog").then((m) => m.QuizSubmitDialog)
-);
-const QuestionJumpSheet = dynamic(
-  () =>
-    import("@/components/quiz/QuestionJumpSheet").then(
-      (m) => m.QuestionJumpSheet
-    )
 );
 const WhatsAppShare = dynamic(
   () =>
@@ -458,7 +453,7 @@ export function QuizRunner({
         onExit={handleExitRequest}
         exitBusy={isNavigating || isSubmitting}
         onOpenJump={
-          questions.length > 0 && !pendingSync && !busy
+          questions.length > 0 && !pendingSync
             ? () => setJumpOpen(true)
             : undefined
         }
@@ -479,19 +474,17 @@ export function QuizRunner({
           confirming={isSubmitting || isPending}
         />
       ) : null}
-      {jumpOpen ? (
-        <QuestionJumpSheet
-          open={jumpOpen}
-          onOpenChange={setJumpOpen}
-          count={questions.length}
-          activeIndex={activeIndex}
-          isSubmitted={isSubmitted}
-          answers={answers}
-          questionIds={questionIds}
-          results={results}
-          onNavigate={goToQuestion}
-        />
-      ) : null}
+      <QuestionJumpSheet
+        open={jumpOpen}
+        onOpenChange={setJumpOpen}
+        count={questions.length}
+        activeIndex={activeIndex}
+        isSubmitted={isSubmitted}
+        answers={answers}
+        questionIds={questionIds}
+        results={results}
+        onNavigate={goToQuestion}
+      />
 
       {!online && !isSubmitted && !pendingSync && <OfflineStatusBanner />}
 

@@ -11,10 +11,11 @@ describe(`${FEATURE} app version indicator`, () => {
     expect(APP_VERSION).toMatch(/^\d+\.\d+\.\d+/);
   });
 
-  it("shows v{version} only in Settings حول التطبيق — not on shells, login, or landing", () => {
+  it("shows v{version} in Settings حول التطبيق and on the login footer", () => {
     const version = readFileSync("src/components/brand/AppVersion.tsx", "utf8");
     expect(version).toContain("`v${APP_VERSION}`");
     expect(version).toContain("SPEKIT.appVersion");
+    expect(version).toContain("text-xs text-slate-400");
 
     const settings = readFileSync(
       "src/components/settings/SettingsPage.tsx",
@@ -24,8 +25,18 @@ describe(`${FEATURE} app version indicator`, () => {
     expect(settings).toContain('id="about"');
     expect(settings).toContain("حول التطبيق");
 
+    const loginForm = readFileSync("src/app/login/login-form.tsx", "utf8");
+    expect(loginForm).toContain("<AppVersion");
+    expect(loginForm).toContain("APP_FOOTER_COPYRIGHT");
+
+    const branding = readFileSync(
+      "src/components/login/LoginBrandingPanel.tsx",
+      "utf8"
+    );
+    expect(branding).toContain("<AppVersion");
+    expect(branding).toContain("APP_FOOTER_COPYRIGHT");
+
     for (const file of [
-      "src/app/login/login-form.tsx",
       "src/app/teacher/login/page.tsx",
       "src/components/layout/StudentAppChrome.tsx",
       "src/app/teacher/(portal)/layout.tsx",
