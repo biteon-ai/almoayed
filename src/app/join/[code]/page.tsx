@@ -17,7 +17,7 @@ import { APP_DESCRIPTION, APP_SLOGAN } from "@/lib/constants";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "انضم للصف | المؤيد",
+  title: "انضم للصف",
   description: `${APP_SLOGAN} — ${APP_DESCRIPTION}`,
 };
 

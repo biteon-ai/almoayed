@@ -4,7 +4,7 @@ import { TeacherDashboardAnalytics } from "@/components/teacher/TeacherDashboard
 import { requireTeacher } from "@/lib/auth";
 import { SPEKIT } from "@/lib/spekit-targets";
 
-export const metadata = { title: "لوحة الأستاذ | المؤيد" };
+export const metadata = { title: "لوحة الأستاذ" };
 
 export default async function TeacherDashboardPage() {
   const session = await requireTeacher();

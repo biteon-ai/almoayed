@@ -2,7 +2,7 @@ import { getAdminKpis } from "@/lib/admin/kpis";
 import { AdminKpiCards } from "@/components/admin/AdminKpiCards";
 
 export const metadata = {
-  title: "لوحة Super Admin | المؤيد",
+  title: "لوحة Super Admin",
 };
 
 export default async function AdminDashboardPage() {

@@ -2,7 +2,7 @@ import { listSubjectCatalog } from "@/lib/admin/teachers";
 import { TeacherFormView } from "@/components/admin/TeacherFormView";
 
 export const metadata = {
-  title: "إضافة مدرس جديد | Super Admin",
+  title: { absolute: "إضافة مدرس جديد | Super Admin" },
 };
 
 export default async function AdminCreateTeacherPage() {

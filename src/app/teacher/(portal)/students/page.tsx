@@ -10,7 +10,7 @@ import { SPEKIT } from "@/lib/spekit-targets";
 import type { StudentTeacherStatus, StudentTier } from "@/types/database";
 import { Suspense } from "react";
 
-export const metadata = { title: "إدارة الطلاب | المؤيد" };
+export const metadata = { title: "إدارة الطلاب" };
 
 interface PageProps {
   searchParams: Promise<{

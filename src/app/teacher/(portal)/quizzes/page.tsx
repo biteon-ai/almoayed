@@ -3,7 +3,7 @@ import { QuizManagement } from "@/components/teacher/QuizManagement";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { Suspense } from "react";
 
-export const metadata = { title: "الاختبارات | المؤيد" };
+export const metadata = { title: "الاختبارات" };
 
 interface PageProps {
   searchParams: Promise<{ page?: string; view?: string }>;

@@ -10,7 +10,7 @@ import { StudentResultsView } from "@/components/student/StudentResultsView";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "نتائجي | المؤيد",
+  title: "نتائجي",
   description: APP_DESCRIPTION,
 };
 

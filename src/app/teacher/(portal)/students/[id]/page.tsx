@@ -3,7 +3,7 @@ import { StudentDetailDashboard } from "@/components/teacher/StudentDetailDashbo
 import { SPEKIT } from "@/lib/spekit-targets";
 import { notFound } from "next/navigation";
 
-export const metadata = { title: "تفاصيل الطالب | المؤيد" };
+export const metadata = { title: "تفاصيل الطالب" };
 
 interface PageProps {
   params: Promise<{ id: string }>;

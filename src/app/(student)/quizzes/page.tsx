@@ -8,7 +8,7 @@ import { StudentQuizzesView } from "@/components/student/StudentQuizzesView";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "الاختبارات | المؤيد",
+  title: "الاختبارات",
   description: APP_DESCRIPTION,
 };
 

@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
-export const metadata = { title: "المستويات والمكافآت | المؤيد" };
+export const metadata = { title: "المستويات والمكافآت" };
 
 export default async function TeacherGamificationSettingsPage() {
   await requireTeacher();

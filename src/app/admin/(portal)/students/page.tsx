@@ -1,7 +1,7 @@
 import { AdminStudentsTable } from "@/components/admin/AdminStudentsTable";
 
 export const metadata = {
-  title: "إدارة الطلاب | Super Admin",
+  title: { absolute: "إدارة الطلاب | Super Admin" },
 };
 
 export default function AdminStudentsPage() {

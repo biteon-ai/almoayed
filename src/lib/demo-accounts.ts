@@ -123,29 +123,67 @@ async function fetchProfileByWhatsApp(
   supabase: AuthSupabaseClient,
   whatsappNumber: string
 ): Promise<{ ok: true; profile: SessionProfile | null } | DemoResolveErr> {
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, whatsapp_number, full_name, role")
-      .eq("whatsapp_number", whatsappNumber)
-      .maybeSingle<ProfileRow>();
+  const maxAttempts = 3;
 
-    if (error) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, whatsapp_number, full_name, role")
+        .eq("whatsapp_number", whatsappNumber)
+        .maybeSingle<ProfileRow>();
+
+      if (error) {
+        const transient = isTransientSupabaseFailure(error);
+        if (transient && attempt < maxAttempts) {
+          await delay(200 * attempt);
+          continue;
+        }
+        logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", error);
+        return {
+          ok: false,
+          error: authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED),
+        };
+      }
+
+      return { ok: true, profile: data };
+    } catch (error) {
+      const transient = isTransientSupabaseFailure(error);
+      if (transient && attempt < maxAttempts) {
+        await delay(200 * attempt);
+        continue;
+      }
       logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", error);
       return {
         ok: false,
         error: authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED),
       };
     }
-
-    return { ok: true, profile: data };
-  } catch (error) {
-    logAuthFailure("SUPABASE_PROFILE_FETCH_FAILED", error);
-    return {
-      ok: false,
-      error: authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED),
-    };
   }
+
+  return {
+    ok: false,
+    error: authError(AuthErrorCode.SUPABASE_PROFILE_FETCH_FAILED),
+  };
+}
+
+function isTransientSupabaseFailure(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" &&
+          error &&
+          "message" in error &&
+          typeof (error as { message: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : String(error ?? "");
+  return /abort|timeout|fetch failed|ECONNRESET|ETIMEDOUT|network/i.test(
+    message
+  );
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function fetchActiveTeacherId(

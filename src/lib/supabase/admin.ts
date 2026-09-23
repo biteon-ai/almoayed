@@ -1,7 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 
-/** Cap hung Supabase requests so auth actions fail fast (FIX-AUTH-001). */
-const ADMIN_FETCH_TIMEOUT_MS = 8_000;
+/**
+ * Cap hung Supabase requests so auth actions fail fast (FIX-AUTH-001).
+ * E2E runs many parallel demo logins against one Next server — allow more
+ * headroom so profile selects are not aborted mid-flight.
+ */
+const ADMIN_FETCH_TIMEOUT_MS =
+  process.env.E2E_FORCE_DEMO_MODE === "true" ||
+  process.env.AUTH_DEMO_BYPASS === "true"
+    ? 20_000
+    : 12_000;
 
 /**
  * CI / docs placeholder hosts must not open a real client — Node `fetch` DNS

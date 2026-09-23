@@ -2,7 +2,7 @@ import { getAdminPlatformSettings } from "@/actions/platform-settings";
 import { PlatformSettingsForm } from "@/components/admin/PlatformSettingsForm";
 import { PLATFORM_SETTINGS_MESSAGES } from "@/lib/platform-settings-messages";
 
-export const metadata = { title: "إعدادات المنصة | المؤيد" };
+export const metadata = { title: "إعدادات المنصة" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminPlatformSettingsPage() {

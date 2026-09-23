@@ -7,7 +7,7 @@ import { SPEKIT } from "@/lib/spekit-targets";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-export const metadata = { title: "تحرير الاختبار | المؤيد" };
+export const metadata = { title: "تحرير الاختبار" };
 
 interface PageProps {
   params: Promise<{ id: string }>;
