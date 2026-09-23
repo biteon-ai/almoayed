@@ -31,10 +31,10 @@ export async function generateMetadata({ params }: QuizPageProps) {
   try {
     const { quiz } = await getQuizForStudent(id, { skipPresentation: true });
     return {
-      title: quiz ? `${quiz.title} | المؤيد` : "اختبار | المؤيد",
+      title: quiz?.title ?? "اختبار",
     };
   } catch {
-    return { title: "اختبار | المؤيد" };
+    return { title: "اختبار" };
   }
 }
 

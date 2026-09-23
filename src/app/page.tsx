@@ -4,7 +4,9 @@ import { getSession } from "@/lib/auth";
 import { APP_DESCRIPTION, APP_NAME, APP_SLOGAN } from "@/lib/constants";
 
 export const metadata = {
-  title: `${APP_NAME} — ${APP_SLOGAN}`,
+  title: {
+    absolute: `${APP_NAME} — ${APP_SLOGAN}`,
+  },
   description: APP_DESCRIPTION,
 };
 

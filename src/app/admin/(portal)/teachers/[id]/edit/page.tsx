@@ -10,9 +10,11 @@ export async function generateMetadata({
   const { id } = await params;
   const teacher = await getTeacherById(id);
   return {
-    title: teacher
-      ? `تعديل ${teacher.fullName} | Super Admin`
-      : "تعديل المدرس | Super Admin",
+    title: {
+      absolute: teacher
+        ? `تعديل ${teacher.fullName} | Super Admin`
+        : "تعديل المدرس | Super Admin",
+    },
   };
 }
 

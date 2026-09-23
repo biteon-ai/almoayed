@@ -2,7 +2,7 @@ import { getAdminKpis } from "@/lib/admin/kpis";
 import { AdminTeachersTable } from "@/components/admin/AdminTeachersTable";
 
 export const metadata = {
-  title: "إدارة المدرسين | Super Admin",
+  title: { absolute: "إدارة المدرسين | Super Admin" },
 };
 
 export default async function AdminTeachersPage() {

@@ -139,6 +139,7 @@ export function StudentResultsView({
     >
       <StudentPageHero
         variant="teal"
+        hideTitleOnMobile
         badge={
           <StudentPageHeroBadge variant="teal">
             <Sparkles className="size-3 shrink-0 text-amber-300" />

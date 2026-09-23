@@ -1,7 +1,7 @@
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { requireStudent } from "@/lib/auth";
 
-export const metadata = { title: "الإعدادات | المؤيد" };
+export const metadata = { title: "الإعدادات" };
 
 export default async function StudentSettingsPage() {
   await requireStudent();

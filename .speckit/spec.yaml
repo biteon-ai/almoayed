@@ -1544,6 +1544,7 @@ partial_features:
     acceptance:
       - Shared StudentPageHero shell: p-3 / sm:p-4, badge+title tight, subtitle hidden on phone
       - Dashboard / quizzes / results / settings headers use the same mobile density pattern
+      - Quizzes / results hero titles hide on mobile (`hideTitleOnMobile`) so chrome `نتائجي` / `الاختبارات` is not duplicated; h1 stays sr-only for a11y
       - Stats grids use text-sm–text-base with gap-2; no overflow on ~320px
       - Results submission timestamps format in the viewer local timezone (not SSR UTC)
       - Results card actions stack below ~380px and sit side-by-side with gap-2 without overflow

@@ -119,6 +119,7 @@ export function StudentQuizzesView({
     >
       <PendingSyncBadge />
       <StudentPageHero
+        hideTitleOnMobile
         badge={
           <StudentPageHeroBadge>
             <Sparkles className="h-3 w-3 shrink-0 text-amber-300" />

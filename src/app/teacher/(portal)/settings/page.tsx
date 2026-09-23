@@ -1,6 +1,6 @@
 import { SettingsPage } from "@/components/settings/SettingsPage";
 
-export const metadata = { title: "الإعدادات | المؤيد" };
+export const metadata = { title: "الإعدادات" };
 
 export default function TeacherSettingsPage() {
   return (

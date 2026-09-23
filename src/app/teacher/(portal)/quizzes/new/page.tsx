@@ -1,7 +1,7 @@
 import { getTeacherCategories, getTeacherGroups } from "@/actions/teacher";
 import { QuizCreateWizard } from "@/components/teacher/QuizCreateWizard";
 
-export const metadata = { title: "اختبار جديد | المؤيد" };
+export const metadata = { title: "اختبار جديد" };
 
 export default async function NewQuizPage() {
   const [categories, groups] = await Promise.all([

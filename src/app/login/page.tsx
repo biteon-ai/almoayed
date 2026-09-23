@@ -7,7 +7,7 @@ import { getPendingTeacherLinkSession } from "@/lib/auth-session";
 import { APP_DESCRIPTION, APP_SLOGAN } from "@/lib/constants";
 
 export const metadata = {
-  title: "تسجيل الدخول | المؤيد",
+  title: "تسجيل الدخول",
   description: `${APP_SLOGAN} — ${APP_DESCRIPTION}`,
 };
 export const dynamic = "force-dynamic";

@@ -19,6 +19,12 @@ export interface StudentPageHeroProps {
   badge: ReactNode;
   /** Main page title. */
   title: ReactNode;
+  /**
+   * When true, hide the hero title visually below `md` — `StudentHeader` already
+   * shows the route title on mobile (same pattern as settings `hideTitleOnMobile`).
+   * Title stays `sr-only` so the page still has one accessible heading.
+   */
+  hideTitleOnMobile?: boolean;
   /** Optional support line — hidden on phone, single line from sm+. */
   subtitle?: string;
   /** Extra content under the title (e.g. daily goal) — always visible, compact. */
@@ -38,6 +44,7 @@ export function StudentPageHero({
   variant = "emerald",
   badge,
   title,
+  hideTitleOnMobile = false,
   subtitle,
   belowTitle,
   children,
@@ -58,7 +65,11 @@ export function StudentPageHero({
       <div className="relative z-10 flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <div className="min-w-0 w-full flex-1 space-y-0.5">
           {badge}
-          <div className="min-w-0">{title}</div>
+          <div
+            className={cn("min-w-0", hideTitleOnMobile && "max-md:sr-only")}
+          >
+            {title}
+          </div>
           {subtitle ? (
             <p className="hidden text-sm leading-snug text-emerald-100/90 sm:line-clamp-1 sm:block">
               {subtitle}

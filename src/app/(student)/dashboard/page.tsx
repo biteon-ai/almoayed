@@ -10,7 +10,7 @@ import { StudentDashboardView } from "@/components/dashboard/StudentDashboardVie
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "لوحة الطالب | المؤيد",
+  title: "لوحة الطالب",
   description: APP_DESCRIPTION,
 };
 
