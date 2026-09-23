@@ -463,13 +463,16 @@ export function LoginForm({
 
       <div
         className={cn(
-          "flex flex-1 items-center justify-center px-4 py-6 sm:px-6 sm:py-8",
+          // Mobile: top-align under sticky brand header — avoid large vertical whitespace
+          "flex flex-1 items-start justify-center px-4 pb-6 pt-3 sm:px-6 sm:pb-8 sm:pt-4",
+          // Desktop form column: keep centered card beside branding panel
+          "lg:items-center lg:py-8",
           overlay && "pointer-events-none opacity-40"
         )}
         aria-busy={isBusy}
       >
           <div
-            className="w-full max-w-md space-y-6"
+            className="w-full max-w-md space-y-4 sm:space-y-6"
             {...spekit(SPEKIT.loginForm)}
           >
             <div className="hidden space-y-1 text-center lg:block">

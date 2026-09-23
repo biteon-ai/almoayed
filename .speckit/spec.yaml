@@ -1353,14 +1353,18 @@ partial_features:
     routes: ["/login"]
     files:
       - src/app/login/login-form.tsx
+      - src/app/login/login-page-shell.tsx
+      - src/components/login/LoginBrandingPanel.tsx
       - src/components/pwa/PwaInstallPrompt.tsx
       - src/components/pwa/StoreBadgeLogos.tsx
       - src/hooks/use-pwa-install.ts
       - src/lib/pwa-install.ts
+      - tests/features/ui-010-login-mobile-header.test.ts
     acceptance:
       - Login/signup shows brand-green (`brand-600`) install CTAs with white mono Apple/Play icons; labels «تثبيت التطبيق / على Android|iOS» (RTL); no Store/Play/black badge look
       - Android uses deferred beforeinstallprompt when available; otherwise Arabic Chrome guide modal
       - iOS opens Safari «إضافة إلى الشاشة الرئيسية» step modal (no beforeinstallprompt)
+      - Mobile compact brand header is sticky (`sticky top-0 z-40`) with tight padding; login/join forms top-align under it (no large vertical gap)
       - Spekit hooks: pwa-install-buttons, pwa-install-android, pwa-install-ios, pwa-install-modal
     spekit:
       - pwa-install-buttons

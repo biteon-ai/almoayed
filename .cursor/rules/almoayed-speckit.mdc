@@ -40,7 +40,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **UI-006** — Header + global top nav progress (`NavbarProgress`, NProgress `top-nav-loader`)
 - **UI-007** — Results card score badge + action layout
 - **UI-009** — Quiz timer settings card (presets, status badge, Switch, HubToast save)
-- **UI-010** — Login PWA install CTAs (Android beforeinstallprompt + iOS/Android guide modal)
+- **UI-010** — Login PWA install CTAs + sticky compact brand header / tight form spacing on mobile
 - **ADMIN-001/002** — Super Admin dashboard + runtime platform settings (Demo Mode, Fixed OTP)
 - **AUTH-008 / TEACH-015** — Trial join link + teacher invite
 - **AUTH-009** — Teacher login recovery (back to main login, forgot password, magic link)
