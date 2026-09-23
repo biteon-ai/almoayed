@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, CalendarClock, LayoutGrid, Loader2 } from "lucide-react";
+import { ArrowRight, CalendarClock, LayoutGrid } from "lucide-react";
 import { QuizTimerBadge } from "@/components/quiz/QuizTimerBadge";
 import { LocalDateTime } from "@/components/ui/local-datetime";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
@@ -14,7 +14,6 @@ export function QuizPlayerHeader({
   attemptSubmittedAt,
   onExit,
   onOpenJump,
-  exitBusy = false,
 }: {
   title: string;
   showTimer: boolean;
@@ -24,8 +23,6 @@ export function QuizPlayerHeader({
   attemptSubmittedAt?: string | null;
   onExit: () => void;
   onOpenJump?: () => void;
-  /** Disable رجوع and show spinner while a route transition is in flight. */
-  exitBusy?: boolean;
 }) {
   const displayTitle = title.trim() || "الاختبار";
   const showAttemptMeta = Boolean(attemptSubmittedAt?.trim());
@@ -48,27 +45,18 @@ export function QuizPlayerHeader({
         <button
           type="button"
           onClick={onExit}
-          disabled={exitBusy}
-          aria-busy={exitBusy || undefined}
           className={cn(
             "inline-flex h-9 shrink-0 items-center justify-center gap-1 rounded-full px-2.5 sm:h-10 sm:gap-1.5 sm:px-3",
             "border border-border/70 bg-muted/40 text-foreground shadow-sm",
             "transition-colors hover:bg-muted active:scale-[0.98]",
             "dark:border-slate-600 dark:bg-slate-800/80 dark:text-white",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30",
-            "disabled:pointer-events-none disabled:opacity-60"
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30"
           )}
-          aria-label={exitBusy ? "جاري الرجوع..." : "رجوع"}
+          aria-label="رجوع"
           {...spekit(SPEKIT.quizExitButton)}
         >
-          {exitBusy ? (
-            <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-          ) : (
-            <ArrowRight className="size-4 shrink-0" aria-hidden />
-          )}
-          <span className="text-xs font-bold leading-none">
-            {exitBusy ? "جاري..." : "رجوع"}
-          </span>
+          <ArrowRight className="size-4 shrink-0" aria-hidden />
+          <span className="text-xs font-bold leading-none">رجوع</span>
         </button>
 
         <div className="flex min-w-0 flex-1 flex-col items-center px-1">

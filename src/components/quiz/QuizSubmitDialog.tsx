@@ -16,21 +16,13 @@ export function QuizSubmitDialog({
   open,
   onOpenChange,
   onConfirm,
-  confirming = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  confirming?: boolean;
 }) {
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(next) => {
-        if (confirming && !next) return;
-        onOpenChange(next);
-      }}
-    >
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent dir="rtl" data-spekit={SPEKIT.quizSubmitConfirm}>
         <AlertDialogHeader>
           <AlertDialogTitle>هل أنت متأكد من تسليم الإجابات؟</AlertDialogTitle>
@@ -39,15 +31,9 @@ export function QuizSubmitDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="min-h-11" disabled={confirming}>
-            إلغاء
-          </AlertDialogCancel>
-          <AlertDialogAction
-            className="min-h-11"
-            disabled={confirming}
-            onClick={onConfirm}
-          >
-            {confirming ? "جاري التسليم..." : "تأكيد التسليم"}
+          <AlertDialogCancel className="min-h-11">إلغاء</AlertDialogCancel>
+          <AlertDialogAction className="min-h-11" onClick={onConfirm}>
+            تأكيد التسليم
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

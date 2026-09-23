@@ -57,7 +57,7 @@ export function PendingSyncBadge() {
           type="button"
           size="sm"
           variant="outline"
-          className="h-10 gap-2 border-teal-300 bg-white font-bold text-teal-800 hover:bg-teal-100 dark:border-teal-700 dark:bg-slate-900 dark:text-teal-200 dark:hover:bg-slate-800"
+          className="h-10 gap-2 border-teal-300 bg-white font-bold text-teal-800 hover:bg-teal-100"
           onClick={handleSync}
           disabled={isPending}
           data-spekit={SPEKIT.offlineSyncNow}

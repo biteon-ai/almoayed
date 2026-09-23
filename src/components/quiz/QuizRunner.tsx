@@ -20,7 +20,6 @@ import {
   CloudUpload,
   Flag,
   HelpCircle,
-  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toUserMessage, uiMessage, ErrorCode } from "@/lib/app-errors";
@@ -108,11 +107,8 @@ export function QuizRunner({
   const [exitOpen, setExitOpen] = useState(false);
   const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const busy = isSubmitting || isPending || isNavigating;
-  useStudentLoadingBarSync(busy);
+  useStudentLoadingBarSync(isPending);
   const router = useRouter();
   const searchParams = useSearchParams();
   const reviewSubmissionId = searchParams.get("review");
@@ -238,7 +234,7 @@ export function QuizRunner({
   );
 
   const handleAnswer = (questionId: string, value: string) => {
-    if (isSubmitted || pendingSync || timeLocked || busy) return;
+    if (isSubmitted || pendingSync || timeLocked) return;
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
     hapticPulse(10);
 
@@ -262,7 +258,6 @@ export function QuizRunner({
       setError(uiMessage(ErrorCode.QUIZ_EMPTY));
       return;
     }
-    if (isSubmitting || isPending) return;
 
     const payload =
       opts.forceTimedExpiry || opts.allowIncomplete
@@ -279,27 +274,26 @@ export function QuizRunner({
     }
 
     setError(null);
-    setIsSubmitting(true);
     if (opts.forceTimedExpiry) {
       setTimeExpiredNotice(true);
       setAnswers(payload);
     }
 
     startTransition(async () => {
-      try {
-        if (!online) {
-          await enqueuePendingSubmission({
-            quizId: quiz.id,
-            teacherId,
-            answers: payload,
-            questionIds,
-            sessionExpiredAtSubmit: opts.forceTimedExpiry,
-          });
-          setPendingSync(true);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          return;
-        }
+      if (!online) {
+        await enqueuePendingSubmission({
+          quizId: quiz.id,
+          teacherId,
+          answers: payload,
+          questionIds,
+          sessionExpiredAtSubmit: opts.forceTimedExpiry,
+        });
+        setPendingSync(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
 
+      try {
         const result = await submitQuiz(quiz.id, payload);
         await clearInProgress(quiz.id);
         setResults(result);
@@ -309,8 +303,6 @@ export function QuizRunner({
       } catch (e) {
         setError(toUserMessage(e, "صار خطأ أثناء تسليم الإجابات."));
         autoSubmitStarted.current = false;
-      } finally {
-        setIsSubmitting(false);
       }
     });
   };
@@ -335,13 +327,12 @@ export function QuizRunner({
   ]);
 
   const handleSubmit = () => {
-    if (busy || !complete) return;
+    if (isPending || !complete) return;
     hapticPulse(20);
     setSubmitConfirmOpen(true);
   };
 
   const handleSubmitConfirm = () => {
-    if (busy) return;
     setSubmitConfirmOpen(false);
     submitAttempt({
       forceTimedExpiry: false,
@@ -361,8 +352,6 @@ export function QuizRunner({
   }, []);
 
   const handleRetrySync = () => {
-    if (busy) return;
-    setIsSubmitting(true);
     startTransition(async () => {
       try {
         await flushPendingSubmissions();
@@ -374,14 +363,11 @@ export function QuizRunner({
         setPendingSync(false);
       } catch (e) {
         setError(toUserMessage(e, "تعذرت مزامنة المحاولة. جرّب مرة تانية."));
-      } finally {
-        setIsSubmitting(false);
       }
     });
   };
 
   const goToQuestion = (index: number) => {
-    if (busy) return;
     if (advanceTimer.current) {
       window.clearTimeout(advanceTimer.current);
       advanceTimer.current = null;
@@ -403,18 +389,14 @@ export function QuizRunner({
   }, [confirmExit, quiz.id]);
 
   const handleExitRequest = () => {
-    if (busy) return;
     if (confirmExit) {
       setExitOpen(true);
       return;
     }
-    setIsNavigating(true);
     router.replace(exitHref);
   };
 
   const handleExitConfirm = () => {
-    if (isNavigating) return;
-    setIsNavigating(true);
     void saveInProgress(quiz.id, {
       answers: answersRef.current,
       activeIndex,
@@ -441,9 +423,8 @@ export function QuizRunner({
         durationMinutes={timer?.durationMinutes}
         attemptSubmittedAt={isSubmitted ? results?.submittedAt : null}
         onExit={handleExitRequest}
-        exitBusy={isNavigating || isSubmitting}
         onOpenJump={
-          questions.length > 0 && !pendingSync && !busy
+          questions.length > 0 && !pendingSync
             ? () => setJumpOpen(true)
             : undefined
         }
@@ -453,7 +434,6 @@ export function QuizRunner({
           open={exitOpen}
           onOpenChange={setExitOpen}
           onConfirm={handleExitConfirm}
-          confirming={isNavigating}
         />
       ) : null}
       {submitConfirmOpen ? (
@@ -461,7 +441,6 @@ export function QuizRunner({
           open={submitConfirmOpen}
           onOpenChange={setSubmitConfirmOpen}
           onConfirm={handleSubmitConfirm}
-          confirming={isSubmitting || isPending}
         />
       ) : null}
       {jumpOpen ? (
@@ -520,10 +499,10 @@ export function QuizRunner({
                     variant="outline"
                     className="h-11 font-bold"
                     onClick={handleRetrySync}
-                    disabled={busy}
+                    disabled={isPending}
                     data-spekit={SPEKIT.offlineSyncNow}
                   >
-                    {busy ? "جاري المزامنة..." : "مزامنة الآن"}
+                    مزامنة الآن
                   </Button>
                 )}
               </CardContent>
@@ -567,7 +546,7 @@ export function QuizRunner({
                           : answers[activeQuestion.id]
                       }
                       onChange={(v) => handleAnswer(activeQuestion.id, v)}
-                      disabled={isSubmitted || timeLocked || busy}
+                      disabled={isSubmitted || timeLocked}
                       showResult={isSubmitted}
                       correctAnswer={
                         isSubmitted ? activeResult?.correctAnswer : undefined
@@ -597,18 +576,15 @@ export function QuizRunner({
                                   "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                                 )}
                                 onClick={handleSubmit}
-                                disabled={!complete || busy}
-                                aria-busy={isSubmitting || isPending || undefined}
+                                disabled={!complete || isPending}
                                 {...spekit(SPEKIT.quizSubmitButton)}
                               >
-                                {isSubmitting || isPending ? (
-                                  <>
-                                    <Loader2
-                                      className="size-3.5 animate-spin"
-                                      aria-hidden
-                                    />
-                                    {online ? "جاري التسليم..." : "جاري الحفظ..."}
-                                  </>
+                                {isPending ? (
+                                  online ? (
+                                    "جاري التسليم..."
+                                  ) : (
+                                    "جاري الحفظ..."
+                                  )
                                 ) : (
                                   <>
                                     <Flag className="size-3.5" aria-hidden />
@@ -626,7 +602,6 @@ export function QuizRunner({
                               results={results}
                               onNavigate={goToQuestion}
                               compact={showTakingSubmit}
-                              disabled={busy}
                               className={
                                 showTakingSubmit ? "ms-auto" : "mx-auto"
                               }
@@ -691,30 +666,12 @@ export function QuizRunner({
                 </Card>
               )}
 
-              <Link
-                href="/dashboard"
-                className="block"
-                onClick={(event) => {
-                  if (isNavigating) {
-                    event.preventDefault();
-                    return;
-                  }
-                  setIsNavigating(true);
-                }}
-              >
+              <Link href="/dashboard" className="block">
                 <Button
                   variant="outline"
-                  className="h-12 w-full gap-2 rounded-2xl border-border/60 font-bold hover:bg-muted/60"
-                  disabled={isNavigating}
+                  className="h-12 w-full rounded-2xl border-border/60 font-bold hover:bg-muted/60"
                 >
-                  {isNavigating ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" aria-hidden />
-                      جاري الرجوع...
-                    </>
-                  ) : (
-                    "العودة للوحة التحكم"
-                  )}
+                  العودة للوحة التحكم
                 </Button>
               </Link>
             </div>
