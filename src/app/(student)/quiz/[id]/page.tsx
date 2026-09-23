@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import {
+  clearTimedQuizSession,
   getChallengeLeaderboard,
   getQuizForStudent,
   getSubmissionResults,
@@ -29,7 +30,10 @@ interface QuizPageProps {
 export async function generateMetadata({ params }: QuizPageProps) {
   const { id } = await params;
   try {
-    const { quiz } = await getQuizForStudent(id, { skipPresentation: true });
+    const { quiz } = await getQuizForStudent(id, {
+      skipPresentation: true,
+      ensureTimer: false,
+    });
     return {
       title: quiz?.title ?? "اختبار",
     };
@@ -54,6 +58,7 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
   try {
     data = await getQuizForStudent(id, {
       skipPresentation: isExplicitReview,
+      ensureTimer: !isExplicitReview,
     });
   } catch (e) {
     if (e instanceof AppError && e.code === ErrorCode.SUBSCRIPTION_REQUIRED) {
@@ -115,6 +120,12 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
   const initialResults = reviewId
     ? await getSubmissionResults(reviewId)
     : null;
+
+  // Review / results must not leave a next-attempt clock ticking — otherwise
+  // «إعادة المحاولة» reuses an already-expired QUIZ-004 session.
+  if (initialResults && attemptState.canStartNewAttempt) {
+    await clearTimedQuizSession(id);
+  }
 
   const runnerQuestions = initialResults
     ? applyPresentation(questions, presentationFromSubmitResult(initialResults))

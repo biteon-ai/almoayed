@@ -7,7 +7,6 @@ export default function QuizPageLoading() {
     <Suspense
       fallback={
         <PageLoadingView
-          compact
           message="جاري التحميل..."
           subMessage="نحضّر صفحتك"
         />

@@ -21,6 +21,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **QUIZ-006** — Retake wipes drafts; each attempt shuffles questions and MCQ options (review snapshot)
 - **UI-018** — Compact header «تسليم» (disabled until complete), right stepper, timer countdown bar, polished «كل الأسئلة»
 - **UI-019** — Compact student green heroes (dashboard / quizzes / results; phone density; hide subtitles; tight stats)
+- **UI-020** — App version (`v{package.json}`) only in Settings «حول التطبيق»
 - **GAMIF-001** — Teacher level tiers + student progress/badges (active teacher)
 - **GAMIF-004** — Rewards hall horizontal carousel + expand grid
 - **GAMIF-002** — Default gamification preset loader on teacher settings

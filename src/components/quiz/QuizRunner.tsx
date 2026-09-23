@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { submitQuiz } from "@/actions/quiz";
+import { useQuizPlayerChrome } from "@/components/layout/StudentChromeContext";
 import { useStudentLoadingBarSync } from "@/components/layout/StudentPortalShell";
 import { OfflineStatusBanner } from "@/components/quiz/OfflineStatusBanner";
 import { QuizPlayerHeader } from "@/components/quiz/QuizPlayerHeader";
@@ -102,8 +103,11 @@ export function QuizRunner({
   const [error, setError] = useState<string | null>(null);
   const [timeExpiredNotice, setTimeExpiredNotice] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(() =>
-    timer ? timer.remainingSeconds : 0
+    timer && Number.isFinite(timer.remainingSeconds)
+      ? Math.max(0, Math.floor(timer.remainingSeconds))
+      : 0
   );
+  const [timerArmed, setTimerArmed] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
@@ -113,6 +117,8 @@ export function QuizRunner({
   const [isPending, startTransition] = useTransition();
   const busy = isSubmitting || isPending || isNavigating;
   useStudentLoadingBarSync(busy);
+  // Immersive chrome only while the player is mounted — route loading keeps hub chrome.
+  useQuizPlayerChrome(true);
   const router = useRouter();
   const searchParams = useSearchParams();
   const reviewSubmissionId = searchParams.get("review");
@@ -128,15 +134,21 @@ export function QuizRunner({
     if (!timer) {
       timerHydratedAtPerf.current = null;
       timerServerRemaining.current = 0;
+      setTimerArmed(false);
       setRemainingSeconds(0);
       return;
     }
 
+    const serverRemaining = Number.isFinite(timer.remainingSeconds)
+      ? Math.max(0, Math.floor(timer.remainingSeconds))
+      : 0;
+
     // Prefer server remaining + monotonic clock so changing the device
     // wall clock mid-attempt cannot stretch the countdown.
     timerHydratedAtPerf.current = performance.now();
-    timerServerRemaining.current = timer.remainingSeconds;
-    setRemainingSeconds(timer.remainingSeconds);
+    timerServerRemaining.current = serverRemaining;
+    setRemainingSeconds(serverRemaining);
+    setTimerArmed(true);
 
     const id = window.setInterval(() => {
       const hydratedAt = timerHydratedAtPerf.current;
@@ -316,8 +328,10 @@ export function QuizRunner({
   };
 
   useEffect(() => {
-    if (!timer || isSubmitted || pendingSync || !draftReady) return;
-    if (remainingSeconds > 0) return;
+    if (!timer || !timerArmed || isSubmitted || pendingSync || !draftReady) {
+      return;
+    }
+    if (!Number.isFinite(remainingSeconds) || remainingSeconds > 0) return;
     if (autoSubmitStarted.current) return;
     if (questions.length === 0) return;
 
@@ -327,6 +341,7 @@ export function QuizRunner({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on expiry after draft restore
   }, [
     timer,
+    timerArmed,
     remainingSeconds,
     isSubmitted,
     pendingSync,

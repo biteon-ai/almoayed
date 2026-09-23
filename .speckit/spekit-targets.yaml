@@ -6,7 +6,7 @@ meta:
   app: Al-Moayed
   language: ar
   direction: rtl
-  total_targets: 135
+  total_targets: 136
 
 # ── Core Spots (priority — wire these first in Spekit) ───────────
 core_spots:
@@ -318,7 +318,8 @@ UI-010:
 
 # ── Native home-screen shell / drawer / tiles / A2HS ────────────
 UI-012:
-  native-app-version: "Profile drawer published version label"
+  native-app-version: "Profile drawer link to Settings حول التطبيق (version lives there)"
+  app-version: "Muted published version label (v{package.json}) in Settings حول التطبيق only"
 UI-013:
   native-profile-drawer: "Student native profile / settings drawer"
   native-drawer-close: "Close control on the native profile drawer"

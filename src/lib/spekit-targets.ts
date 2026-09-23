@@ -278,6 +278,7 @@ export const SPEKIT = {
   nativeShareApp: "native-share-app",
   nativeContactUs: "native-contact-us",
   nativeAppVersion: "native-app-version",
+  appVersion: "app-version",
 
   // ── DASH-002 action tiles ────────────────────────────────────
   dashboardActionTiles: "dashboard-action-tiles",

@@ -1,20 +1,26 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
-import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface PageLoadingViewProps {
   message?: string;
   subMessage?: string;
-  /** Fill the student/teacher shell content area instead of the full viewport. */
+  /**
+   * Fill the shell **content** area (default). Pass `false` only for rare
+   * full-viewport surfaces outside authenticated chrome.
+   */
   compact?: boolean;
 }
 
+/**
+ * Unified in-shell loading — spinner card + pulsed dots inside the main column.
+ * Authenticated layouts keep header / bottom nav mounted around this view.
+ */
 export function PageLoadingView({
   message = "جاري التحميل…",
   subMessage = "نحضّر صفحتك",
-  compact = false,
+  compact = true,
 }: PageLoadingViewProps) {
   return (
     <div
@@ -22,11 +28,12 @@ export function PageLoadingView({
         "flex flex-col items-center justify-center px-6",
         compact
           ? "min-h-[50vh] py-16"
-          : "min-h-dvh bg-gradient-to-b from-brand-50/30 to-background dark:from-brand-950/20"
+          : "min-h-dvh bg-gradient-to-b from-brand-50/30 to-background py-16 dark:from-brand-950/20"
       )}
       role="status"
       aria-live="polite"
       aria-busy="true"
+      data-page-loading="true"
     >
       <div className="flex max-w-xs flex-col items-center text-center animate-fade-in">
         <div className="relative mb-5 flex size-16 items-center justify-center rounded-2xl border border-brand-200/50 bg-background shadow-md dark:border-brand-800/30">
@@ -50,11 +57,6 @@ export function PageLoadingView({
             />
           ))}
         </div>
-        {!compact ? (
-          <p className="mt-5 text-[10px] font-bold text-muted-foreground/60">
-            {APP_NAME}
-          </p>
-        ) : null}
       </div>
     </div>
   );

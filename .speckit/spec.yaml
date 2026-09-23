@@ -560,8 +560,8 @@ features:
       - tests/features/quiz-004-countdown-timer.test.ts
     acceptance:
       - Teacher enables تفعيل التوقيت with duration 1–180 minutes on create/edit
-      - Timed attempt snapshots duration + absolute ends_at at first open; teacher edits do not change in-progress sessions
-      - Refresh / cleared storage reuses the same DB session for the current attempt (no clock reset); retakes get a fresh session only after submit
+      - Timed attempt snapshots duration + absolute ends_at only on the taking load (not metadata, review, submit gate, or taking-route RSC prefetch)
+      - Refresh / cleared storage reuses the same DB session for the current attempt (no clock reset); retakes get a fresh session after submit + review cleanup of orphan clocks
       - Student sticky MM:SS badge (minutes may be ≥ 60); warning style at ≤ 2 minutes; client countdown is monotonic from server remaining
       - At 00:00 or late reopen: lock answers, Arabic notice, auto-submit with padded blanks; server allows post-deadline submit using DB ends_at
       - Untimed quizzes show no timer badge; QUIZ-001 gatekeeper selects unchanged
@@ -1045,6 +1045,7 @@ features:
       - manifest + mobile-web-app-capable meta
       - Global emerald top progress bar on route navigation via TopLoaderProvider
       - useLoadingBar / useLoadingBarSync / withLoadingBar for manual heavy-action feedback
+      - Authenticated route `loading.tsx` keeps student header + bottom nav mounted; content uses shared `PageLoadingView`
 
   - id: OFFLINE-001
     name: Offline Quiz PWA
@@ -1427,7 +1428,9 @@ partial_features:
     spec: specs/030-quiz-player-ui/
     files:
       - src/lib/quiz-player.ts
+      - src/lib/student-chrome.ts
       - src/components/quiz/QuizRunner.tsx
+      - src/components/quiz/QuizRunnerContainer.tsx
       - src/components/quiz/QuestionCard.tsx
       - src/components/quiz/QuizPlayerHeader.tsx
       - src/components/quiz/QuizExitDialog.tsx
@@ -1435,10 +1438,15 @@ partial_features:
       - src/components/quiz/QuestionJumpSheet.tsx
       - src/components/quiz/QuizTimerBadge.tsx
       - src/components/quiz/QuestionNavGrid.tsx
+      - src/components/layout/StudentAppChrome.tsx
+      - src/components/layout/StudentChromeContext.tsx
+      - src/components/ui/page-loading-view.tsx
       - tests/features/ui-016-quiz-player.test.ts
+      - tests/features/ui-001-loading-chrome.test.ts
       - e2e/ui-016-quiz-player.spec.ts
     acceptance:
-      - Single quiz chrome on `/quiz/[id]`: global student header/bottom nav hidden; QuizPlayerHeader is sole sticky top bar
+      - Single quiz chrome on `/quiz/[id]` **after** QuizRunner mounts: global student header/bottom nav hidden; QuizPlayerHeader is sole sticky top bar
+      - Route `loading.tsx` / runner hydrate keep hub header + bottom nav visible with in-content `PageLoadingView` (no full-shell swap)
       - Header shows dynamic quiz title (truncated on narrow screens), Arabic exit confirm, and MM:SS «الوقت المتبقي» when timed
       - One immersive question card with A/B/C/D rows; selected state #065f46; no solutions until submit
       - Horizontal pager + all-questions sheet replace the taking sidebar grid
@@ -1553,6 +1561,23 @@ partial_features:
       - student-welcome
       - student-quizzes-page
       - student-results-page
+
+  - id: UI-020
+    name: App Version Indicator
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    routes: ["/settings", "/teacher/settings"]
+    files:
+      - package.json
+      - src/lib/constants.ts
+      - src/components/brand/AppVersion.tsx
+      - src/components/settings/SettingsPage.tsx
+      - tests/features/ui-020-app-version.test.ts
+    acceptance:
+      - APP_VERSION is read from package.json and rendered as v{version} (synced with GitHub release tags)
+      - Version appears only in Settings «حول التطبيق» (student and teacher); not on landing, login, results, or portal footers
+      - Profile drawer links to /settings#about instead of showing the version inline
+    spekit: [app-version]
 
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel
