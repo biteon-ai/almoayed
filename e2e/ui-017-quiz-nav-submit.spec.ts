@@ -181,9 +181,9 @@ test.describe(`${FEATURE} Quiz nav and gated submit`, () => {
     const sheetBox = await jumpSheet.boundingBox();
     const viewport = page.viewportSize();
     if (sheetBox && viewport) {
-      // Mobile jump UI is a bottom sheet (not a centered modal).
+      // Mobile jump UI is a bottom-docked sheet (content height, not a centered card).
       expect(sheetBox.y).toBeGreaterThan(viewport.height * 0.15);
-      expect(sheetBox.y + sheetBox.height).toBeGreaterThan(viewport.height * 0.7);
+      expect(viewport.height - (sheetBox.y + sheetBox.height)).toBeLessThan(48);
     }
     await page.getByRole("button", { name: "إغلاق" }).click();
     await expect(jumpSheet).toBeHidden();

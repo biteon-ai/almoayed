@@ -74,40 +74,49 @@ export function QuizRunnerContainer({
     let cancelled = false;
 
     async function hydrate() {
-      if (quiz && questions.length > 0) {
-        if (online && !initialResults) {
-          await saveQuizPackage({ quiz, questions, teacherId, timer });
+      try {
+        if (quiz && questions.length > 0) {
+          if (!cancelled) {
+            setLoadedQuiz(quiz);
+            setLoadedQuestions(questions);
+            setLoadedResults(initialResults ?? null);
+            setLoadedTimer(timer);
+            setUnavailable(false);
+            setHydrated(true);
+          }
+          // Offline cache is best-effort — never block the player UI on IndexedDB.
+          if (online && !initialResults) {
+            void saveQuizPackage({ quiz, questions, teacherId, timer }).catch(
+              () => undefined
+            );
+          }
+          return;
         }
+
+        if (!online) {
+          const pkg = await getQuizPackage(quizId);
+          if (cancelled) return;
+
+          if (pkg) {
+            setLoadedQuiz(pkg.quiz);
+            setLoadedQuestions(pkg.questions);
+            setLoadedResults(null);
+            setLoadedTimer(pkg.timer ?? null);
+            setUnavailable(false);
+          } else {
+            setUnavailable(true);
+          }
+          setHydrated(true);
+          return;
+        }
+
         if (!cancelled) {
-          setLoadedQuiz(quiz);
-          setLoadedQuestions(questions);
-          setLoadedResults(initialResults ?? null);
-          setLoadedTimer(timer);
-          setUnavailable(false);
           setHydrated(true);
         }
-        return;
-      }
-
-      if (!online) {
-        const pkg = await getQuizPackage(quizId);
-        if (cancelled) return;
-
-        if (pkg) {
-          setLoadedQuiz(pkg.quiz);
-          setLoadedQuestions(pkg.questions);
-          setLoadedResults(null);
-          setLoadedTimer(pkg.timer ?? null);
-          setUnavailable(false);
-        } else {
-          setUnavailable(true);
+      } catch {
+        if (!cancelled) {
+          setHydrated(true);
         }
-        setHydrated(true);
-        return;
-      }
-
-      if (!cancelled) {
-        setHydrated(true);
       }
     }
 

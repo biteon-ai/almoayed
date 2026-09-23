@@ -1390,10 +1390,16 @@ partial_features:
       - src/components/providers/appearance-provider.tsx
       - src/components/layout/StudentHeader.tsx
       - src/components/layout/StudentBottomNav.tsx
+      - src/components/pwa/PwaStandaloneEntryRedirect.tsx
+      - src/components/landing/LandingPageView.tsx
+      - src/app/login/page.tsx
       - tests/features/ui-012-native-shell.test.ts
       - e2e/ui-012-native-pwa-shell.spec.ts
     acceptance:
       - Installed launch is display standalone with المؤيد icons (192/512 + Apple 180)
+      - Manifest start_url is /login with scope / so cold starts skip the marketing landing
+      - Standalone clients that still open / are client-redirected to /login (PwaStandaloneEntryRedirect)
+      - Signed-in visitors hitting /login are server-redirected to their role dashboard
       - theme_color teal and background_color match the light shell
       - Viewport remains unscalable; OS text scaling still applies
       - Student chrome uses semantic tokens for dark/light appearance

@@ -6,7 +6,8 @@ Locale `ar-SY`, `dir="rtl"`, Tajawal. Touch targets `h-10`–`h-12`. Spekit via 
 
 | Surface | Behavior |
 |---------|----------|
-| `public/manifest.json` | `display: "standalone"`, `lang: "ar"`, `dir: "rtl"`, `theme_color: "#0d9488"`, `background_color` aligned to light `--background` (`#f8fafc`), icons 192/512 `any` + `maskable`, Apple 180 via `apple-touch-icon` |
+| `public/manifest.json` | `display: "standalone"`, `start_url: "/login"`, `scope: "/"`, `lang: "ar"`, `dir: "rtl"`, `theme_color: "#0d9488"`, `background_color` aligned to light `--background` (`#f8fafc`), icons 192/512 `any` + `maskable`, Apple 180 via `apple-touch-icon` |
+| Standalone landing guard | `PwaStandaloneEntryRedirect` on marketing `/` replaces to `/login` when `display-mode: standalone` or iOS `navigator.standalone` |
 | Root viewport | Keep `userScalable: false`, `maximumScale: 1`, `viewportFit: "cover"`; `themeColor` light `#0d9488` / dark `#042626` (or resolved appearance) |
 | Student chrome | Header, bottom nav, portal background use **semantic tokens** (`bg-background`, `border-border`, `text-foreground`) — not hard-coded `bg-white` / `slate-100` |
 
