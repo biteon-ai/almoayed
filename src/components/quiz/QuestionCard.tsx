@@ -26,8 +26,8 @@ interface QuestionCardProps {
 
 function WrongBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold text-red-600">
-      <span className="flex size-4 items-center justify-center rounded-full bg-red-100">
+    <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold text-red-600 dark:border-red-800/60 dark:bg-red-950/50 dark:text-red-300">
+      <span className="flex size-4 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/60">
         <X className="size-2.5 stroke-[3]" aria-hidden />
       </span>
       إجابتك خاطئة
@@ -37,7 +37,7 @@ function WrongBadge() {
 
 function CorrectBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-green-100 bg-green-50 px-2.5 py-0.5 text-[10px] font-bold text-green-600">
+    <span className="inline-flex items-center gap-1 rounded-full border border-green-100 bg-green-50 px-2.5 py-0.5 text-[10px] font-bold text-green-600 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-300">
       <Check className="size-3 stroke-[3]" aria-hidden />
       الإجابة الصحيحة
     </span>
@@ -84,7 +84,7 @@ export function QuestionCard({
         </div>
 
         {question.question_image_url && (
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60">
             <Image
               src={question.question_image_url}
               alt={`توضيح السؤال ${index + 1}`}
@@ -115,12 +115,14 @@ export function QuestionCard({
                 className={cn(
                   "flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-2xl border px-4 py-3 transition-all duration-200",
                   "border-border bg-background hover:border-muted-foreground/30 hover:bg-muted/40",
+                  "dark:border-slate-700 dark:bg-slate-950/40 dark:hover:border-slate-500 dark:hover:bg-slate-900/80",
                   takingSelected && "text-white hover:text-white",
                   isCorrect &&
-                    "border-green-200 bg-green-50/70 text-green-900 hover:bg-green-50/70",
+                    "border-green-200 bg-green-50/70 text-green-900 hover:bg-green-50/70 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-100 dark:hover:bg-emerald-950/40",
                   isWrong &&
-                    "border-red-200 bg-red-50/70 text-red-900 hover:bg-red-50/70",
-                  disabled && "cursor-default hover:border-border hover:bg-background"
+                    "border-red-200 bg-red-50/70 text-red-900 hover:bg-red-50/70 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-100 dark:hover:bg-red-950/40",
+                  disabled &&
+                    "cursor-default hover:border-border hover:bg-background dark:hover:border-slate-700 dark:hover:bg-slate-950/40"
                 )}
                 style={
                   takingSelected
@@ -146,10 +148,11 @@ export function QuestionCard({
                   <div
                     className={cn(
                       "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors",
-                      "bg-muted text-muted-foreground",
+                      "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-200",
                       takingSelected && "bg-white/15 text-white",
                       isCorrect && "bg-green-500 text-white",
-                      isWrong && "bg-red-100 text-red-600"
+                      isWrong &&
+                        "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300"
                     )}
                     style={
                       takingSelected
@@ -187,22 +190,22 @@ export function QuestionCard({
         </RadioGroup>
 
         {showResult && explanationText && (
-          <div className="border-t border-slate-100 pt-4">
+          <div className="border-t border-slate-100 pt-4 dark:border-slate-700">
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               className={cn(
                 "flex w-full items-center justify-between py-2 text-xs font-bold transition-colors",
                 isExpanded
-                  ? "text-brand-700"
-                  : "text-slate-500 hover:text-brand-600"
+                  ? "text-brand-700 dark:text-brand-300"
+                  : "text-slate-500 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-300"
               )}
             >
               <span className="flex items-center gap-1.5">
-                <HelpCircle className="size-4 text-brand-500" />
+                <HelpCircle className="size-4 text-brand-500 dark:text-brand-400" />
                 شرح الحل التفصيلي
               </span>
-              <span className="rounded-md bg-slate-100 px-2.5 py-1 text-[10px]">
+              <span className="rounded-md bg-slate-100 px-2.5 py-1 text-[10px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                 {isExpanded ? "إخفاء ▲" : "عرض ▼"}
               </span>
             </button>
@@ -216,15 +219,15 @@ export function QuestionCard({
               )}
             >
               <div className="overflow-hidden">
-                <div className="space-y-3 rounded-2xl border border-brand-100 bg-brand-50/30 p-5 text-start">
-                  <p className="text-xs font-bold text-brand-800">
+                <div className="space-y-3 rounded-2xl border border-brand-100 bg-brand-50/30 p-5 text-start dark:border-brand-800/50 dark:bg-brand-950/30">
+                  <p className="text-xs font-bold text-brand-800 dark:text-brand-200">
                     خطوات التفكير والحل العلمي:
                   </p>
-                  <div className="text-sm font-medium leading-relaxed text-slate-800">
+                  <div className="text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-100">
                     <MathText text={explanationText} />
                   </div>
                   {explanationMediaUrl && (
-                    <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
+                    <div className="overflow-hidden rounded-xl border border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-900">
                       {/\.(mp4|webm|ogg)$/i.test(explanationMediaUrl) ? (
                         <video
                           src={explanationMediaUrl}

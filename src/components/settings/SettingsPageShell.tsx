@@ -46,8 +46,8 @@ function NavButton({
       className={cn(
         "w-full shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-start text-sm font-semibold transition-all duration-200",
         isActive
-          ? "border-brand-200/80 bg-brand-50 text-brand-800 shadow-sm ring-1 ring-brand-100/80"
-          : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-brand-700",
+          ? "border-brand-200/80 bg-brand-50 text-brand-800 shadow-sm ring-1 ring-brand-100/80 dark:border-brand-700/50 dark:bg-brand-950/40 dark:text-brand-200 dark:ring-brand-800/40"
+          : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-brand-700 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-900 dark:hover:text-brand-200",
         className
       )}
     >
@@ -139,7 +139,7 @@ export function SettingsPageShell({
             <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               الإعدادات
             </h1>
-            <p className="hidden text-sm leading-snug tracking-wide text-slate-500 sm:block md:text-base">
+            <p className="hidden text-sm leading-snug tracking-wide text-slate-500 sm:block md:text-base dark:text-slate-300">
               إدارة حسابك وجلساتك
             </p>
           </div>
@@ -153,10 +153,11 @@ export function SettingsPageShell({
             aria-label="أقسام الإعدادات"
             className={cn(
               "sticky top-8 rounded-2xl border border-slate-200/80 bg-white p-3",
-              "shadow-md ring-1 ring-slate-900/[0.03]"
+              "shadow-md ring-1 ring-slate-900/[0.03]",
+              "dark:border-slate-700 dark:bg-slate-950 dark:shadow-none dark:ring-white/10"
             )}
           >
-            <p className="border-b border-slate-100 px-3 pb-2.5 pt-1 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <p className="border-b border-slate-100 px-3 pb-2.5 pt-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:border-slate-700 dark:text-slate-400">
               الأقسام
             </p>
             <div className="space-y-1 pt-1">
