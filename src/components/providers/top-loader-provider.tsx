@@ -54,24 +54,34 @@ function isInternalNavigationAnchor(anchor: HTMLAnchorElement): boolean {
 /** Starts the bar synchronously before App Router mutates history. */
 function NavigationStartListener() {
   useEffect(() => {
-    const begin = () => startTopNavLoader();
+    const begin = () => {
+      try {
+        startTopNavLoader();
+      } catch {
+        /* nprogress / DOM race — never break navigation */
+      }
+    };
 
     const handleDocumentClick = (event: MouseEvent) => {
-      if (event.defaultPrevented) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-        return;
+      try {
+        if (event.defaultPrevented) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+          return;
+        }
+        if (event.button !== 0) return;
+
+        let element = event.target as Element | null;
+        while (element && element.tagName !== "A") {
+          element = element.parentElement;
+        }
+
+        if (!(element instanceof HTMLAnchorElement)) return;
+        if (!isInternalNavigationAnchor(element)) return;
+
+        begin();
+      } catch {
+        /* extension-mutated event targets — ignore */
       }
-      if (event.button !== 0) return;
-
-      let element = event.target as Element | null;
-      while (element && element.tagName !== "A") {
-        element = element.parentElement;
-      }
-
-      if (!(element instanceof HTMLAnchorElement)) return;
-      if (!isInternalNavigationAnchor(element)) return;
-
-      begin();
     };
 
     const currentPushState = window.history.pushState.bind(window.history);
@@ -79,15 +89,19 @@ function NavigationStartListener() {
       window.history
     );
 
-    window.history.pushState = (...args) => {
-      begin();
-      return currentPushState(...args);
-    };
+    try {
+      window.history.pushState = (...args) => {
+        begin();
+        return currentPushState(...args);
+      };
 
-    window.history.replaceState = (...args) => {
-      begin();
-      return currentReplaceState(...args);
-    };
+      window.history.replaceState = (...args) => {
+        begin();
+        return currentReplaceState(...args);
+      };
+    } catch {
+      // Some environments / extensions lock history — skip patching.
+    }
 
     window.addEventListener("click", handleDocumentClick, true);
     window.addEventListener("popstate", begin);
@@ -95,8 +109,12 @@ function NavigationStartListener() {
     return () => {
       window.removeEventListener("click", handleDocumentClick, true);
       window.removeEventListener("popstate", begin);
-      window.history.pushState = currentPushState;
-      window.history.replaceState = currentReplaceState;
+      try {
+        window.history.pushState = currentPushState;
+        window.history.replaceState = currentReplaceState;
+      } catch {
+        /* ignore */
+      }
     };
   }, []);
 
@@ -110,14 +128,24 @@ function RouteFinishListener() {
 
   useEffect(() => {
     const finishTimer = window.setTimeout(() => {
-      stopTopNavLoader(true);
+      try {
+        stopTopNavLoader(true);
+      } catch {
+        /* ignore */
+      }
     }, FINISH_DELAY_MS);
 
     return () => window.clearTimeout(finishTimer);
   }, [pathname, searchParams]);
 
   useEffect(() => {
-    const finish = () => stopTopNavLoader(true);
+    const finish = () => {
+      try {
+        stopTopNavLoader(true);
+      } catch {
+        /* ignore */
+      }
+    };
     window.addEventListener("hashchange", finish);
     return () => window.removeEventListener("hashchange", finish);
   }, []);

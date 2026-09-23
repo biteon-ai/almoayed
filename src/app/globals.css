@@ -32,7 +32,7 @@
   .dark {
     color-scheme: dark;
     /* Slightly lifted surfaces so cards/modals separate from page bg */
-    --background: 215 28% 8%;
+    --background: 222 47% 5%;
     --foreground: 210 20% 98%;
     --card: 215 24% 12%;
     --card-foreground: 210 20% 98%;

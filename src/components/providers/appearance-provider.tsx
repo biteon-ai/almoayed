@@ -27,7 +27,11 @@ const AppearanceContext = createContext<AppearanceContextValue | null>(null);
 
 function prefersDarkFromWindow(): boolean {
   if (typeof window === "undefined") return false;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  } catch {
+    return false;
+  }
 }
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
@@ -35,23 +39,54 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [prefersDark, setPrefersDark] = useState(false);
 
   useEffect(() => {
-    setAppearanceState(readAppearance());
-    setPrefersDark(prefersDarkFromWindow());
+    try {
+      setAppearanceState(readAppearance());
+      setPrefersDark(prefersDarkFromWindow());
+    } catch {
+      // Storage / matchMedia blocked — keep defaults.
+    }
 
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => setPrefersDark(media.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
+    let media: MediaQueryList | null = null;
+    const onChange = () => {
+      try {
+        setPrefersDark(prefersDarkFromWindow());
+      } catch {
+        /* ignore */
+      }
+    };
+
+    try {
+      media = window.matchMedia("(prefers-color-scheme: dark)");
+      media.addEventListener("change", onChange);
+    } catch {
+      media = null;
+    }
+
+    return () => {
+      try {
+        media?.removeEventListener("change", onChange);
+      } catch {
+        /* ignore */
+      }
+    };
   }, []);
 
   const scheme = resolveScheme(appearance, prefersDark);
 
   useEffect(() => {
-    applyAppearanceClass(scheme);
+    try {
+      applyAppearanceClass(scheme);
+    } catch {
+      // DOM / meta theme-color write failed — non-fatal.
+    }
   }, [scheme]);
 
   const setAppearance = useCallback((value: Appearance) => {
-    writeAppearance(value);
+    try {
+      writeAppearance(value);
+    } catch {
+      /* ignore */
+    }
     setAppearanceState(value);
   }, []);
 

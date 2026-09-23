@@ -24,6 +24,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **UI-020** — App version (`v{package.json}`) only in Settings «حول التطبيق»
 - **FIX-UI-004** — Settings/dark inputs use slate surfaces (no forced white `!bg-white`)
 - **FIX-UI-005** — Blocking FOUC script + critical CSS prevent white flash on dark hard reload
+- **FIX-UI-006** — Runtime guard + early head/console filter ignore extension noise; providers fail soft
 - **GAMIF-001** — Teacher level tiers + student progress/badges (active teacher)
 - **GAMIF-004** — Rewards hall horizontal carousel + expand grid
 - **GAMIF-002** — Default gamification preset loader on teacher settings

@@ -1278,10 +1278,32 @@ partial_features:
       - src/components/ui/page-loading-view.tsx
       - tests/features/fix-ui-005-dark-fouc.test.ts
     acceptance:
-      - Blocking head script sets `.dark` + inline `html`/`body` background before first paint
-      - Critical FOUC `<style>` paints slate dark page bg when `html.dark` before CSS loads
+      - Blocking sync `<script>` + critical `<style>` live inside root `<head>` (never as direct `<html>` children) and set `.dark`/`.light` + page bg before first paint
+      - Critical FOUC CSS uses `prefers-color-scheme: dark` so system-dark users never flash white; `html.dark` / `html.light` override stored preference
+      - Root `<html>` / `<body>` use `bg-white dark:bg-slate-950` (slate-950 `#020617`)
       - Loading views and student-flows / teacher / admin shells avoid light-only white wrappers in dark mode
     extends: [UI-013, FIX-UI-004]
+
+  - id: FIX-UI-006
+    name: Runtime Guard Against Extension Noise
+    status: implemented
+    persona: [STUDENT, TEACHER, ADMIN]
+    routes: ["/"]
+    files:
+      - src/lib/extension-noise.ts
+      - src/components/providers/runtime-guard.tsx
+      - src/components/providers/appearance-provider.tsx
+      - src/components/providers/top-loader-provider.tsx
+      - src/app/layout.tsx
+      - src/app/error.tsx
+      - src/app/global-error.tsx
+      - tests/features/fix-ui-006-extension-noise.test.ts
+    acceptance:
+      - Root `error.tsx` / `global-error.tsx` recover from route and layout failures with Arabic RTL CTAs
+      - Early `<head>` guard + `installBrowserExtensionNoiseFilter` intercept `window.onerror`, `unhandledrejection`, and extension-sourced `console.error`/`warn` (chrome/moz/safari / `background-redux-new` / vault / “No tab with id”) without swallowing real app errors
+      - `RuntimeGuard` wraps AppearanceProvider + TopLoaderProvider so provider failures cannot blank the tree
+      - AppearanceProvider and TopLoaderProvider effects catch DOM / history / matchMedia failures so layout keeps rendering
+    extends: [UI-001, FIX-UI-005]
 
   - id: UI-007
     name: Quiz Results Card Redesign
