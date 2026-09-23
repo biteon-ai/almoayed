@@ -108,20 +108,25 @@ export function QuizPlayerHeader({
           <button
             type="button"
             className={cn(
-              "inline-flex size-9 shrink-0 items-center justify-center gap-1.5 rounded-full sm:h-10 sm:w-auto sm:rounded-xl sm:px-3",
+              "relative z-10 inline-flex size-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full sm:h-10 sm:w-auto sm:rounded-xl sm:px-3",
               "border border-border/80 bg-muted/40 text-foreground shadow-sm",
               "transition-colors hover:bg-muted active:scale-[0.98]",
-              "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30"
             )}
-            onClick={onOpenJump}
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenJump();
+            }}
             aria-label="كل الأسئلة"
+            aria-haspopup="dialog"
             data-spekit={SPEKIT.quizAllQuestions}
           >
             <LayoutGrid className="size-4 shrink-0" aria-hidden />
             <span className="hidden text-xs font-bold sm:inline">كل الأسئلة</span>
           </button>
         ) : (
-          <span className="inline-block size-9 shrink-0" aria-hidden />
+          <span className="inline-block size-11 shrink-0" aria-hidden />
         )}
       </div>
 

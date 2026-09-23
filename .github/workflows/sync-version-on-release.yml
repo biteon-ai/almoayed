@@ -1,0 +1,75 @@
+# UI-020 — Keep package.json (footer / Settings «حول التطبيق») in sync with GitHub Releases.
+#
+# Flow:
+#   1. Publish a GitHub Release with tag v1.2.3
+#   2. This job writes "1.2.3" into package.json on the release target branch
+#   3. Push triggers Vercel deploy → AppVersion shows v1.2.3
+name: Sync app version on release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-version-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  sync-package-version:
+    name: Sync package.json from release tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release target branch
+        uses: actions/checkout@v4
+        with:
+          # Usually "main" — the branch selected when creating the release.
+          ref: ${{ github.event.release.target_commitish }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync package.json version from release tag
+        id: sync
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+
+          VERSION="${TAG#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.+-][0-9A-Za-z.-]+)*$ ]]; then
+            echo "::error::Release tag must look like v1.2.3 (got: ${TAG})"
+            exit 1
+          fi
+
+          CURRENT="$(node -p "require('./package.json').version")"
+          if [ "$CURRENT" = "$VERSION" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "package.json already at ${VERSION} — nothing to commit"
+            exit 0
+          fi
+
+          VERSION="$VERSION" node <<'NODE'
+          const fs = require("node:fs");
+          const version = process.env.VERSION;
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          console.log(`package.json: ${pkg.version} → ${version}`);
+          pkg.version = version;
+          fs.writeFileSync("package.json", `${JSON.stringify(pkg, null, 2)}\n`);
+          NODE
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push version bump
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          VERSION: ${{ steps.sync.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore(UI-020): sync app version to ${VERSION} from release ${TAG}"
+          git push

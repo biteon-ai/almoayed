@@ -7,6 +7,12 @@ import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 import type { QuizSubmitResult } from "@/types/database";
 
+/**
+ * Question jump bottom sheet (UI-018).
+ * Uses a full-viewport transparent `<dialog>` shell with an inner panel —
+ * same pattern as QuestionEditDialog — so mobile Safari/Chrome don't fight
+ * native modal centering when positioning the dialog element itself.
+ */
 export function QuestionJumpSheet({
   open,
   onOpenChange,
@@ -33,22 +39,24 @@ export function QuestionJumpSheet({
       open={open}
       onOpenChange={onOpenChange}
       className={cn(
-        // Mobile: bottom sheet above the student tab bar
-        "inset-x-0 bottom-0 top-auto m-0 max-h-[min(78vh,36rem)] w-full max-w-none",
-        "rounded-t-3xl rounded-b-none border border-border/80 border-b-0 bg-card p-0 shadow-2xl",
-        "open:flex open:flex-col dark:border-slate-700 dark:bg-slate-950",
-        // Desktop: centered card
-        "sm:inset-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:max-h-[min(80vh,40rem)]",
-        "sm:w-[min(100%-2rem,24rem)] sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2",
-        "sm:rounded-2xl sm:border-b sm:shadow-xl"
+        // Full-bleed top-layer shell (not the sheet itself)
+        "inset-0 m-0 h-dvh max-h-none w-full max-w-none border-0 bg-transparent p-0 shadow-none",
+        "open:flex open:items-end open:justify-center sm:open:items-center",
+        "backdrop:bg-black/60"
       )}
     >
       <DialogContent
         className={cn(
-          "relative flex min-h-0 flex-1 flex-col gap-0 overflow-hidden p-0",
+          "relative z-10 flex w-full max-h-[min(78vh,36rem)] flex-col gap-0 overflow-hidden p-0",
+          "rounded-t-3xl rounded-b-none border border-border/80 border-b-0 bg-card shadow-2xl",
+          "dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50",
+          "sm:max-h-[min(80vh,40rem)] sm:w-[min(100%-2rem,24rem)] sm:max-w-sm",
+          "sm:rounded-2xl sm:border-b sm:shadow-xl",
           "animate-slide-up"
         )}
         {...spekit(SPEKIT.quizJumpSheet)}
+        onClick={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
       >
         <div className="flex shrink-0 justify-center pt-2.5 sm:hidden" aria-hidden>
           <span className="h-1 w-10 rounded-full bg-muted-foreground/30" />
@@ -69,7 +77,7 @@ export function QuestionJumpSheet({
           <button
             type="button"
             className={cn(
-              "inline-flex size-10 shrink-0 items-center justify-center rounded-full",
+              "inline-flex size-11 shrink-0 touch-manipulation items-center justify-center rounded-full",
               "text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             )}
             aria-label="إغلاق"

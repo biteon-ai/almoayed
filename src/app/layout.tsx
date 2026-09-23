@@ -1,10 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Tajawal } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { APP_DESCRIPTION, APP_NAME, APP_THEME_COLOR, APP_URL } from "@/lib/constants";
-import { APPEARANCE_FOUC_SCRIPT } from "@/lib/appearance";
+import {
+  APPEARANCE_FOUC_SCRIPT,
+  APPEARANCE_FOUC_STYLE,
+} from "@/lib/appearance";
+import { EXTENSION_NOISE_GUARD_SCRIPT } from "@/lib/extension-noise";
 import { AppearanceProvider } from "@/components/providers/appearance-provider";
+import { RuntimeGuard } from "@/components/providers/runtime-guard";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { TopLoaderProvider } from "@/components/providers/top-loader-provider";
 import "./globals.css";
@@ -72,26 +76,40 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
-      className={cn(tajawal.variable, "h-full")}
+      className={cn(tajawal.variable, "h-full bg-white dark:bg-slate-950")}
       suppressHydrationWarning
     >
+      <head>
+        {/* Theme FOUC: script then style — both must live in <head>, never under <html> */}
+        <script
+          id="almoayed-appearance"
+          dangerouslySetInnerHTML={{ __html: APPEARANCE_FOUC_SCRIPT }}
+        />
+        <style
+          id="almoayed-appearance-fouc"
+          dangerouslySetInnerHTML={{ __html: APPEARANCE_FOUC_STYLE }}
+        />
+        {/* Mute extension runtime noise before React / Next overlay mounts */}
+        <script
+          id="almoayed-extension-noise-guard"
+          dangerouslySetInnerHTML={{ __html: EXTENSION_NOISE_GUARD_SCRIPT }}
+        />
+      </head>
       <body
         className={cn(
-          "min-h-dvh font-sans antialiased overscroll-y-none",
-          "bg-background text-foreground",
+          "min-h-dvh bg-white font-sans text-foreground antialiased overscroll-y-none",
+          "dark:bg-slate-950 dark:text-white",
           "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
         )}
         style={{ fontFamily: "var(--font-arabic), system-ui, sans-serif" }}
+        suppressHydrationWarning
       >
-        <Script
-          id="almoayed-appearance"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: APPEARANCE_FOUC_SCRIPT }}
-        />
-        <AppearanceProvider>
-          <ServiceWorkerRegister />
-          <TopLoaderProvider>{children}</TopLoaderProvider>
-        </AppearanceProvider>
+        <RuntimeGuard>
+          <AppearanceProvider>
+            <ServiceWorkerRegister />
+            <TopLoaderProvider>{children}</TopLoaderProvider>
+          </AppearanceProvider>
+        </RuntimeGuard>
       </body>
     </html>
   );

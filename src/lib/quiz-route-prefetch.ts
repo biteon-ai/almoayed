@@ -1,6 +1,10 @@
 /**
  * Quiz / review route warming — prefetch App Router payloads and the player chunk
  * on hover or when a quiz card enters the viewport (PERF-001).
+ *
+ * Taking routes (`/quiz/:id` without `review=`) must NOT RSC-prefetch: the page
+ * calls `ensureTimedQuizSession` (QUIZ-004), and a prefetch would start the clock
+ * before the student opens the quiz.
  */
 
 export function quizPlayerHref(
@@ -12,6 +16,17 @@ export function quizPlayerHref(
     return `/quiz/${quizId}?review=${encodeURIComponent(review)}`;
   }
   return `/quiz/${quizId}`;
+}
+
+/** True for `/quiz/:id` taking URLs (no review query). */
+export function isQuizTakingHref(href: string): boolean {
+  try {
+    const url = new URL(href, "https://almoayed.local");
+    if (!url.pathname.startsWith("/quiz/")) return false;
+    return !url.searchParams.get("review")?.trim();
+  } catch {
+    return false;
+  }
 }
 
 /** Warm the QuizRunner client bundle before navigation. */
@@ -28,10 +43,13 @@ export function prefetchQuizRoute(
   router: PrefetchRouter,
   href: string
 ): void {
-  try {
-    router.prefetch(href);
-  } catch {
-    // Prefetch is best-effort.
+  // Taking: warm JS only — RSC prefetch would mint a timed session early.
+  if (!isQuizTakingHref(href)) {
+    try {
+      router.prefetch(href);
+    } catch {
+      // Prefetch is best-effort.
+    }
   }
   preloadQuizPlayerChunk();
 }

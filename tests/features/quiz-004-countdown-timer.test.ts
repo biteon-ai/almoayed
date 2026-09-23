@@ -7,6 +7,7 @@ import {
   padAnswersForQuestions,
   remainingSecondsFromEndsAt,
   remainingSecondsMonotonic,
+  shouldEnsureTimedSession,
   shouldReuseTimedSession,
   timedSessionViewFromRow,
   validateDurationMinutes,
@@ -76,6 +77,20 @@ describe(`${FEATURE} display + remaining math`, () => {
     expect(view.remainingSeconds).toBe(180);
     expect(view.serverNow).toBe("2026-07-24T10:02:00.000Z");
   });
+
+  it("new session at start yields full duration remaining", () => {
+    const started = new Date("2026-09-23T12:00:00.000Z");
+    const view = timedSessionViewFromRow(
+      {
+        started_at: started.toISOString(),
+        duration_minutes: 30,
+        ends_at: new Date(started.getTime() + 30 * 60_000).toISOString(),
+        used_attempts_at_start: 0,
+      },
+      started
+    );
+    expect(view.remainingSeconds).toBe(1800);
+  });
 });
 
 describe(`${FEATURE} session reuse + monotonic countdown`, () => {
@@ -93,6 +108,19 @@ describe(`${FEATURE} session reuse + monotonic countdown`, () => {
     // Legacy rows without stamp default to attempt 0
     expect(shouldReuseTimedSession({}, 0)).toBe(true);
     expect(shouldReuseTimedSession({}, 1)).toBe(false);
+  });
+
+  it("ensures timer only on taking path (not metadata/review/submit gate)", () => {
+    expect(shouldEnsureTimedSession()).toBe(true);
+    expect(shouldEnsureTimedSession({})).toBe(true);
+    expect(shouldEnsureTimedSession({ skipPresentation: false })).toBe(true);
+    expect(shouldEnsureTimedSession({ skipPresentation: true })).toBe(false);
+    expect(
+      shouldEnsureTimedSession({ skipPresentation: true, ensureTimer: true })
+    ).toBe(true);
+    expect(
+      shouldEnsureTimedSession({ skipPresentation: false, ensureTimer: false })
+    ).toBe(false);
   });
 
   it("monotonic remaining ignores wall-clock jumps after hydrate", () => {

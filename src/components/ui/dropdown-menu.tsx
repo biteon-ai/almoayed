@@ -27,7 +27,8 @@ export function DropdownMenuContent({
       >
         <Menu.Popup
           className={cn(
-            "min-w-[10.5rem] origin-[var(--transform-origin)] rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none",
+            "min-w-[10.5rem] origin-[var(--transform-origin)] rounded-xl border border-slate-200 bg-white p-1 text-foreground shadow-lg outline-none",
+            "dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:shadow-none dark:ring-1 dark:ring-white/10",
             className
           )}
         >
@@ -59,9 +60,12 @@ export function DropdownMenuItem({
       onClick={onClick}
       data-spekit={dataSpekit}
       className={cn(
-        "flex cursor-default items-center gap-2 rounded-lg px-2.5 py-2 text-sm outline-none select-none data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "flex cursor-default items-center gap-2 rounded-lg px-2.5 py-2 text-sm outline-none select-none",
+        "data-[highlighted]:bg-slate-100 data-[highlighted]:text-foreground",
+        "dark:data-[highlighted]:bg-slate-800 dark:data-[highlighted]:text-white",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         destructive &&
-          "text-destructive data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive",
+          "text-destructive data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive dark:data-[highlighted]:bg-destructive/20",
         className
       )}
     >

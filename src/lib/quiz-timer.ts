@@ -42,6 +42,20 @@ export function shouldReuseTimedSession(
   return stamp === usedAttempts;
 }
 
+/**
+ * Only mint/reuse a timed session while the student is actually taking.
+ * Metadata, review (`?review=`), submit gating, and RSC prefetch must pass false —
+ * otherwise the clock starts (and can expire) before the attempt UI mounts.
+ */
+export function shouldEnsureTimedSession(opts?: {
+  ensureTimer?: boolean;
+  skipPresentation?: boolean;
+}): boolean {
+  if (typeof opts?.ensureTimer === "boolean") return opts.ensureTimer;
+  // Default: ensure only on the taking path (presentation minted).
+  return !opts?.skipPresentation;
+}
+
 export function validateDurationMinutes(
   value: unknown
 ): { ok: true; value: number } | { ok: false; error: string } {

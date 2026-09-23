@@ -34,6 +34,7 @@ import {
   padAnswersForQuestions,
   remainingSecondsFromEndsAt,
   resolveSessionEndsAt,
+  shouldEnsureTimedSession,
   shouldReuseTimedSession,
   timedSessionViewFromRow,
   type TimedQuizSessionView,
@@ -229,6 +230,17 @@ export async function ensureTimedQuizSession(
   return timedSessionViewFromRow(inserted as TimedSessionRow, now);
 }
 
+/** Drop any in-flight timed row (review / post-submit cleanup). */
+export async function clearTimedQuizSession(quizId: string): Promise<void> {
+  const session = await requireStudent();
+  const supabase = createAdminClient();
+  await supabase
+    .from("quiz_timed_sessions")
+    .delete()
+    .eq("student_id", session.profileId)
+    .eq("quiz_id", quizId);
+}
+
 function snapshotFromSubmissionRow(row: {
   question_order?: unknown;
   option_orders?: unknown;
@@ -270,7 +282,7 @@ async function presentQuestionsForTaking(args: {
 
 export async function getQuizForStudent(
   quizId: string,
-  opts?: { skipPresentation?: boolean }
+  opts?: { skipPresentation?: boolean; ensureTimer?: boolean }
 ): Promise<{
   quiz: Quiz | null;
   questions: ExamQuestion[];
@@ -371,7 +383,9 @@ export async function getQuizForStudent(
       : authoredQuestions;
 
   const timer =
-    attemptState.canStartNewAttempt && quiz.is_timed
+    attemptState.canStartNewAttempt &&
+    quiz.is_timed &&
+    shouldEnsureTimedSession(opts)
       ? await ensureTimedQuizSession(quizId)
       : null;
 
@@ -483,7 +497,10 @@ export async function submitQuiz(
   answers: Record<string, string>
 ): Promise<QuizSubmitResult> {
   const session = await requireStudent();
-  const gate = await getQuizForStudent(quizId, { skipPresentation: true });
+  const gate = await getQuizForStudent(quizId, {
+    skipPresentation: true,
+    ensureTimer: false,
+  });
 
   if (!gate.quiz) {
     throw appError(ErrorCode.QUIZ_INACTIVE);
@@ -638,8 +655,9 @@ export async function submitQuiz(
     throw appError(ErrorCode.QUIZ_ANSWERS_SAVE_FAILED);
   }
 
-  const retakesRemain = canStartNewAttempt(used + 1, maxAttempts);
-  if (retakesRemain && timedSession) {
+  // Always clear the attempt clock after submit so a later review/retake cannot
+  // reuse an expired session (QUIZ-004 / QUIZ-006).
+  if (timedSession) {
     await supabase
       .from("quiz_timed_sessions")
       .delete()

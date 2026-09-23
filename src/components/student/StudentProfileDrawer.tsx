@@ -16,7 +16,6 @@ import { useAppearance } from "@/components/providers/appearance-provider";
 import { HubToast } from "@/components/teacher/HubToast";
 import { OfflineSavedQuizzesList } from "@/components/student/OfflineSavedQuizzesList";
 import type { Appearance } from "@/lib/appearance";
-import { APP_VERSION } from "@/lib/constants";
 import {
   buildAppSharePayload,
   buildSupportWhatsAppUrl,
@@ -207,11 +206,15 @@ export function StudentProfileDrawer({
           </nav>
         </div>
 
-        <footer
-          {...spekit(SPEKIT.nativeAppVersion)}
-          className="border-t border-border/70 px-4 py-3 text-center text-[11px] text-muted-foreground"
-        >
-          الإصدار {APP_VERSION}
+        <footer className="border-t border-border/70 px-4 py-3 text-center">
+          <Link
+            href="/settings#about"
+            {...spekit(SPEKIT.nativeAppVersion)}
+            className="text-[11px] text-muted-foreground hover:text-foreground"
+            onClick={() => onOpenChange(false)}
+          >
+            حول التطبيق
+          </Link>
         </footer>
       </aside>
       <HubToast message={toast} onDismiss={() => setToast(null)} />
