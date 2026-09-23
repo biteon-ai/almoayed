@@ -1247,6 +1247,42 @@ partial_features:
       - Progress fill uses LTR geometry so width% grows smoothly without a leftover right segment
     spekit: [active-login-loader, top-nav-loader]
 
+  - id: FIX-UI-004
+    name: Settings Dark Mode Input Contrast
+    status: implemented
+    persona: [STUDENT, TEACHER]
+    routes: ["/settings", "/teacher/settings"]
+    files:
+      - src/components/settings/settings-ui.tsx
+      - src/components/ui/input.tsx
+      - src/components/ui/select.tsx
+      - src/components/ui/textarea.tsx
+      - src/components/ui/dropdown-menu.tsx
+      - tests/features/fix-ui-004-settings-input-dark.test.ts
+      - tests/features/fix-ui-004-select-dropdown-dark.test.ts
+    acceptance:
+      - SettingsEditableInput no longer forces `!bg-white`; dark mode uses `dark:bg-slate-900 dark:text-white dark:border-slate-700`
+      - Shared Input / Select / Textarea use opaque dark slate surfaces so typed values stay legible
+      - Select / dropdown portaled panels use `dark:bg-slate-900 dark:text-white dark:border-slate-800` with dark option hover states (birth-date menus, etc.)
+      - Locked settings fields and form panels keep dark-mode borders/surfaces
+
+  - id: FIX-UI-005
+    name: Prevent Dark Mode White Flash on Hard Reload
+    status: implemented
+    persona: [STUDENT, TEACHER, ADMIN]
+    routes: ["/"]
+    files:
+      - src/lib/appearance.ts
+      - src/app/layout.tsx
+      - src/app/globals.css
+      - src/components/ui/page-loading-view.tsx
+      - tests/features/fix-ui-005-dark-fouc.test.ts
+    acceptance:
+      - Blocking head script sets `.dark` + inline `html`/`body` background before first paint
+      - Critical FOUC `<style>` paints slate dark page bg when `html.dark` before CSS loads
+      - Loading views and student-flows / teacher / admin shells avoid light-only white wrappers in dark mode
+    extends: [UI-013, FIX-UI-004]
+
   - id: UI-007
     name: Quiz Results Card Redesign
     status: done

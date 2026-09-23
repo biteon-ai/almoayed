@@ -7,6 +7,15 @@ export const APPEARANCE_THEME_COLORS = {
   dark: "#042626",
 } as const;
 
+/**
+ * Inline paint colors for FOUC prevention (match globals.css --background).
+ * Applied on <html> before CSS loads so hard reload never flashes white in dark mode.
+ */
+export const APPEARANCE_PAGE_BG = {
+  light: "#f7f9fb", // hsl(210 20% 98%)
+  dark: "#0f172a", // slate-900 — close to hsl(215 28% 8%)
+} as const;
+
 export function parseAppearance(raw: string | null): Appearance {
   if (raw === "light" || raw === "dark" || raw === "system") return raw;
   return "system";
@@ -40,11 +49,32 @@ export function resolveScheme(
 
 export function applyAppearanceClass(scheme: "light" | "dark"): void {
   if (typeof document === "undefined") return;
-  document.documentElement.classList.toggle("dark", scheme === "dark");
+  const root = document.documentElement;
+  root.classList.toggle("dark", scheme === "dark");
+  root.style.colorScheme = scheme;
+  root.style.backgroundColor = APPEARANCE_PAGE_BG[scheme];
+  if (document.body) {
+    document.body.style.backgroundColor = APPEARANCE_PAGE_BG[scheme];
+  }
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) {
     meta.setAttribute("content", APPEARANCE_THEME_COLORS[scheme]);
   }
 }
 
-export const APPEARANCE_FOUC_SCRIPT = `(function(){try{var k=${JSON.stringify(APPEARANCE_STORAGE_KEY)};var v=localStorage.getItem(k);var a=v==="light"||v==="dark"||v==="system"?v:"system";var dark=a==="dark"||(a==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",dark);}catch(e){}})();`;
+/**
+ * Blocking head script — sets .dark + inline page background before first paint.
+ * Keep in sync with applyAppearanceClass / APPEARANCE_PAGE_BG.
+ */
+export const APPEARANCE_FOUC_SCRIPT = `(function(){try{var k=${JSON.stringify(
+  APPEARANCE_STORAGE_KEY
+)};var v=localStorage.getItem(k);var a=v==="light"||v==="dark"||v==="system"?v:"system";var dark=a==="dark"||(a==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);var root=document.documentElement;root.classList.toggle("dark",dark);root.style.colorScheme=dark?"dark":"light";var bg=dark?${JSON.stringify(
+  APPEARANCE_PAGE_BG.dark
+)}:${JSON.stringify(
+  APPEARANCE_PAGE_BG.light
+)};root.style.backgroundColor=bg;var b=document.body;if(b)b.style.backgroundColor=bg;var meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute("content",dark?${JSON.stringify(
+  APPEARANCE_THEME_COLORS.dark
+)}:${JSON.stringify(APPEARANCE_THEME_COLORS.light)});}catch(e){}})();`;
+
+/** Critical CSS in <head> so html/body never paint browser-default white. */
+export const APPEARANCE_FOUC_STYLE = `html{background-color:${APPEARANCE_PAGE_BG.light}}html.dark{background-color:${APPEARANCE_PAGE_BG.dark};color-scheme:dark}body{background-color:inherit}`;

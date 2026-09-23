@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Tajawal } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { APP_DESCRIPTION, APP_NAME, APP_THEME_COLOR, APP_URL } from "@/lib/constants";
-import { APPEARANCE_FOUC_SCRIPT } from "@/lib/appearance";
+import {
+  APPEARANCE_FOUC_SCRIPT,
+  APPEARANCE_FOUC_STYLE,
+} from "@/lib/appearance";
 import { AppearanceProvider } from "@/components/providers/appearance-provider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { TopLoaderProvider } from "@/components/providers/top-loader-provider";
@@ -75,6 +77,17 @@ export default function RootLayout({
       className={cn(tajawal.variable, "h-full")}
       suppressHydrationWarning
     >
+      <head>
+        {/* Critical paint colors before CSS — prevents white flash on dark hard reload */}
+        <style
+          id="almoayed-appearance-fouc"
+          dangerouslySetInnerHTML={{ __html: APPEARANCE_FOUC_STYLE }}
+        />
+        <script
+          id="almoayed-appearance"
+          dangerouslySetInnerHTML={{ __html: APPEARANCE_FOUC_SCRIPT }}
+        />
+      </head>
       <body
         className={cn(
           "min-h-dvh font-sans antialiased overscroll-y-none",
@@ -82,12 +95,8 @@ export default function RootLayout({
           "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
         )}
         style={{ fontFamily: "var(--font-arabic), system-ui, sans-serif" }}
+        suppressHydrationWarning
       >
-        <Script
-          id="almoayed-appearance"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: APPEARANCE_FOUC_SCRIPT }}
-        />
         <AppearanceProvider>
           <ServiceWorkerRegister />
           <TopLoaderProvider>{children}</TopLoaderProvider>

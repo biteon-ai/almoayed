@@ -25,10 +25,10 @@ export function PageLoadingView({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center px-6",
+        "flex flex-col items-center justify-center px-6 text-foreground",
         compact
-          ? "min-h-[50vh] py-16"
-          : "min-h-dvh bg-gradient-to-b from-brand-50/30 to-background py-16 dark:from-brand-950/20"
+          ? "min-h-[50vh] bg-transparent py-16"
+          : "min-h-dvh bg-background py-16 dark:bg-slate-950"
       )}
       role="status"
       aria-live="polite"
@@ -36,15 +36,25 @@ export function PageLoadingView({
       data-page-loading="true"
     >
       <div className="flex max-w-xs flex-col items-center text-center animate-fade-in">
-        <div className="relative mb-5 flex size-16 items-center justify-center rounded-2xl border border-brand-200/50 bg-background shadow-md dark:border-brand-800/30">
+        <div
+          className={cn(
+            "relative mb-5 flex size-16 items-center justify-center rounded-2xl border shadow-md",
+            "border-brand-200/50 bg-background",
+            "dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
+          )}
+        >
           <RefreshCw
             className="size-8 animate-spin text-brand-600 dark:text-brand-400"
             strokeWidth={2.25}
             aria-hidden
           />
         </div>
-        <p className="text-sm font-extrabold text-foreground">{message}</p>
-        <p className="mt-1.5 text-xs text-muted-foreground">{subMessage}</p>
+        <p className="text-sm font-extrabold text-foreground dark:text-white">
+          {message}
+        </p>
+        <p className="mt-1.5 text-xs text-muted-foreground dark:text-slate-300">
+          {subMessage}
+        </p>
         <div className="mt-4 flex gap-1.5" aria-hidden>
           {[0, 1, 2].map((i) => (
             <span

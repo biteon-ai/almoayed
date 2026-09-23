@@ -36,7 +36,7 @@
     --foreground: 210 20% 98%;
     --card: 215 24% 12%;
     --card-foreground: 210 20% 98%;
-    --popover: 215 24% 13%;
+    --popover: 222 47% 6%;
     --popover-foreground: 210 20% 98%;
     --primary: 180 65% 45%;
     --primary-foreground: 215 28% 7%;
@@ -58,6 +58,8 @@
   html {
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
+    /* Prefer token bg once CSS loads (FOUC inline style covers pre-CSS paint) */
+    background-color: hsl(var(--background));
   }
 
   * {
@@ -68,6 +70,7 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "kern" 1;
     overscroll-behavior-y: none;
+    background-color: hsl(var(--background));
   }
 }
 

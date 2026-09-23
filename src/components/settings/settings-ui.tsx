@@ -21,13 +21,14 @@ const settingsFieldShellClass = cn(
   "transition-colors duration-200 md:min-h-[52px] md:px-5 md:py-3.5"
 );
 
-/** Editable settings input */
+/** Editable settings input — light card on white, dark slate so typed text stays legible */
 export const settingsEditableInputClass = cn(
   settingsFieldShellClass,
   "border-gray-200 bg-white text-start text-base font-medium leading-relaxed text-foreground",
   "shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)]",
   "placeholder:text-muted-foreground/55 dark:placeholder:text-slate-400",
-  "hover:border-gray-300 dark:border-slate-600 dark:bg-slate-900/70 dark:hover:border-slate-500",
+  "hover:border-gray-300",
+  "dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:shadow-none dark:hover:border-slate-500",
   "focus:border-emerald-500 focus:bg-white focus-visible:ring-2 focus-visible:ring-emerald-100",
   "dark:focus:border-emerald-500 dark:focus:bg-slate-950 dark:focus-visible:ring-emerald-500/25"
 );
@@ -150,7 +151,10 @@ export function SettingsField({
       >
         {Icon ? (
           <span
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 ring-1 ring-brand-100/80"
+            className={cn(
+              "flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 ring-1 ring-brand-100/80",
+              "dark:bg-brand-950/50 dark:text-brand-300 dark:ring-brand-800/50"
+            )}
             aria-hidden
           >
             <Icon className="size-3.5" />
@@ -160,7 +164,7 @@ export function SettingsField({
       </Label>
       {children}
       {hint ? (
-        <p className="text-start text-xs leading-relaxed text-slate-500">
+        <p className="text-start text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           {hint}
         </p>
       ) : null}
@@ -176,11 +180,7 @@ export function SettingsEditableInput({
   return (
     <Input
       dir={dir}
-      className={cn(
-        settingsEditableInputClass,
-        "h-auto !bg-white",
-        className
-      )}
+      className={cn(settingsEditableInputClass, "h-auto", className)}
       {...props}
     />
   );
@@ -220,7 +220,11 @@ export function SettingsReadonlyField({
         {value}
       </span>
       <span
-        className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/70 text-slate-400 ring-1 ring-slate-200/80"
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-lg",
+          "bg-white/70 text-slate-400 ring-1 ring-slate-200/80",
+          "dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600"
+        )}
         aria-hidden
         title="حقل مقفول"
       >
@@ -236,12 +240,13 @@ export function SettingsCodeBlock({ code }: { code: string }) {
       dir="rtl"
       className={cn(
         settingsFieldShellClass,
-        "flex items-center justify-between gap-4 bg-slate-50"
+        "flex items-center justify-between gap-4 bg-slate-50",
+        "dark:border-slate-700 dark:bg-slate-900 dark:text-white"
       )}
     >
       <span
         dir="ltr"
-        className="min-w-0 shrink-0 font-mono text-sm font-bold tracking-wide text-brand-800/90 sm:text-base"
+        className="min-w-0 shrink-0 font-mono text-sm font-bold tracking-wide text-brand-800/90 sm:text-base dark:text-brand-200"
       >
         {code}
       </span>
@@ -255,7 +260,8 @@ export function SettingsEmptyState({ children }: { children: ReactNode }) {
       dir="rtl"
       className={cn(
         settingsFieldShellClass,
-        "min-h-0 bg-slate-50 text-sm leading-relaxed text-slate-500"
+        "min-h-0 bg-slate-50 text-sm leading-relaxed text-slate-500",
+        "dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
       )}
     >
       {children}

@@ -20,8 +20,8 @@ export default async function TeacherLayout({
       {session.impersonation ? (
         <ImpersonationBanner teacherName={session.impersonation.teacherName} />
       ) : null}
-      <div className="min-h-dvh bg-gradient-to-b from-brand-50/40 to-background">
-        <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur-md">
+      <div className="min-h-dvh bg-gradient-to-b from-brand-50/40 to-background dark:from-slate-950 dark:to-background">
+        <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
           <NavbarProgress />
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
