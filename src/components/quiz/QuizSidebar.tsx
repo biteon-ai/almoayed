@@ -33,7 +33,7 @@ function ProgressRing({ value }: { value: number }) {
           cx="44"
           cy="44"
           r={radius}
-          className="stroke-slate-100"
+          className="stroke-slate-100 dark:stroke-slate-700"
           strokeWidth="6"
           fill="transparent"
         />
@@ -81,7 +81,7 @@ export function QuizSidebar({
     >
       {/* Quiz header card */}
       <div
-        className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+        className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
         {...spekit(SPEKIT.quizGatekeeper)}
       >
         <div className="flex items-start justify-between gap-3">
@@ -92,22 +92,22 @@ export function QuizSidebar({
             <div className="flex items-center gap-1.5 text-xs font-semibold">
               {isSubmitted ? (
                 <>
-                  <Unlock className="size-3.5 shrink-0 text-green-600" />
-                  <span className="text-green-700">
+                  <Unlock className="size-3.5 shrink-0 text-green-600 dark:text-emerald-400" />
+                  <span className="text-green-700 dark:text-emerald-300">
                     تم فتح الحلول والشرح العلمي
                   </span>
                 </>
               ) : (
                 <>
-                  <Lock className="size-3.5 shrink-0 text-amber-600" />
-                  <span className="text-amber-700">
+                  <Lock className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <span className="text-amber-700 dark:text-amber-300">
                     الحلول مقفلة حتى ترسل إجاباتك
                   </span>
                 </>
               )}
             </div>
           </div>
-          <span className="shrink-0 rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-bold text-brand-800">
+          <span className="shrink-0 rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-bold text-brand-800 dark:border-brand-800/50 dark:bg-brand-950/40 dark:text-brand-200">
             {questionCount} {questionCount === 1 ? "سؤال" : "أسئلة"}
           </span>
         </div>
@@ -115,8 +115,8 @@ export function QuizSidebar({
 
       {/* Question navigation */}
       {questionCount > 0 && (
-        <div className="rounded-2xl border border-border/60 bg-white p-4 shadow-sm dark:bg-card">
-          <h2 className="mb-3 text-xs font-bold text-muted-foreground">
+        <div className="rounded-2xl border border-border/60 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+          <h2 className="mb-3 text-xs font-bold text-muted-foreground dark:text-slate-300">
             التنقل بين الأسئلة
           </h2>
           <QuestionNavGrid
@@ -150,17 +150,17 @@ export function QuizSidebar({
       {/* Progress card */}
       {!isSubmitted && questionCount > 0 && (
         <div
-          className="rounded-2xl border border-slate-100 bg-gradient-to-br from-brand-50/50 to-white p-5 shadow-sm dark:border-slate-700 dark:from-brand-950/40 dark:to-slate-900"
+          className="rounded-2xl border border-slate-100 bg-gradient-to-br from-brand-50/50 to-white p-5 shadow-sm dark:border-slate-700 dark:from-brand-950/30 dark:to-slate-900 dark:shadow-none"
           {...spekit(SPEKIT.quizProgress)}
         >
           <div className="flex items-center gap-4">
             <ProgressRing value={progress} />
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-sm font-bold text-slate-800 dark:text-white">تقدمك بالاختبار</p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">
+              <p className="text-xs text-slate-500">
                 {answeredCount} من {questionCount} أسئلة محلولة
               </p>
-              <Progress value={progress} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+              <Progress value={progress} className="h-1.5 bg-slate-100" />
             </div>
           </div>
         </div>

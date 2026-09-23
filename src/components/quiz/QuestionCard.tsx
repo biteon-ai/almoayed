@@ -26,8 +26,8 @@ interface QuestionCardProps {
 
 function WrongBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold text-red-600">
-      <span className="flex size-4 items-center justify-center rounded-full bg-red-100">
+    <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold text-red-600 dark:border-red-800/60 dark:bg-red-950/50 dark:text-red-300">
+      <span className="flex size-4 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/60">
         <X className="size-2.5 stroke-[3]" aria-hidden />
       </span>
       إجابتك خاطئة
@@ -37,7 +37,7 @@ function WrongBadge() {
 
 function CorrectBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-green-100 bg-green-50 px-2.5 py-0.5 text-[10px] font-bold text-green-600">
+    <span className="inline-flex items-center gap-1 rounded-full border border-green-100 bg-green-50 px-2.5 py-0.5 text-[10px] font-bold text-green-600 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-300">
       <Check className="size-3 stroke-[3]" aria-hidden />
       الإجابة الصحيحة
     </span>
@@ -84,7 +84,7 @@ export function QuestionCard({
         </div>
 
         {question.question_image_url && (
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60">
             <Image
               src={question.question_image_url}
               alt={`توضيح السؤال ${index + 1}`}
@@ -115,14 +115,14 @@ export function QuestionCard({
                 className={cn(
                   "flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-2xl border px-4 py-3 transition-all duration-200",
                   "border-border bg-background hover:border-muted-foreground/30 hover:bg-muted/40",
-                  "dark:border-slate-600 dark:bg-slate-950/40 dark:hover:border-slate-500 dark:hover:bg-slate-900/80",
+                  "dark:border-slate-700 dark:bg-slate-950/40 dark:hover:border-slate-500 dark:hover:bg-slate-900/80",
                   takingSelected && "text-white hover:text-white",
                   isCorrect &&
-                    "border-green-200 bg-green-50/70 text-green-900 hover:bg-green-50/70 dark:border-green-800/60 dark:bg-green-950/40 dark:text-green-100",
+                    "border-green-200 bg-green-50/70 text-green-900 hover:bg-green-50/70 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-100 dark:hover:bg-emerald-950/40",
                   isWrong &&
-                    "border-red-200 bg-red-50/70 text-red-900 hover:bg-red-50/70 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-100",
+                    "border-red-200 bg-red-50/70 text-red-900 hover:bg-red-50/70 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-100 dark:hover:bg-red-950/40",
                   disabled &&
-                    "cursor-default hover:border-border hover:bg-background dark:hover:border-slate-600 dark:hover:bg-slate-950/40"
+                    "cursor-default hover:border-border hover:bg-background dark:hover:border-slate-700 dark:hover:bg-slate-950/40"
                 )}
                 style={
                   takingSelected
@@ -148,10 +148,11 @@ export function QuestionCard({
                   <div
                     className={cn(
                       "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors",
-                      "bg-muted text-muted-foreground",
+                      "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-200",
                       takingSelected && "bg-white/15 text-white",
                       isCorrect && "bg-green-500 text-white",
-                      isWrong && "bg-red-100 text-red-600"
+                      isWrong &&
+                        "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300"
                     )}
                     style={
                       takingSelected
@@ -204,7 +205,7 @@ export function QuestionCard({
                 <HelpCircle className="size-4 text-brand-500 dark:text-brand-400" />
                 شرح الحل التفصيلي
               </span>
-              <span className="rounded-md bg-slate-100 px-2.5 py-1 text-[10px] dark:bg-slate-800 dark:text-slate-200">
+              <span className="rounded-md bg-slate-100 px-2.5 py-1 text-[10px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                 {isExpanded ? "إخفاء ▲" : "عرض ▼"}
               </span>
             </button>

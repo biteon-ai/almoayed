@@ -31,24 +31,25 @@
 
   .dark {
     color-scheme: dark;
-    --background: 215 28% 7%;
+    /* Slightly lifted surfaces so cards/modals separate from page bg */
+    --background: 215 28% 8%;
     --foreground: 210 20% 98%;
-    --card: 215 24% 11%;
+    --card: 215 24% 12%;
     --card-foreground: 210 20% 98%;
-    --popover: 215 24% 12%;
+    --popover: 215 24% 13%;
     --popover-foreground: 210 20% 98%;
     --primary: 180 65% 45%;
     --primary-foreground: 215 28% 7%;
     --secondary: 215 18% 16%;
-    --secondary-foreground: 210 18% 94%;
+    --secondary-foreground: 210 18% 96%;
     --muted: 215 16% 16%;
-    /* High-contrast secondary copy on dark surfaces */
-    --muted-foreground: 210 14% 78%;
+    /* Secondary copy must stay readable on dark cards (WCAG-ish) */
+    --muted-foreground: 215 12% 78%;
     --accent: 180 32% 16%;
     --accent-foreground: 180 55% 82%;
     --destructive: 354 70% 55%;
     --destructive-foreground: 0 0% 98%;
-    /* Clearer card edges vs page background */
+    /* Clearer hairlines against lifted cards */
     --border: 215 14% 28%;
     --input: 215 14% 28%;
     --ring: 180 55% 48%;
@@ -79,7 +80,7 @@
   /* ── Touch inputs (16px = no iOS zoom) ── */
   .input-touch {
     @apply h-[52px] w-full min-w-0 rounded-xl border border-input bg-muted/50 px-3.5;
-    @apply text-base font-medium text-foreground placeholder:text-muted-foreground;
+    @apply text-base font-medium text-foreground placeholder:text-muted-foreground/70;
     @apply transition-all duration-200 outline-none touch-manipulation;
     @apply hover:border-brand-300/80 focus:border-brand-500 focus:bg-background;
     @apply focus:ring-[3px] focus:ring-brand-500/15;
@@ -112,8 +113,7 @@
     @apply inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border;
     @apply border-brand-200/80 bg-white text-sm font-semibold text-brand-800;
     @apply transition-transform duration-150 active:scale-[0.98] touch-manipulation;
-    @apply hover:bg-brand-50 dark:border-brand-700/50 dark:bg-slate-900 dark:text-brand-200;
-    @apply dark:hover:bg-slate-800;
+    @apply hover:bg-brand-50 dark:border-brand-700/50 dark:bg-slate-900 dark:text-brand-200 dark:hover:bg-slate-800;
   }
 
   .btn-touch-ghost {
@@ -126,12 +126,12 @@
   /* ── Cards ── */
   .card-native {
     @apply w-full overflow-hidden rounded-2xl border border-border/70 bg-card shadow-xl;
-    @apply shadow-slate-900/[0.06] dark:border-slate-700 dark:shadow-black/30;
+    @apply shadow-slate-900/[0.06] dark:border-slate-700 dark:shadow-black/40;
   }
 
   .card-native-header {
     @apply border-b border-border/50 bg-gradient-to-b from-muted/40 to-transparent px-5 py-5 text-center;
-    @apply dark:border-slate-700/80;
+    @apply dark:border-slate-700 dark:from-slate-800/60;
   }
 }
 

@@ -196,7 +196,7 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
                         <>
                           عرض المزيد
                           <ChevronDown className="size-4" aria-hidden />
-                          <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                          <span className="text-xs font-normal text-slate-500">
                             ({remainingCount} متبقية)
                           </span>
                         </>
@@ -206,7 +206,7 @@ export function QuizCarousel({ quizzes }: QuizCarouselProps) {
                 )}
 
                 {isSearching && filteredQueue.length > 0 && (
-                  <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-center text-xs text-slate-500">
                     عرض {filteredQueue.length} نتيجة مطابقة للبحث
                   </p>
                 )}

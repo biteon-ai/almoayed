@@ -62,7 +62,7 @@ export function TeacherCodeSection({ teacherCode }: TeacherCodeSectionProps) {
               )}
             </Button>
             {copyError ? (
-              <p className="text-start text-xs leading-relaxed text-slate-500 dark:text-slate-300">
+              <p className="text-start text-xs leading-relaxed text-slate-500">
                 ما قدرنا ننسخ تلقائياً — انسخ الرمز يدوياً من الأعلى.
               </p>
             ) : null}

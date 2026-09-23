@@ -43,11 +43,11 @@ export function PendingSyncBadge() {
 
   return (
     <div
-      className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3"
+      className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 dark:border-teal-800/50 dark:bg-teal-950/40"
       role="status"
       data-spekit={SPEKIT.pendingSyncBadge}
     >
-      <p className="text-sm font-bold text-teal-900">
+      <p className="text-sm font-bold text-teal-900 dark:text-teal-100">
         {count === 1
           ? "محاولة اختبار واحدة بانتظار المزامنة"
           : `${count} محاولات اختبار بانتظار المزامنة`}
