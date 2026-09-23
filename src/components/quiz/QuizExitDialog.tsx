@@ -16,21 +16,13 @@ export function QuizExitDialog({
   open,
   onOpenChange,
   onConfirm,
-  confirming = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  confirming?: boolean;
 }) {
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(next) => {
-        if (confirming && !next) return;
-        onOpenChange(next);
-      }}
-    >
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent dir="rtl" data-spekit={SPEKIT.quizExitDialog}>
         <AlertDialogHeader>
           <AlertDialogTitle>هل تريد الخروج من الاختبار؟</AlertDialogTitle>
@@ -39,15 +31,9 @@ export function QuizExitDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="min-h-11" disabled={confirming}>
-            بقاء
-          </AlertDialogCancel>
-          <AlertDialogAction
-            className="min-h-11"
-            disabled={confirming}
-            onClick={onConfirm}
-          >
-            {confirming ? "جاري الخروج..." : "خروج"}
+          <AlertDialogCancel className="min-h-11">بقاء</AlertDialogCancel>
+          <AlertDialogAction className="min-h-11" onClick={onConfirm}>
+            خروج
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

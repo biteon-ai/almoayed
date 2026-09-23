@@ -84,7 +84,7 @@ export function QuestionCard({
         </div>
 
         {question.question_image_url && (
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
             <Image
               src={question.question_image_url}
               alt={`توضيح السؤال ${index + 1}`}
@@ -115,14 +115,12 @@ export function QuestionCard({
                 className={cn(
                   "flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-2xl border px-4 py-3 transition-all duration-200",
                   "border-border bg-background hover:border-muted-foreground/30 hover:bg-muted/40",
-                  "dark:border-slate-600 dark:bg-slate-950/40 dark:hover:border-slate-500 dark:hover:bg-slate-900/80",
                   takingSelected && "text-white hover:text-white",
                   isCorrect &&
-                    "border-green-200 bg-green-50/70 text-green-900 hover:bg-green-50/70 dark:border-green-800/60 dark:bg-green-950/40 dark:text-green-100",
+                    "border-green-200 bg-green-50/70 text-green-900 hover:bg-green-50/70",
                   isWrong &&
-                    "border-red-200 bg-red-50/70 text-red-900 hover:bg-red-50/70 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-100",
-                  disabled &&
-                    "cursor-default hover:border-border hover:bg-background dark:hover:border-slate-600 dark:hover:bg-slate-950/40"
+                    "border-red-200 bg-red-50/70 text-red-900 hover:bg-red-50/70",
+                  disabled && "cursor-default hover:border-border hover:bg-background"
                 )}
                 style={
                   takingSelected
@@ -189,22 +187,22 @@ export function QuestionCard({
         </RadioGroup>
 
         {showResult && explanationText && (
-          <div className="border-t border-slate-100 pt-4 dark:border-slate-700">
+          <div className="border-t border-slate-100 pt-4">
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               className={cn(
                 "flex w-full items-center justify-between py-2 text-xs font-bold transition-colors",
                 isExpanded
-                  ? "text-brand-700 dark:text-brand-300"
-                  : "text-slate-500 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-300"
+                  ? "text-brand-700"
+                  : "text-slate-500 hover:text-brand-600"
               )}
             >
               <span className="flex items-center gap-1.5">
-                <HelpCircle className="size-4 text-brand-500 dark:text-brand-400" />
+                <HelpCircle className="size-4 text-brand-500" />
                 شرح الحل التفصيلي
               </span>
-              <span className="rounded-md bg-slate-100 px-2.5 py-1 text-[10px] dark:bg-slate-800 dark:text-slate-200">
+              <span className="rounded-md bg-slate-100 px-2.5 py-1 text-[10px]">
                 {isExpanded ? "إخفاء ▲" : "عرض ▼"}
               </span>
             </button>
@@ -218,15 +216,15 @@ export function QuestionCard({
               )}
             >
               <div className="overflow-hidden">
-                <div className="space-y-3 rounded-2xl border border-brand-100 bg-brand-50/30 p-5 text-start dark:border-brand-800/50 dark:bg-brand-950/30">
-                  <p className="text-xs font-bold text-brand-800 dark:text-brand-200">
+                <div className="space-y-3 rounded-2xl border border-brand-100 bg-brand-50/30 p-5 text-start">
+                  <p className="text-xs font-bold text-brand-800">
                     خطوات التفكير والحل العلمي:
                   </p>
-                  <div className="text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-100">
+                  <div className="text-sm font-medium leading-relaxed text-slate-800">
                     <MathText text={explanationText} />
                   </div>
                   {explanationMediaUrl && (
-                    <div className="overflow-hidden rounded-xl border border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-900">
+                    <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
                       {/\.(mp4|webm|ogg)$/i.test(explanationMediaUrl) ? (
                         <video
                           src={explanationMediaUrl}

@@ -55,7 +55,7 @@ export function LogoutActionButton({
 export function StudentLogoutButton() {
   return (
     <LogoutActionButton
-      className="rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      className="rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900"
       spekitId={SPEKIT.studentLogout}
     />
   );
