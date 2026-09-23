@@ -11,6 +11,17 @@ describe(`${FEATURE} app version indicator`, () => {
     expect(APP_VERSION).toMatch(/^\d+\.\d+\.\d+/);
   });
 
+  it("auto-syncs package.json from GitHub release tags", () => {
+    const workflow = readFileSync(
+      ".github/workflows/sync-version-on-release.yml",
+      "utf8"
+    );
+    expect(workflow).toContain("release:");
+    expect(workflow).toContain("types: [published]");
+    expect(workflow).toContain("package.json");
+    expect(workflow).toContain("git push");
+  });
+
   it("shows v{version} in Settings حول التطبيق and on the login footer", () => {
     const version = readFileSync("src/components/brand/AppVersion.tsx", "utf8");
     expect(version).toContain("`v${APP_VERSION}`");

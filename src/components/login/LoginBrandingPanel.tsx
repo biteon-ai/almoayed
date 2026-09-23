@@ -13,6 +13,10 @@ import {
   APP_SLOGAN,
 } from "@/lib/constants";
 import { AppVersion } from "@/components/brand/AppVersion";
+import {
+  LoginBrandHomeLink,
+  LoginLandingBackLink,
+} from "@/components/login/LoginLandingNav";
 import { cn } from "@/lib/utils";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 
@@ -61,22 +65,25 @@ export function LoginBrandingPanel({
 
       {compact ? (
         <div className="relative z-10 space-y-1.5">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-base font-black shadow-md backdrop-blur-sm">
-              م
-            </div>
-            <div className="min-w-0">
-              <p className="text-lg font-black leading-tight tracking-tight">
-                {APP_NAME}
-              </p>
-              <p className="text-[11px] font-medium leading-tight text-emerald-100/90">
-                للاختبارات
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold backdrop-blur-sm sm:ms-auto">
-              <Sparkles className="h-3 w-3 text-amber-300" aria-hidden />
-              <span>{APP_PLATFORM_BADGE}</span>
-            </div>
+          <div className="flex items-center justify-between gap-3">
+            <LoginBrandHomeLink className="flex min-w-0 items-center gap-x-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-base font-black shadow-md backdrop-blur-sm">
+                م
+              </div>
+              <div className="min-w-0">
+                <p className="text-lg font-black leading-tight tracking-tight">
+                  {APP_NAME}
+                </p>
+                <p className="text-[11px] font-medium leading-tight text-emerald-100/90">
+                  للاختبارات
+                </p>
+              </div>
+            </LoginBrandHomeLink>
+            <LoginLandingBackLink />
+          </div>
+          <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold backdrop-blur-sm">
+            <Sparkles className="h-3 w-3 shrink-0 text-amber-300" aria-hidden />
+            <span className="truncate">{APP_PLATFORM_BADGE}</span>
           </div>
           <p className="max-w-md truncate text-xs font-bold leading-snug text-white/95 sm:text-sm">
             {APP_SLOGAN}
@@ -86,18 +93,21 @@ export function LoginBrandingPanel({
         <>
           <div className="relative z-10 space-y-8">
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-xl font-black shadow-lg backdrop-blur-sm">
-                  م
-                </div>
-                <div>
-                  <p className="text-2xl font-black tracking-tight">
-                    {APP_NAME}
-                  </p>
-                  <p className="text-sm font-medium text-emerald-100/90">
-                    للاختبارات
-                  </p>
-                </div>
+              <div className="flex items-center justify-between gap-3">
+                <LoginBrandHomeLink className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-xl font-black shadow-lg backdrop-blur-sm">
+                    م
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black tracking-tight">
+                      {APP_NAME}
+                    </p>
+                    <p className="text-sm font-medium text-emerald-100/90">
+                      للاختبارات
+                    </p>
+                  </div>
+                </LoginBrandHomeLink>
+                <LoginLandingBackLink />
               </div>
 
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold backdrop-blur-sm">

@@ -1355,22 +1355,27 @@ partial_features:
       - src/app/login/login-form.tsx
       - src/app/login/login-page-shell.tsx
       - src/components/login/LoginBrandingPanel.tsx
+      - src/components/login/LoginLandingNav.tsx
       - src/components/pwa/PwaInstallPrompt.tsx
       - src/components/pwa/StoreBadgeLogos.tsx
       - src/hooks/use-pwa-install.ts
       - src/lib/pwa-install.ts
       - tests/features/ui-010-login-mobile-header.test.ts
+      - tests/features/ui-010-login-landing-nav.test.ts
     acceptance:
       - Login/signup shows brand-green (`brand-600`) install CTAs with white mono Apple/Play icons; labels «تثبيت التطبيق / على Android|iOS» (RTL); no Store/Play/black badge look
       - Android uses deferred beforeinstallprompt when available; otherwise Arabic Chrome guide modal
       - iOS opens Safari «إضافة إلى الشاشة الرئيسية» step modal (no beforeinstallprompt)
       - Mobile compact brand header is sticky (`sticky top-0 z-40`) with tight padding; login/join forms top-align under it (no large vertical gap)
-      - Spekit hooks: pwa-install-buttons, pwa-install-android, pwa-install-ios, pwa-install-modal
+      - Browser (not display-mode standalone / iOS navigator.standalone): compact circular Home icon button (h-9 w-9) opposite the logo with aria-label «العودة للصفحة الرئيسية»; logo also links to `/`
+      - Installed PWA: header landing control and logo home link are omitted so /login is the clean root
+      - Spekit hooks: pwa-install-buttons, pwa-install-android, pwa-install-ios, pwa-install-modal, login-landing-back
     spekit:
       - pwa-install-buttons
       - pwa-install-android
       - pwa-install-ios
       - pwa-install-modal
+      - login-landing-back
 
   - id: UI-012
     name: Native Standalone Home-Screen Shell
@@ -1637,9 +1642,11 @@ partial_features:
       - src/components/settings/SettingsPage.tsx
       - src/app/login/login-form.tsx
       - src/components/login/LoginBrandingPanel.tsx
+      - .github/workflows/sync-version-on-release.yml
       - tests/features/ui-020-app-version.test.ts
     acceptance:
-      - APP_VERSION is read from package.json and rendered as v{version} (synced with GitHub release tags)
+      - APP_VERSION is read from package.json and rendered as v{version}
+      - Publishing a GitHub Release (tag vX.Y.Z) auto-syncs package.json version via sync-version-on-release.yml
       - Version appears in Settings «حول التطبيق» (student and teacher) and beneath login copyright (mobile form + desktop branding panel)
       - Profile drawer links to /settings#about instead of showing the version inline
       - Not shown on landing, results, or portal footers
