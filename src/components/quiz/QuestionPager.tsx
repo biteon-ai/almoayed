@@ -35,6 +35,7 @@ export function QuestionPager({
   onNavigate,
   className,
   compact = false,
+  disabled = false,
 }: {
   count: number;
   activeIndex: number;
@@ -45,6 +46,8 @@ export function QuestionPager({
   onNavigate: (index: number) => void;
   className?: string;
   compact?: boolean;
+  /** Block pager clicks while submit / route transition is in flight. */
+  disabled?: boolean;
 }) {
   if (count === 0) return null;
 
@@ -72,11 +75,13 @@ export function QuestionPager({
       <button
         type="button"
         onClick={() => onNavigate(index)}
+        disabled={disabled}
         aria-label={`السؤال ${index + 1}`}
         aria-current={index === activeIndex ? "step" : undefined}
         className={cn(
           "flex shrink-0 items-center justify-center rounded-xl border text-sm font-bold tabular-nums",
           "touch-manipulation transition-colors duration-200",
+          "disabled:pointer-events-none disabled:opacity-40",
           box,
           statusStyles[status]
         )}
@@ -102,7 +107,7 @@ export function QuestionPager({
           "inline-flex shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40",
           box
         )}
-        disabled={!slots.canGoLeft}
+        disabled={disabled || !slots.canGoLeft}
         onClick={() => onNavigate(activeIndex + 1)}
         aria-label="السؤال التالي"
       >
@@ -117,7 +122,7 @@ export function QuestionPager({
           "inline-flex shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40",
           box
         )}
-        disabled={!slots.canGoRight}
+        disabled={disabled || !slots.canGoRight}
         onClick={() => onNavigate(activeIndex - 1)}
         aria-label="السؤال السابق"
       >
