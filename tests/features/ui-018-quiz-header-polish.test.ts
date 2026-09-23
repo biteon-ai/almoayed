@@ -70,6 +70,7 @@ describe(`${FEATURE} question jump sheet mobile shell`, () => {
       "utf8"
     );
     expect(sheet).toContain("open:items-end");
+    expect(sheet).toContain("flex-row");
     expect(sheet).toContain("bg-transparent");
     expect(sheet).toContain("h-dvh");
     expect(sheet).toContain("quizJumpSheet");

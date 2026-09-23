@@ -39,10 +39,12 @@ export function QuestionJumpSheet({
       open={open}
       onOpenChange={onOpenChange}
       className={cn(
-        // Full-bleed top-layer shell (not the sheet itself)
-        "inset-0 m-0 h-dvh max-h-none w-full max-w-none border-0 bg-transparent p-0 shadow-none",
-        "open:flex open:items-end open:justify-center sm:open:items-center",
-        "backdrop:bg-black/60"
+        // Full-bleed top-layer shell (not the sheet itself).
+        // Override Dialog defaults (`flex-col` / `m-auto` / `max-h-[90vh]`) so
+        // `items-end` docks the panel to the bottom (row flex: cross-axis = vertical).
+        "inset-0 m-0 h-dvh !max-h-none w-full max-w-none overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none",
+        "flex-row open:flex open:items-end open:justify-center sm:open:items-center",
+        "dark:bg-transparent backdrop:bg-black/60"
       )}
     >
       <DialogContent

@@ -1,6 +1,8 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { LoginForm } from "./login-form";
 import { LoginPageShell } from "./login-page-shell";
+import { getSession } from "@/lib/auth";
 import { getBiteonHostedLoginHref } from "@/lib/biteonswitch/hosted-login-href";
 import { isDemoModeEnabled, isFixedOtpUsable } from "@/lib/platform-settings";
 import { getPendingTeacherLinkSession } from "@/lib/auth-session";
@@ -21,6 +23,18 @@ function LoginFormFallback() {
 }
 
 export default async function LoginPage() {
+  // PWA start_url is /login — send already-signed-in users into the app.
+  const session = await getSession();
+  if (session.isLoggedIn) {
+    redirect(
+      session.role === "TEACHER"
+        ? "/teacher/dashboard"
+        : session.role === "SUPER_ADMIN"
+          ? "/admin/dashboard"
+          : "/dashboard"
+    );
+  }
+
   const demoEnabled = await isDemoModeEnabled();
   const pending = await getPendingTeacherLinkSession();
   const biteonHostedLoginHref = getBiteonHostedLoginHref();

@@ -20,10 +20,17 @@ test.describe(`${FEATURE} PWA shell meta`, () => {
 
     const manifest = await page.evaluate(async () => {
       const res = await fetch("/manifest.json");
-      return res.json() as Promise<{ display: string; name: string }>;
+      return res.json() as Promise<{
+        display: string;
+        name: string;
+        start_url: string;
+        scope: string;
+      }>;
     });
     expect(manifest.display).toBe("standalone");
     expect(manifest.name).toBe("المؤيد");
+    expect(manifest.start_url).toBe("/login");
+    expect(manifest.scope).toBe("/");
   });
 });
 
