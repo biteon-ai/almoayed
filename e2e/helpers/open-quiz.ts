@@ -6,14 +6,16 @@ type OpenQuizOptions = {
 };
 
 async function waitForQuizPlayer(page: Page): Promise<void> {
+  // Prefer the player surface; loading copy is a soft gate (IndexedDB/cache
+  // must not leave e2e hanging if a spinner briefly remounts).
+  await expect(page.locator('[data-spekit="question-card"]')).toBeVisible({
+    timeout: 45_000,
+  });
   await expect(page.getByText("جاري تحميل الاختبار...")).toHaveCount(0, {
-    timeout: 30_000,
+    timeout: 15_000,
   });
   await expect(page.getByText("جاري تحميل تفاصيل النتيجة...")).toHaveCount(0, {
-    timeout: 30_000,
-  });
-  await expect(page.locator('[data-spekit="question-card"]')).toBeVisible({
-    timeout: 20_000,
+    timeout: 15_000,
   });
 }
 
