@@ -4,11 +4,11 @@ import {
   gradePillClassName,
   STUDENT_DASHBOARD_RECENT_SCORES_LIMIT,
 } from "@/lib/student-quiz-ui";
-import { ScoreRingBadge } from "@/components/ui/score-ring-badge";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { ScoreRingBadge } from "@/components/ui/score-ring-badge";
 
 interface MyScoresTabProps {
   scores: RecentScoreRow[];
