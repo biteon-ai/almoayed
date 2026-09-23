@@ -26,16 +26,18 @@ export const settingsEditableInputClass = cn(
   settingsFieldShellClass,
   "border-gray-200 bg-white text-start text-base font-medium leading-relaxed text-foreground",
   "shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)]",
-  "placeholder:text-muted-foreground/55",
-  "hover:border-gray-300",
-  "focus:border-emerald-500 focus:bg-white focus-visible:ring-2 focus-visible:ring-emerald-100"
+  "placeholder:text-muted-foreground/55 dark:placeholder:text-slate-400",
+  "hover:border-gray-300 dark:border-slate-600 dark:bg-slate-900/70 dark:hover:border-slate-500",
+  "focus:border-emerald-500 focus:bg-white focus-visible:ring-2 focus-visible:ring-emerald-100",
+  "dark:focus:border-emerald-500 dark:focus:bg-slate-950 dark:focus-visible:ring-emerald-500/25"
 );
 
 /** Read-only / locked field surface */
 export const settingsReadonlySurfaceClass = cn(
   settingsFieldShellClass,
   "flex items-center justify-between gap-4",
-  "border-slate-100 bg-slate-50 shadow-none"
+  "border-slate-100 bg-slate-50 shadow-none",
+  "dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
 );
 
 export function SettingsCard({
@@ -47,7 +49,7 @@ export function SettingsCard({
     <Card
       className={cn(
         "gap-0 overflow-hidden border-slate-200/80 bg-card py-0 shadow-sm",
-        "ring-1 ring-slate-900/[0.04]",
+        "ring-1 ring-slate-900/[0.04] dark:border-slate-700 dark:ring-white/10",
         className
       )}
       {...props}
@@ -74,13 +76,14 @@ export function SettingsCardHeader({
       className={cn(
         settingsCardPx,
         "gap-0 border-b border-slate-100 bg-slate-50/50",
+        "dark:border-slate-700 dark:bg-slate-900/50",
         "pb-4 pt-5 md:pb-5 md:pt-6"
       )}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 flex-1 items-center gap-3.5 text-start">
           <div
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-100/80 text-brand-700 ring-1 ring-brand-200/60"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-100/80 text-brand-700 ring-1 ring-brand-200/60 dark:bg-brand-950/50 dark:text-brand-300 dark:ring-brand-800/50"
             aria-hidden
           >
             <Icon className="size-5" />
@@ -90,7 +93,7 @@ export function SettingsCardHeader({
               {title}
             </CardTitle>
             {description ? (
-              <CardDescription className="text-xs leading-relaxed text-slate-500">
+              <CardDescription className="text-xs leading-relaxed text-slate-500 dark:text-slate-300">
                 {description}
               </CardDescription>
             ) : null}
@@ -116,6 +119,7 @@ export function SettingsFormPanel({
       dir="rtl"
       className={cn(
         "space-y-6 rounded-xl border border-slate-200/90 bg-white p-4",
+        "dark:border-slate-700 dark:bg-slate-950/60",
         "md:p-6 lg:p-8",
         className
       )}
@@ -289,6 +293,7 @@ export function SettingsCardFooter({
       className={cn(
         settingsCardPx,
         "space-y-3 border-t border-slate-100 bg-slate-50/30 pb-5 pt-4 md:pb-6 md:pt-5",
+        "dark:border-slate-700 dark:bg-slate-900/40",
         className
       )}
     >
@@ -312,7 +317,7 @@ export function SettingsMessage({
         "rounded-xl px-4 py-2.5 text-center text-xs font-medium",
         isError
           ? "border border-destructive/20 bg-destructive/5 text-destructive"
-          : "border border-brand-200/50 bg-brand-50/70 text-brand-800"
+          : "border border-brand-200/50 bg-brand-50/70 text-brand-800 dark:border-brand-800/40 dark:bg-brand-950/40 dark:text-brand-200"
       )}
     >
       {message}

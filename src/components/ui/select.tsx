@@ -43,14 +43,14 @@ function SelectTrigger({
       data-size={size}
       className={cn(
         "flex w-full items-center justify-between gap-2 rounded-xl border border-gray-200 bg-background py-2.5 ps-4 pe-3 text-start text-base font-medium whitespace-nowrap transition-colors outline-none select-none",
-        "hover:border-gray-300 dark:border-border dark:hover:border-border",
-        "focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-100",
+        "hover:border-gray-300 dark:border-slate-600 dark:bg-slate-900/70 dark:hover:border-slate-500",
+        "focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-100 dark:focus-visible:ring-emerald-500/25",
         "disabled:cursor-not-allowed disabled:opacity-50",
         "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20",
-        "data-placeholder:text-muted-foreground/55",
+        "data-placeholder:text-muted-foreground/55 dark:data-placeholder:text-slate-400",
         "data-[size=default]:min-h-12 data-[size=sm]:min-h-10 data-[size=sm]:rounded-xl",
         "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 *:data-[slot=select-value]:text-start",
-        "dark:bg-input/30 dark:aria-invalid:border-destructive/50",
+        "dark:aria-invalid:border-destructive/50",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
