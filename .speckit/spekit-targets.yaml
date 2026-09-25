@@ -140,7 +140,9 @@ TIER-002:
 # ── Teacher ─────────────────────────────────────────────────────
 TEACH-000:
   teacher-layout-nav: "Desktop teacher navigation"
-  teacher-layout-nav-mobile: "Mobile teacher navigation"
+  teacher-layout-nav-mobile: "Legacy mobile header strip (superseded by bottom nav)"
+  teacher-layout-nav-bottom: "Teacher mobile/PWA fixed bottom tab bar"
+  teacher-header-back: "Teacher mobile header back control"
   teacher-dashboard: "Teacher dashboard page root"
   teacher-stats-grid: "Stats cards row"
   teacher-stat-students: "Student count stat"
@@ -316,6 +318,16 @@ UI-010:
   pwa-install-ios: "iOS install button (Safari home-screen guide)"
   pwa-install-modal: "Arabic step-by-step PWA install instruction dialog"
   login-landing-back: "Browser-only back link from /login to landing (/); hidden in installed PWA"
+
+UI-021:
+  teacher-pwa-install-buttons: "Teacher login — Android/iOS PWA install CTA row"
+  teacher-pwa-install-android: "Teacher Android install button"
+  teacher-pwa-install-ios: "Teacher iOS install button"
+  teacher-pwa-install-modal: "Teacher Arabic PWA install instruction dialog"
+
+UI-022:
+  teacher-login-brand-header: "Teacher login indigo sticky/desktop branding panel"
+  teacher-login-landing-back: "Browser-only Home from /teacher/login to landing; hidden in installed PWA"
 
 # ── Native home-screen shell / drawer / tiles / A2HS ────────────
 UI-012:

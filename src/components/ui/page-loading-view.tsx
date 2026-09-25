@@ -11,24 +11,29 @@ interface PageLoadingViewProps {
    * full-viewport surfaces outside authenticated chrome.
    */
   compact?: boolean;
+  className?: string;
 }
 
 /**
- * Unified in-shell loading — spinner card + pulsed dots inside the main column.
+ * Unified in-shell loading — spinner + message dead-centered in the content area.
  * Authenticated layouts keep header / bottom nav mounted around this view.
  */
 export function PageLoadingView({
   message = "جاري التحميل…",
   subMessage = "نحضّر صفحتك",
   compact = true,
+  className,
 }: PageLoadingViewProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center px-6 text-foreground",
+        "flex w-full flex-col items-center justify-center px-6 text-foreground",
+        // Dead-center in remaining viewport under sticky header (+ bottom tabs on mobile).
+        // Avoid large py-* which bias the block toward the top of the screen.
         compact
-          ? "min-h-[50vh] bg-transparent py-16"
-          : "min-h-dvh bg-background py-16 dark:bg-slate-950"
+          ? "min-h-[max(60vh,calc(100dvh-10rem))] md:min-h-[max(60vh,calc(100dvh-5.5rem))]"
+          : "min-h-dvh bg-background dark:bg-slate-950",
+        className
       )}
       role="status"
       aria-live="polite"

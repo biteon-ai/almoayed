@@ -75,6 +75,20 @@
 }
 
 @layer components {
+  /* ── Digit / ring optical centering (Tajawal line-box + SVG) ── */
+  .progress-ring-label {
+    @apply pointer-events-none absolute inset-0 z-10 grid place-items-center leading-none tabular-nums;
+  }
+
+  /* Cap-height sits slightly below geometric center in most UI fonts; nudge up. */
+  .progress-ring-label > * {
+    transform: translateY(-0.5px);
+  }
+
+  .digit-box {
+    @apply inline-flex items-center justify-center leading-none tabular-nums;
+  }
+
   /* ── PWA shell ── */
   .mobile-shell {
     @apply w-full max-w-md mx-auto overscroll-y-contain;

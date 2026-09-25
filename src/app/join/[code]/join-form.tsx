@@ -201,11 +201,8 @@ export function JoinForm({ teacherCode, teacherName }: JoinFormProps) {
             icon={MessageCircle}
             spekitProps={spekit(SPEKIT.joinWhatsapp)}
           >
-            <AuthInputShell suppressHydrationWarning>
-              <span
-                className="flex shrink-0 items-center gap-1.5 border-e border-input/80 bg-muted/60 px-3 text-xs font-bold text-foreground sm:text-sm"
-                dir="ltr"
-              >
+            <AuthInputShell suppressHydrationWarning dir="ltr" className="text-start">
+              <span className="flex shrink-0 items-center gap-1.5 border-e border-input/80 bg-muted/60 px-3 text-xs font-bold text-foreground sm:text-sm">
                 <span
                   className="size-1.5 shrink-0 rounded-full bg-[#25D366]"
                   aria-hidden
@@ -221,7 +218,7 @@ export function JoinForm({ teacherCode, teacherName }: JoinFormProps) {
                 placeholder="9xx xxx xxx"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-xs"
+                className="min-w-0 flex-1 bg-transparent px-3 text-start text-sm outline-none placeholder:text-xs"
                 dir="ltr"
                 required
                 suppressHydrationWarning

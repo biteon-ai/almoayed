@@ -22,6 +22,7 @@ import { AppVersion } from "@/components/brand/AppVersion";
 import { AuthField, AuthInputShell } from "@/components/login/AuthField";
 import { LoginLoadingOverlay } from "@/components/login/LoginLoadingOverlay";
 import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
+import { PwaPortalMarker } from "@/components/pwa/PwaPortalMarker";
 import { useLoadingBarSync } from "@/components/providers/top-loader-provider";
 import {
   ActiveLoginLoaderBar,
@@ -131,10 +132,9 @@ function WhatsAppField({
       icon={MessageCircle}
       spekitProps={spekitProps}
     >
-      <AuthInputShell suppressHydrationWarning>
+      <AuthInputShell suppressHydrationWarning dir="ltr" className="text-start">
         <span
           className="flex shrink-0 items-center gap-1.5 border-e border-input/80 bg-muted/60 px-3 text-xs font-bold text-foreground sm:text-sm"
-          dir="ltr"
         >
           <span
             className="size-1.5 shrink-0 rounded-full bg-[#25D366]"
@@ -151,7 +151,7 @@ function WhatsAppField({
           placeholder="9xx xxx xxx"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-xs"
+          className="min-w-0 flex-1 bg-transparent px-3 text-start text-sm outline-none placeholder:text-xs"
           dir="ltr"
           required
           suppressHydrationWarning
@@ -448,6 +448,7 @@ export function LoginForm({
 
   return (
     <>
+      <PwaPortalMarker portal="student" />
       <ActiveLoginLoaderBar active={isBusy} />
       <LoginLoadingOverlay
         show={overlay}
@@ -487,8 +488,6 @@ export function LoginForm({
             </div>
 
             <div className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-xl dark:border-border/50 dark:bg-card/95">
-              <div className="h-1 bg-gradient-to-l from-emerald-400 via-emerald-600 to-teal-700" />
-
               <div className="space-y-5 p-5 sm:p-6">
                 {(banner || errorMessage) && !isBusy ? (
                   <div

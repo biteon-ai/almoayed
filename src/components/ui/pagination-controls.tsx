@@ -80,7 +80,7 @@ export function PaginationControls({
         >
           <SelectTrigger
             aria-label="انتقل إلى صفحة"
-            className="h-8 w-[5.25rem] rounded-lg px-2 text-[11px] font-semibold tabular-nums shadow-none"
+            className="h-8 w-[5.25rem] rounded-lg px-2 text-[11px] font-semibold leading-none tabular-nums shadow-none"
           >
             <SelectValue>
               {page}/{totalPages}
@@ -97,7 +97,7 @@ export function PaginationControls({
           </SelectContent>
         </Select>
       ) : variant === "compact" ? (
-        <span className="min-w-[3.5rem] rounded-md bg-background px-2 py-1 text-center text-[11px] font-semibold tabular-nums text-muted-foreground ring-1 ring-border/60">
+        <span className="digit-box min-w-[3.5rem] rounded-md bg-background px-2 py-1 text-center text-[11px] font-semibold text-muted-foreground ring-1 ring-border/60">
           {page}/{totalPages}
         </span>
       ) : null}

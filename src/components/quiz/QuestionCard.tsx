@@ -147,7 +147,7 @@ export function QuestionCard({
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <div
                     className={cn(
-                      "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors",
+                      "digit-box size-9 shrink-0 rounded-full text-sm font-semibold transition-colors",
                       "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-200",
                       takingSelected && "bg-white/15 text-white",
                       isCorrect && "bg-green-500 text-white",

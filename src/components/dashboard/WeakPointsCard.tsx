@@ -98,8 +98,12 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
               return (
                 <div key={cat.category_tag} className="flex flex-col items-center p-3.5 rounded-xl border border-brand-50 bg-brand-50/5 dark:border-brand-950/40 dark:bg-brand-950/5 w-full max-w-[130px] transition-shadow duration-200 hover:shadow-inner">
                   {/* Circular Mastery Ring */}
-                  <div className="relative size-16 flex items-center justify-center">
-                    <svg className="size-full -rotate-90">
+                  <div className="relative flex size-16 items-center justify-center">
+                    <svg
+                      className="size-full -rotate-90"
+                      viewBox="0 0 64 64"
+                      aria-hidden
+                    >
                       {/* Background circle track */}
                       <circle
                         cx="32"
@@ -125,11 +129,12 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
                         fill="transparent"
                       />
                     </svg>
-                    {/* Inner Text */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-[13px] font-black tracking-tighter text-foreground font-mono">
-                        <PercentText value={Math.round(success)} />
-                      </span>
+                    {/* Inner Text — absolute center (no mono metrics / RTL offset) */}
+                    <div className="progress-ring-label">
+                      <PercentText
+                        value={Math.round(success)}
+                        className="text-[13px] font-black tracking-tighter text-foreground"
+                      />
                     </div>
                   </div>
 

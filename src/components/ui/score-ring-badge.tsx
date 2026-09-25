@@ -86,15 +86,19 @@ export function ScoreRingBadge({
       </svg>
       <span
         className={cn(
-          "pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-px",
-          "whitespace-nowrap leading-none",
+          "pointer-events-none absolute inset-0 z-10 grid place-items-center",
           styles.text
         )}
       >
-        <span className="text-sm font-bold tabular-nums tracking-tight">
-          {clamped}
+        <span
+          dir="ltr"
+          className="m-0 inline-flex items-center gap-px p-0 leading-none tabular-nums"
+        >
+          <span className="m-0 p-0 text-sm font-bold leading-none tracking-tight">
+            {clamped}
+          </span>
+          <span className="m-0 p-0 text-[10px] font-bold leading-none">%</span>
         </span>
-        <span className="text-[10px] font-bold leading-none">%</span>
       </span>
     </span>
   );

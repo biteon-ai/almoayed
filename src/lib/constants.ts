@@ -10,6 +10,12 @@ export const APP_PLATFORM_BADGE = "منصة تعليمية متكاملة لجم
 export const APP_FOOTER_COPYRIGHT = `© ${new Date().getFullYear()} منصة المؤيد التعليمية — منصة اختبارات وتقييم شاملة لكافة المراحل.`;
 export const APP_THEME_COLOR = "#0d9488";
 
+/** Teacher Portal PWA — distinct from student teal (`UI-021`). */
+export const TEACHER_APP_NAME = "المؤيد للمدرسين";
+export const TEACHER_APP_SHORT_NAME = "مدرس المؤيد";
+export const TEACHER_APP_THEME_COLOR = "#4f46e5";
+export const TEACHER_APP_THEME_COLOR_DARK = "#312e81";
+
 /** Published version from package.json, shown as `v{APP_VERSION}` for PWA cache tracking. */
 export const APP_VERSION = packageJson.version;
 

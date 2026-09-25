@@ -234,7 +234,7 @@ export function StudentsTable({
                     ) : (
                       <span
                         aria-hidden
-                        className="flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-100 bg-emerald-500/10 text-xs font-bold text-emerald-700 dark:border-emerald-900 dark:text-emerald-300"
+                        className="digit-box size-10 shrink-0 rounded-full border-2 border-emerald-100 bg-emerald-500/10 text-xs font-bold text-emerald-700 dark:border-emerald-900 dark:text-emerald-300"
                       >
                         {studentInitials(student.fullName)}
                       </span>

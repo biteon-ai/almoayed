@@ -6,12 +6,12 @@ alwaysApply: true
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-**Active plan**: `specs/034-compact-welcome-hero/plan.md`
+**Active plan**: `specs/036-teacher-pwa-login/plan.md`
 
 Related artifacts:
-- Spec: `specs/034-compact-welcome-hero/spec.md`
-- Research: `specs/034-compact-welcome-hero/research.md`
-- Data model: `specs/034-compact-welcome-hero/data-model.md`
-- Contracts: `specs/034-compact-welcome-hero/contracts/`
-- Quickstart: `specs/034-compact-welcome-hero/quickstart.md`
+- Spec: `specs/036-teacher-pwa-login/spec.md`
+- Research: `specs/036-teacher-pwa-login/research.md`
+- Data model: `specs/036-teacher-pwa-login/data-model.md`
+- Contracts: `specs/036-teacher-pwa-login/contracts/`
+- Quickstart: `specs/036-teacher-pwa-login/quickstart.md`
 <!-- SPECKIT END -->

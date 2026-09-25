@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Regenerate PWA / favicon PNGs from scripts/brand-asset-template.html.
- * Text must match src/lib/constants.ts APP_NAME ("المؤيد").
+ * Student icons use APP_NAME (teal). Teacher icons use a short indigo mark (UI-021).
  */
 import { chromium } from "@playwright/test";
 import { spawnSync } from "node:child_process";
@@ -16,13 +16,21 @@ const TEMPLATE = join(__dirname, "brand-asset-template.html");
 
 /** Keep in sync with src/lib/constants.ts */
 const APP_NAME = "المؤيد";
+/** Short mark for teacher icons — full TEACHER_APP_NAME is too long for 192px. */
+const TEACHER_ICON_LABEL = "مدرس";
 
-const OUTPUTS = [
+const STUDENT_OUTPUTS = [
   { file: "icon-512.png", size: 512 },
   { file: "icon-192.png", size: 192 },
   { file: "apple-touch-icon.png", size: 180 },
   { file: "favicon-32x32.png", size: 32 },
   { file: "favicon-16x16.png", size: 16 },
+];
+
+const TEACHER_OUTPUTS = [
+  { file: "teacher-icon-512.png", size: 512 },
+  { file: "teacher-icon-192.png", size: 192 },
+  { file: "teacher-apple-touch-icon.png", size: 180 },
 ];
 
 function decodeDataUrl(dataUrl) {
@@ -61,7 +69,7 @@ async function main() {
     });
     await page.waitForTimeout(500);
 
-    for (const { file, size } of OUTPUTS) {
+    for (const { file, size } of STUDENT_OUTPUTS) {
       const dataUrl = await page.evaluate(
         ({ iconSize, label }) => window.renderBrandIcon(iconSize, label),
         { iconSize: size, label: APP_NAME }
@@ -72,7 +80,20 @@ async function main() {
     }
 
     writeFaviconIco();
-    console.log(`Brand assets regenerated with label: ${APP_NAME}`);
+    console.log(`Student brand assets regenerated with label: ${APP_NAME}`);
+
+    const teacherColors = await page.evaluate(() => window.TEACHER_ICON_COLORS);
+    for (const { file, size } of TEACHER_OUTPUTS) {
+      const dataUrl = await page.evaluate(
+        ({ iconSize, label, colors }) =>
+          window.renderBrandIcon(iconSize, label, colors),
+        { iconSize: size, label: TEACHER_ICON_LABEL, colors: teacherColors }
+      );
+      const outPath = join(PUBLIC, file);
+      writeFileSync(outPath, decodeDataUrl(dataUrl));
+      console.log(`Wrote ${file} (${size}x${size})`);
+    }
+    console.log(`Teacher brand assets regenerated with label: ${TEACHER_ICON_LABEL}`);
   } finally {
     await browser.close();
   }

@@ -56,7 +56,7 @@ export function WeakPointsTab({ categories }: WeakPointsTabProps) {
             <div className="flex shrink-0 items-center gap-2">
               <span
                 className={cn(
-                  "rounded-lg px-2.5 py-1 text-sm font-black tabular-nums",
+                  "digit-box rounded-lg px-2.5 py-1 text-sm font-black",
                   isStrong &&
                     "border border-green-100 bg-green-50 text-green-600 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-300",
                   isWeak &&

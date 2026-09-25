@@ -49,11 +49,18 @@ function ProgressRing({ value }: { value: number }) {
           fill="transparent"
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-black tabular-nums text-slate-800 dark:text-white">
-          {Math.round(value)}%
-        </span>
-        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-300">تقدم</span>
+      <div className="progress-ring-label">
+        <div className="flex flex-col items-center gap-0.5 leading-none">
+          <span
+            dir="ltr"
+            className="text-lg font-black leading-none text-slate-800 dark:text-white"
+          >
+            {Math.round(value)}%
+          </span>
+          <span className="text-[10px] font-semibold leading-none text-slate-500 dark:text-slate-300">
+            تقدم
+          </span>
+        </div>
       </div>
     </div>
   );

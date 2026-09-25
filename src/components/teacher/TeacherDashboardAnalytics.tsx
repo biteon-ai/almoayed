@@ -91,8 +91,13 @@ function CompletionRing({ value }: { value: number }) {
           className="text-emerald-600 transition-all duration-500"
         />
       </svg>
-      <span className="absolute text-[10px] font-bold tabular-nums text-emerald-700">
-        {clamped}%
+      <span className="progress-ring-label">
+        <span
+          dir="ltr"
+          className="text-[10px] font-bold leading-none text-emerald-700"
+        >
+          {clamped}%
+        </span>
       </span>
     </div>
   );

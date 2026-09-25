@@ -21,7 +21,10 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **QUIZ-006** — Retake wipes drafts; each attempt shuffles questions and MCQ options (review snapshot)
 - **UI-018** — Compact header «تسليم» (disabled until complete), right stepper, timer countdown bar, polished «كل الأسئلة»
 - **UI-019** — Compact student green heroes (dashboard / quizzes / results; phone density; hide subtitles; tight stats)
-- **UI-020** — App version (`v{package.json}`) in Settings «حول التطبيق» + login footer; GitHub Release tags auto-sync `package.json` via `sync-version-on-release.yml`
+- **UI-020** — App version (`v{package.json}`) in Settings «حول التطبيق» + login footer (student + teacher); GitHub Release tags auto-sync `package.json` via `sync-version-on-release.yml`
+- **UI-021** — Teacher Portal PWA: separate `teacher-manifest.json`, indigo theme/icons, `start_url` `/teacher/login`, portal-aware standalone guard
+- **UI-022** — Teacher login shell parity: sticky indigo header, browser-only Home, install CTAs, version footer (AUTH-009 preserved)
+- **UI-023** — Teacher portal mobile chrome parity: sticky header + fixed bottom tabs (dashboard / students / quizzes / settings) matching student shell
 - **FIX-UI-004** — Settings/dark inputs use slate surfaces (no forced white `!bg-white`)
 - **FIX-UI-005** — Blocking FOUC script + critical CSS prevent white flash on dark hard reload
 - **FIX-UI-006** — Runtime guard + early head/console filter ignore extension noise; providers fail soft

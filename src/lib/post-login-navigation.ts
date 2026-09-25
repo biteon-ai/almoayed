@@ -13,6 +13,7 @@ export const TEACHER_CORE_PREFETCH_ROUTES = [
   "/teacher/dashboard",
   "/teacher/quizzes",
   "/teacher/students",
+  "/teacher/settings",
 ] as const;
 
 type PrefetchRouter = {

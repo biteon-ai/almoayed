@@ -5,6 +5,7 @@ import { getStudentGamificationStatus } from "@/actions/gamification";
 import { requireStudent } from "@/lib/auth";
 import { APP_DESCRIPTION } from "@/lib/constants";
 import { StudentResultsView } from "@/components/student/StudentResultsView";
+import { PageLoadingView } from "@/components/ui/page-loading-view";
 
 /** Auth + live scores — request-scoped; route JS prefetched from login/chrome. */
 export const dynamic = "force-dynamic";
@@ -30,9 +31,10 @@ export default async function StudentResultsPage() {
   return (
     <Suspense
       fallback={
-        <div className="container mx-auto max-w-7xl p-4 text-sm text-muted-foreground">
-          جاري تحميل النتائج...
-        </div>
+        <PageLoadingView
+          message="جاري تحميل النتائج..."
+          subMessage="نحضّر علاماتك والمحاولات السابقة"
+        />
       }
     >
       <StudentResultsView

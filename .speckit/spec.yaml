@@ -1640,7 +1640,7 @@ partial_features:
     name: App Version Indicator
     status: implemented
     persona: [STUDENT, TEACHER]
-    routes: ["/settings", "/teacher/settings", "/login"]
+    routes: ["/settings", "/teacher/settings", "/login", "/teacher/login"]
     files:
       - package.json
       - src/lib/constants.ts
@@ -1648,15 +1648,105 @@ partial_features:
       - src/components/settings/SettingsPage.tsx
       - src/app/login/login-form.tsx
       - src/components/login/LoginBrandingPanel.tsx
+      - src/app/teacher/login/teacher-login-form.tsx
+      - src/components/login/TeacherLoginBrandingPanel.tsx
       - .github/workflows/sync-version-on-release.yml
       - tests/features/ui-020-app-version.test.ts
     acceptance:
       - APP_VERSION is read from package.json and rendered as v{version}
       - Publishing a GitHub Release (tag vX.Y.Z) auto-syncs package.json version via sync-version-on-release.yml
-      - Version appears in Settings «حول التطبيق» (student and teacher) and beneath login copyright (mobile form + desktop branding panel)
+      - Version appears in Settings «حول التطبيق» (student and teacher) and beneath login copyright (student + teacher login mobile form + desktop branding panels)
       - Profile drawer links to /settings#about instead of showing the version inline
       - Not shown on landing, results, or portal footers
     spekit: [app-version]
+
+  - id: UI-021
+    name: Teacher Portal PWA Install Package
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/login"]
+    extends: [UI-010, UI-012]
+    spec: specs/036-teacher-pwa-login/
+    files:
+      - public/teacher-manifest.json
+      - public/teacher-icon-192.png
+      - public/teacher-icon-512.png
+      - public/teacher-apple-touch-icon.png
+      - public/sw.js
+      - scripts/generate-brand-assets.mjs
+      - src/lib/constants.ts
+      - src/lib/pwa-portal.ts
+      - src/app/teacher/login/layout.tsx
+      - src/components/pwa/PwaInstallPrompt.tsx
+      - src/components/pwa/PwaStandaloneEntryRedirect.tsx
+      - src/components/pwa/PwaPortalMarker.tsx
+      - tests/features/ui-021-teacher-pwa.test.ts
+      - e2e/ui-021-teacher-pwa-login.spec.ts
+    acceptance:
+      - Teacher login advertises /teacher-manifest.json with start_url /teacher/login and indigo theme_color (not student #0d9488)
+      - Separate teacher icons (192/512 + Apple 180) distinguishable from student icons
+      - PwaInstallPrompt variant=teacher uses indigo CTAs and teacher Spekit install hooks
+      - Standalone marketing / redirects to /teacher/login when portal hint is teacher, else /login
+      - Student manifest.json and root layout student package unchanged
+    spekit:
+      - teacher-pwa-install-buttons
+      - teacher-pwa-install-android
+      - teacher-pwa-install-ios
+      - teacher-pwa-install-modal
+
+  - id: UI-022
+    name: Teacher Login Shell Parity
+    status: implemented
+    persona: [TEACHER]
+    routes: ["/teacher/login"]
+    extends: [UI-010, UI-020, AUTH-009, UI-021]
+    spec: specs/036-teacher-pwa-login/
+    files:
+      - src/app/teacher/login/page.tsx
+      - src/app/teacher/login/teacher-login-page-shell.tsx
+      - src/app/teacher/login/teacher-login-form.tsx
+      - src/components/login/TeacherLoginBrandingPanel.tsx
+      - src/components/login/LoginLandingNav.tsx
+      - tests/features/ui-022-teacher-login-shell.test.ts
+    acceptance:
+      - Sticky compact indigo brand header on mobile with tight gap under header (pt-3 parity with student login)
+      - Browser-only Home control (teacher-login-landing-back) hidden in standalone / iOS navigator.standalone
+      - App version at bottom of login container; AUTH-009 recovery controls preserved
+      - RTL + touch-friendly inputs (h-12 / size=touch); server session redirect for signed-in teachers
+    spekit:
+      - teacher-login-brand-header
+      - teacher-login-landing-back
+
+  - id: UI-023
+    name: Teacher Portal Mobile Chrome Parity
+    status: implemented
+    persona: [TEACHER]
+    routes:
+      - /teacher/dashboard
+      - /teacher/students
+      - /teacher/quizzes
+      - /teacher/settings
+    extends: [UI-001, UI-006, UI-012, UI-021]
+    files:
+      - src/lib/teacher-nav.ts
+      - src/components/layout/TeacherAppChrome.tsx
+      - src/components/layout/TeacherHeader.tsx
+      - src/components/layout/TeacherBottomNav.tsx
+      - src/components/layout/TeacherNavLink.tsx
+      - src/components/layout/TeacherBackButton.tsx
+      - src/app/teacher/(portal)/layout.tsx
+      - tests/features/ui-023-teacher-portal-chrome.test.ts
+      - e2e/ui-023-teacher-portal-chrome.spec.ts
+    acceptance:
+      - Sticky header uses student chrome tokens (bg-background/90, border-border/80, z-50) with mobile title/back
+      - Fixed bottom tab bar on md:hidden with safe-bottom — الرئيسية، الطلاب، الاختبارات، الإعدادات
+      - Active tab uses brand accent + dot; nested quiz/student/settings routes keep parent tab active
+      - Main content has pb-28 on mobile so content clears the tab bar; desktop keeps header nav without bottom bar
+      - Teacher login PWA manifest/theme (UI-021) unchanged
+    spekit:
+      - teacher-layout-nav
+      - teacher-layout-nav-bottom
+      - teacher-header-back
 
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel

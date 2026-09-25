@@ -1,13 +1,17 @@
-const APP_SHELL_CACHE = "APP_SHELL_CACHE_v3";
-const RUNTIME_CACHE = "RUNTIME_CACHE_v3";
+const APP_SHELL_CACHE = "APP_SHELL_CACHE_v4";
+const RUNTIME_CACHE = "RUNTIME_CACHE_v4";
 
 const PRECACHE_URLS = [
   "/offline.html",
   "/manifest.json",
+  "/teacher-manifest.json",
   "/favicon.ico",
   "/icon-192.png",
   "/icon-512.png",
   "/apple-touch-icon.png",
+  "/teacher-icon-192.png",
+  "/teacher-icon-512.png",
+  "/teacher-apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (event) => {
