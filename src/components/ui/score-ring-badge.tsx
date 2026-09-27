@@ -46,7 +46,7 @@ export function ScoreRingBadge({
       role="img"
       aria-label={`النتيجة ${clamped}%`}
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center",
+        "relative inline-block shrink-0 overflow-hidden rounded-full",
         size === "sm" ? "size-12" : "size-14",
         className
       )}
@@ -54,7 +54,7 @@ export function ScoreRingBadge({
     >
       <span
         className={cn(
-          "absolute inset-[6px] rounded-full shadow-inner",
+          "absolute inset-[6px] rounded-full",
           styles.well
         )}
         aria-hidden
@@ -86,15 +86,13 @@ export function ScoreRingBadge({
       </svg>
       <span
         className={cn(
-          "pointer-events-none absolute inset-0 z-10 grid place-items-center",
+          "pointer-events-none absolute inset-0 z-10 grid h-full w-full place-items-center leading-none tabular-nums",
           styles.text
         )}
       >
-        <span className="flex h-full w-full items-center justify-center leading-none tabular-nums">
-          <span className="m-0 p-0 text-sm font-bold leading-none tracking-tight">
-            {clamped}
-          </span>
-          <span className="m-0 p-0 text-[10px] font-bold leading-none">%</span>
+        <span className="text-sm font-bold leading-none tracking-tight">
+          {clamped}
+          <span className="text-[10px] font-bold leading-none">%</span>
         </span>
       </span>
     </span>
