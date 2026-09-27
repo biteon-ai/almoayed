@@ -3,6 +3,7 @@ import { QuizQuestionsDashboard } from "@/components/teacher/QuizQuestionsDashbo
 import { QuizEditSettingsPanel } from "@/components/teacher/QuizEditSettingsPanel";
 import { QuizTrashBanner } from "@/components/teacher/QuizTrashBanner";
 import { EditQuizImportToast } from "@/components/teacher/EditQuizImportToast";
+import { PageLoadingView } from "@/components/ui/page-loading-view";
 import { SPEKIT } from "@/lib/spekit-targets";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -46,9 +47,10 @@ export default async function EditQuizPage({ params }: PageProps) {
 
       <Suspense
         fallback={
-          <div className="rounded-2xl border border-border/70 bg-card p-6 text-sm text-muted-foreground shadow-sm">
-            جاري تحميل إدارة الأسئلة...
-          </div>
+          <PageLoadingView
+            message="جاري تحميل إدارة الأسئلة..."
+            subMessage="نحضّر الأسئلة والإعدادات"
+          />
         }
       >
         <QuizQuestionsDashboard

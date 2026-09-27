@@ -13,11 +13,22 @@ export type QuizCategoryFilter = (typeof QUIZ_CATEGORY_FILTERS)[number];
 /** Student /quizzes page — exam cards per pagination page (mobile-first). */
 export const STUDENT_EXAMS_PAGE_SIZE = 4;
 
-/** Student /results page — attempt result cards per pagination page (2×2 grid). */
+/** Student /results & /results/history — attempt cards per pagination page (2×2 grid). */
 export const STUDENT_RESULTS_PAGE_SIZE = 4;
 
 /** Dashboard «نتائجي» tab — recent attempts before «عرض كل النتائج». */
 export const STUDENT_DASHBOARD_RECENT_SCORES_LIMIT = 3;
+
+/** Collapsible archive on a results card — last N previous attempts before «عرض كل المحاولات». */
+export const STUDENT_RESULTS_ARCHIVE_PREVIEW_LIMIT = 3;
+
+export type AttemptSortDirection = "asc" | "desc";
+
+export function parseAttemptSortDirection(
+  value: string | null | undefined
+): AttemptSortDirection {
+  return value === "asc" ? "asc" : "desc";
+}
 
 export type QuizCardStatus = "locked" | "completed" | "in_progress" | "new";
 
@@ -146,14 +157,106 @@ export type QuizResultGroup = {
   archive: RecentScoreRow[];
 };
 
+/** Attempt row with per-quiz chronological numbering (1 = first attempt). */
+export type NumberedScoreRow = RecentScoreRow & {
+  attemptNumber: number;
+  attemptTotal: number;
+};
+
+/**
+ * Sort attempts by submittedAt. Default DESC (newest first).
+ */
+export function sortScoresBySubmittedAt(
+  scores: RecentScoreRow[],
+  direction: AttemptSortDirection = "desc"
+): RecentScoreRow[] {
+  const sorted = [...scores].sort((a, b) =>
+    a.submittedAt.localeCompare(b.submittedAt)
+  );
+  return direction === "asc" ? sorted : sorted.reverse();
+}
+
+/**
+ * Annotate each attempt with its ordinal within that quiz (ASC by date).
+ * Output order matches the input order.
+ */
+export function withAttemptNumbers(
+  scores: RecentScoreRow[]
+): NumberedScoreRow[] {
+  const byQuiz = new Map<string, RecentScoreRow[]>();
+  for (const row of scores) {
+    const list = byQuiz.get(row.quizId);
+    if (list) list.push(row);
+    else byQuiz.set(row.quizId, [row]);
+  }
+
+  const meta = new Map<
+    string,
+    { attemptNumber: number; attemptTotal: number }
+  >();
+  for (const attempts of Array.from(byQuiz.values())) {
+    const chronological = [...attempts].sort((a, b) =>
+      a.submittedAt.localeCompare(b.submittedAt)
+    );
+    chronological.forEach((row, index) => {
+      meta.set(row.submissionId, {
+        attemptNumber: index + 1,
+        attemptTotal: chronological.length,
+      });
+    });
+  }
+
+  return scores.map((row) => {
+    const info = meta.get(row.submissionId) ?? {
+      attemptNumber: 1,
+      attemptTotal: 1,
+    };
+    return { ...row, ...info };
+  });
+}
+
+/**
+ * Preview slice for a quiz card's collapsible archive (newest previous first).
+ * `allAttempts` should include the latest attempt so numbering stays accurate.
+ */
+export function previewArchiveAttempts(
+  allAttempts: RecentScoreRow[],
+  archive: RecentScoreRow[],
+  limit = STUDENT_RESULTS_ARCHIVE_PREVIEW_LIMIT
+): NumberedScoreRow[] {
+  const numberedById = new Map(
+    withAttemptNumbers(allAttempts).map((row) => [row.submissionId, row])
+  );
+  return archive.slice(0, Math.max(0, limit)).map(
+    (row) =>
+      numberedById.get(row.submissionId) ?? {
+        ...row,
+        attemptNumber: 1,
+        attemptTotal: 1,
+      }
+  );
+}
+
+/**
+ * Full history list: sort + attempt numbers (optional quiz filter).
+ */
+export function buildAttemptHistory(
+  scores: RecentScoreRow[],
+  direction: AttemptSortDirection = "desc",
+  quizId?: string | null
+): NumberedScoreRow[] {
+  const scoped = quizId
+    ? scores.filter((row) => row.quizId === quizId)
+    : scores;
+  return withAttemptNumbers(sortScoresBySubmittedAt(scoped, direction));
+}
+
 /**
  * Collapse attempt rows into one group per quiz.
  * Input may be unsorted; output groups are ordered by latest attempt DESC.
  */
 export function groupResultsByQuiz(scores: RecentScoreRow[]): QuizResultGroup[] {
-  const sorted = [...scores].sort((a, b) =>
-    b.submittedAt.localeCompare(a.submittedAt)
-  );
+  const sorted = sortScoresBySubmittedAt(scores, "desc");
   const byQuiz = new Map<string, RecentScoreRow[]>();
 
   for (const row of sorted) {
@@ -179,4 +282,10 @@ export function groupResultsByQuiz(scores: RecentScoreRow[]): QuizResultGroup[] 
     b.latest.submittedAt.localeCompare(a.latest.submittedAt)
   );
   return groups;
+}
+
+/** Href for the full attempt history page (optional quiz scope). */
+export function resultsHistoryHref(quizId?: string | null): string {
+  if (!quizId) return "/results/history";
+  return `/results/history?quizId=${encodeURIComponent(quizId)}`;
 }

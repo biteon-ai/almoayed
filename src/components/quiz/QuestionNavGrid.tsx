@@ -65,7 +65,7 @@ export function QuestionNavGrid({
             aria-label={`السؤال ${index + 1}`}
             aria-current={index === activeIndex ? "step" : undefined}
             className={cn(
-              "flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm font-bold tabular-nums transition-all duration-200",
+              "digit-box min-h-11 min-w-11 rounded-xl border text-sm font-bold transition-all duration-200",
               "touch-manipulation active:scale-95",
               statusStyles[status]
             )}

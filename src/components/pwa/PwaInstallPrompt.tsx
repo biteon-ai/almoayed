@@ -20,10 +20,14 @@ import {
 import { SPEKIT } from "@/lib/spekit-targets";
 import { cn } from "@/lib/utils";
 
+export type PwaInstallVariant = "student" | "teacher";
+
 function StepList({
   steps,
+  accentClassName,
 }: {
   steps: { icon: ElementType; text: ReactNode }[];
+  accentClassName: string;
 }) {
   return (
     <ol className="space-y-3">
@@ -35,7 +39,10 @@ function StepList({
             className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
           >
             <span
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-sm font-black text-white"
+              className={cn(
+                "digit-box h-8 w-8 shrink-0 rounded-lg text-sm font-black text-white",
+                accentClassName
+              )}
               aria-hidden
             >
               {index + 1}
@@ -108,11 +115,13 @@ function InstallBadge({
   platformLabel,
   spekitId,
   onClick,
+  buttonClassName,
 }: {
   logo: ReactNode;
   platformLabel: string;
   spekitId: string;
   onClick: () => void;
+  buttonClassName: string;
 }) {
   return (
     <button
@@ -122,10 +131,11 @@ function InstallBadge({
       onClick={onClick}
       className={cn(
         "inline-flex h-11 w-full flex-1 items-center justify-center gap-2 rounded-xl",
-        "bg-brand-600 px-3 text-white shadow-md shadow-brand-900/12",
-        "transition hover:bg-brand-700 active:scale-[0.98]",
-        "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-500/25",
-        "[@media(max-height:700px)]:h-10 sm:h-11"
+        "px-3 text-white shadow-md",
+        "transition active:scale-[0.98]",
+        "focus-visible:outline-none focus-visible:ring-[3px]",
+        "[@media(max-height:700px)]:h-10 sm:h-11",
+        buttonClassName
       )}
       aria-label={`تثبيت التطبيق على ${platformLabel}`}
     >
@@ -143,14 +153,21 @@ function InstallBadge({
 }
 
 /**
- * Login/signup PWA install CTAs — brand-green buttons matching login
- * primary actions; white mono Apple / Play icons (UI-010).
+ * Login/signup PWA install CTAs.
+ * Student: brand-green (UI-010). Teacher: indigo (UI-021).
  * Hidden entirely when the app is already running as an installed PWA.
  */
-export function PwaInstallPrompt({ className }: { className?: string }) {
+export function PwaInstallPrompt({
+  className,
+  variant = "student",
+}: {
+  className?: string;
+  variant?: PwaInstallVariant;
+}) {
   const { canPrompt, installed, ready, promptInstall } = usePwaInstall();
   const [modalOpen, setModalOpen] = useState(false);
   const [platform, setPlatform] = useState<PwaInstallPlatform>("ios");
+  const isTeacher = variant === "teacher";
 
   const openGuide = (next: PwaInstallPlatform) => {
     setPlatform(next);
@@ -164,41 +181,58 @@ export function PwaInstallPrompt({ className }: { className?: string }) {
     }
   };
 
-  // Wait for client standalone check so installed PWAs never flash CTAs.
   if (!ready || installed) {
     return null;
   }
 
+  const appLabel = isTeacher ? "المؤيد للمدرسين" : "المؤيد";
   const title =
     platform === "ios"
-      ? "تثبيت المؤيد على iPhone / iPad"
-      : "تثبيت المؤيد على Android";
+      ? `تثبيت ${appLabel} على iPhone / iPad`
+      : `تثبيت ${appLabel} على Android`;
 
   const description =
     platform === "ios"
       ? "Safari لا يدعم التثبيت المباشر — اتبع الخطوات التالية:"
       : "التثبيت المباشر غير متاح في هذا المتصفح. اتبع الخطوات التالية:";
 
+  const buttonsSpekit = isTeacher
+    ? SPEKIT.teacherPwaInstallButtons
+    : SPEKIT.pwaInstallButtons;
+  const androidSpekit = isTeacher
+    ? SPEKIT.teacherPwaInstallAndroid
+    : SPEKIT.pwaInstallAndroid;
+  const iosSpekit = isTeacher
+    ? SPEKIT.teacherPwaInstallIos
+    : SPEKIT.pwaInstallIos;
+  const modalSpekit = isTeacher
+    ? SPEKIT.teacherPwaInstallModal
+    : SPEKIT.pwaInstallModal;
+
+  const badgeClass = isTeacher
+    ? "bg-indigo-600 shadow-indigo-900/12 hover:bg-indigo-700 focus-visible:ring-indigo-500/25"
+    : "bg-brand-600 shadow-brand-900/12 hover:bg-brand-700 focus-visible:ring-brand-500/25";
+  const stepAccent = isTeacher ? "bg-indigo-600" : "bg-emerald-600";
+
   return (
-    <div
-      className={cn("space-y-2", className)}
-      data-spekit={SPEKIT.pwaInstallButtons}
-    >
+    <div className={cn("space-y-2", className)} data-spekit={buttonsSpekit}>
       <p className="text-center text-[11px] text-muted-foreground">
         ثبّت التطبيق على هاتفك (بدون متجر)
       </p>
       <div className="flex gap-2">
         <InstallBadge
-          spekitId={SPEKIT.pwaInstallAndroid}
+          spekitId={androidSpekit}
           platformLabel="Android"
           onClick={() => void onAndroidClick()}
           logo={<GooglePlayLogo className="size-[18px]" />}
+          buttonClassName={badgeClass}
         />
         <InstallBadge
-          spekitId={SPEKIT.pwaInstallIos}
+          spekitId={iosSpekit}
           platformLabel="iOS"
           onClick={() => openGuide("ios")}
           logo={<AppleLogo className="size-[18px]" />}
+          buttonClassName={badgeClass}
         />
       </div>
 
@@ -209,7 +243,7 @@ export function PwaInstallPrompt({ className }: { className?: string }) {
       ) : null}
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent data-spekit={SPEKIT.pwaInstallModal}>
+        <DialogContent data-spekit={modalSpekit}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
@@ -217,6 +251,7 @@ export function PwaInstallPrompt({ className }: { className?: string }) {
 
           <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
             <StepList
+              accentClassName={stepAccent}
               steps={[...(platform === "ios" ? IOS_STEPS : ANDROID_STEPS)]}
             />
           </div>

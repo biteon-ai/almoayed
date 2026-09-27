@@ -37,6 +37,14 @@ export const SPEKIT = {
   pwaInstallModal: "pwa-install-modal",
   loginLandingBack: "login-landing-back",
 
+  // ── UI-021 / UI-022 Teacher Portal PWA login ─────────────────
+  teacherLoginBrandHeader: "teacher-login-brand-header",
+  teacherLoginLandingBack: "teacher-login-landing-back",
+  teacherPwaInstallButtons: "teacher-pwa-install-buttons",
+  teacherPwaInstallAndroid: "teacher-pwa-install-android",
+  teacherPwaInstallIos: "teacher-pwa-install-ios",
+  teacherPwaInstallModal: "teacher-pwa-install-modal",
+
   // ── MT-001 / MT-002 ──────────────────────────────────────────
   teacherSwitcher: "teacher-switcher",
 
@@ -50,6 +58,10 @@ export const SPEKIT = {
   studentResultsPage: "student-results-page",
   resultsArchiveToggle: "results-archive-toggle",
   resultsArchiveList: "results-archive-list",
+  resultsViewAllCta: "results-view-all-cta",
+  resultsHistoryPage: "results-history-page",
+  resultsHistoryList: "results-history-list",
+  resultsSortToggle: "results-sort-toggle",
   quizAttemptMeta: "quiz-attempt-meta",
   studentQuizList: "student-quiz-list",
   studentQuizItem: "student-quiz-item",
@@ -97,6 +109,8 @@ export const SPEKIT = {
   // ── Teacher layout & dashboard ───────────────────────────────
   teacherLayoutNav: "teacher-layout-nav",
   teacherLayoutNavMobile: "teacher-layout-nav-mobile",
+  teacherLayoutNavBottom: "teacher-layout-nav-bottom",
+  teacherHeaderBack: "teacher-header-back",
   teacherDashboard: "teacher-dashboard",
   teacherCodeCard: "teacher-code-card",
   teacherStatsGrid: "teacher-stats-grid",

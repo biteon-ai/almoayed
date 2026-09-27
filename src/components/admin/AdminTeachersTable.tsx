@@ -251,8 +251,11 @@ export function AdminTeachersTable({ stats }: AdminTeachersTableProps) {
 
       <div className="card-native overflow-hidden" {...spekit(SPEKIT.adminTeachersTable)}>
         {loading ? (
-          <div className="flex justify-center p-12">
+          <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 p-12">
             <Loader2 className="size-7 animate-spin text-brand-600" />
+            <p className="text-sm font-semibold text-muted-foreground">
+              جاري التحميل…
+            </p>
           </div>
         ) : teachers.length === 0 ? (
           <p className="p-10 text-center text-sm font-semibold text-muted-foreground">
@@ -320,7 +323,7 @@ export function AdminTeachersTable({ stats }: AdminTeachersTableProps) {
                       </div>
                     </td>
                     <td className="px-4 py-4 align-top">
-                      <span className="inline-flex min-w-8 items-center justify-center rounded-xl bg-muted/60 px-2.5 py-1 text-xs font-extrabold tabular-nums">
+                      <span className="digit-box min-w-8 rounded-xl bg-muted/60 px-2.5 py-1 text-xs font-extrabold">
                         {teacher.quizCount}
                       </span>
                     </td>

@@ -13,7 +13,7 @@ test.describe("OFFLINE-001 offline quiz PWA", () => {
     const response = await request.get("/sw.js");
     expect(response.ok()).toBeTruthy();
     const body = await response.text();
-    expect(body).toContain("APP_SHELL_CACHE_v3");
+    expect(body).toContain("APP_SHELL_CACHE_v4");
     expect(body).toContain("offline.html");
   });
 });

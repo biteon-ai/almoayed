@@ -32,7 +32,7 @@ describe(`${FEATURE} PWA entry routing`, () => {
     expect(manifest.display).toBe("standalone");
   });
 
-  it("landing mounts standalone → /login client redirect", () => {
+  it("landing mounts standalone → portal-aware login client redirect", () => {
     const landing = readFileSync(
       "src/components/landing/LandingPageView.tsx",
       "utf8"
@@ -43,7 +43,8 @@ describe(`${FEATURE} PWA entry routing`, () => {
     );
     expect(landing).toContain("PwaStandaloneEntryRedirect");
     expect(guard).toContain("isPwaStandalone");
-    expect(guard).toContain('router.replace("/login")');
+    expect(guard).toContain("standaloneEntryPath");
+    expect(guard).toContain("router.replace(standaloneEntryPath())");
   });
 
   it("login page sends signed-in users to their dashboard", () => {

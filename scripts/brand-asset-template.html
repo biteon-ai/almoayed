@@ -20,10 +20,12 @@
   <body>
     <canvas id="canvas" aria-hidden="true"></canvas>
     <script>
-      /** Must match src/lib/constants.ts APP_NAME */
+      /** Must match src/lib/constants.ts APP_NAME / TEACHER_APP_* */
       const APP_NAME = "المؤيد";
       const THEME_COLOR = "#0d9488";
       const THEME_COLOR_LIGHT = "#14b8a6";
+      const TEACHER_THEME_COLOR = "#4f46e5";
+      const TEACHER_THEME_COLOR_LIGHT = "#6366f1";
 
       function roundRect(ctx, x, y, width, height, radius) {
         const r = Math.min(radius, width / 2, height / 2);
@@ -38,9 +40,14 @@
       /**
        * @param {number} size
        * @param {string} [label]
+       * @param {{ theme?: string, themeLight?: string }} [colors]
        * @returns {string}
        */
-      window.renderBrandIcon = function renderBrandIcon(size, label = APP_NAME) {
+      window.renderBrandIcon = function renderBrandIcon(
+        size,
+        label = APP_NAME,
+        colors = {}
+      ) {
         const canvas = document.getElementById("canvas");
         canvas.width = size;
         canvas.height = size;
@@ -48,6 +55,9 @@
         if (!ctx) {
           throw new Error("Canvas 2D context unavailable");
         }
+
+        const theme = colors.theme || THEME_COLOR;
+        const themeLight = colors.themeLight || THEME_COLOR_LIGHT;
 
         const cornerRadius = size * 0.18;
         ctx.clearRect(0, 0, size, size);
@@ -60,8 +70,8 @@
           size * 0.5,
           size * 0.72
         );
-        gradient.addColorStop(0, THEME_COLOR_LIGHT);
-        gradient.addColorStop(1, THEME_COLOR);
+        gradient.addColorStop(0, themeLight);
+        gradient.addColorStop(1, theme);
 
         ctx.save();
         roundRect(ctx, 0, 0, size, size, cornerRadius);
@@ -87,6 +97,11 @@
         ctx.shadowColor = "transparent";
 
         return canvas.toDataURL("image/png");
+      };
+
+      window.TEACHER_ICON_COLORS = {
+        theme: TEACHER_THEME_COLOR,
+        themeLight: TEACHER_THEME_COLOR_LIGHT,
       };
     </script>
   </body>

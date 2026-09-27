@@ -47,6 +47,19 @@ describe(`${FEATURE} app version indicator`, () => {
     expect(branding).toContain("<AppVersion");
     expect(branding).toContain("APP_FOOTER_COPYRIGHT");
 
+    const teacherForm = readFileSync(
+      "src/app/teacher/login/teacher-login-form.tsx",
+      "utf8"
+    );
+    expect(teacherForm).toContain("<AppVersion");
+    expect(teacherForm).toContain("APP_FOOTER_COPYRIGHT");
+
+    const teacherBranding = readFileSync(
+      "src/components/login/TeacherLoginBrandingPanel.tsx",
+      "utf8"
+    );
+    expect(teacherBranding).toContain("<AppVersion");
+
     for (const file of [
       "src/app/teacher/login/page.tsx",
       "src/components/layout/StudentAppChrome.tsx",

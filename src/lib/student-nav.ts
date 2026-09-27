@@ -256,6 +256,9 @@ export function studentBackFallbackHref(pathname: string): string | null {
 /** Compact mobile header title for the current student route. */
 export function studentMobilePageTitle(pathname: string): string {
   if (pathname.startsWith("/quiz/")) return "الاختبار";
+  if (pathname === "/results/history" || pathname.startsWith("/results/history/")) {
+    return "كل المحاولات";
+  }
   if (pathname.startsWith("/results/") && pathname !== "/results") {
     return "تفاصيل النتيجة";
   }
