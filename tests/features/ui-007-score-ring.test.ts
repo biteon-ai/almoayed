@@ -14,13 +14,20 @@ describe(`${FEATURE} ScoreRingBadge`, () => {
 
     expect(html).toContain(`data-spekit="${SPEKIT.resultsScoreBadge}"`);
     expect(html).toContain("size-14");
-    expect(html).toContain("text-sm");
+    expect(html).toContain("inline-flex");
+    expect(html).toContain("text-[9px]");
     expect(html).toContain("font-bold");
+    expect(html).toContain("fill-emerald-700");
     expect(html).toContain("bg-emerald-50");
+    expect(html).toContain("inset-[4px]");
+    expect(html).toContain("shadow-inner");
     expect(html).toContain("stroke-dashoffset");
-    expect(html).toContain("85");
-    expect(html).toContain("%");
+    expect(html).toContain('text-anchor="middle"');
+    expect(html).toContain('dominant-baseline="central"');
+    expect(html).toContain('dy="0.8"');
+    expect(html).toContain("85%");
     expect(html).toContain("<svg");
+    expect(html).toContain("<text");
   });
 
   it("uses rose tint for low scores and a compact size variant", () => {
@@ -30,7 +37,8 @@ describe(`${FEATURE} ScoreRingBadge`, () => {
 
     expect(html).toContain("size-12");
     expect(html).toContain("bg-rose-50");
-    expect(html).toContain("text-rose-700");
+    expect(html).toContain("fill-rose-700");
+    expect(html).toContain("text-[9px]");
   });
 
   it("uses amber tint for mid-band scores", () => {
@@ -39,6 +47,6 @@ describe(`${FEATURE} ScoreRingBadge`, () => {
     );
 
     expect(html).toContain("bg-amber-50");
-    expect(html).toContain("text-amber-800");
+    expect(html).toContain("fill-amber-800");
   });
 });
