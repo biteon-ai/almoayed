@@ -25,6 +25,7 @@ Arabic RTL PWA for all educational levels and subjects. Stack: Next.js 14 App Ro
 - **UI-021** — Teacher Portal PWA: separate `teacher-manifest.json`, indigo theme/icons, `start_url` `/teacher/login`, portal-aware standalone guard
 - **UI-022** — Teacher login shell parity: sticky indigo header, browser-only Home, install CTAs, version footer (AUTH-009 preserved)
 - **UI-023** — Teacher portal mobile chrome parity: sticky header + fixed bottom tabs (dashboard / students / quizzes / settings) matching student shell
+- **UI-024** — Results archive collapse (last 3) + `/results/history` full list with ASC/DESC date sort
 - **FIX-UI-004** — Settings/dark inputs use slate surfaces (no forced white `!bg-white`)
 - **FIX-UI-005** — Blocking FOUC script + critical CSS prevent white flash on dark hard reload
 - **FIX-UI-006** — Runtime guard + early head/console filter ignore extension noise; providers fail soft

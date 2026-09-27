@@ -90,10 +90,7 @@ export function ScoreRingBadge({
           styles.text
         )}
       >
-        <span
-          dir="ltr"
-          className="m-0 inline-flex items-center gap-px p-0 leading-none tabular-nums"
-        >
+        <span className="flex h-full w-full items-center justify-center leading-none tabular-nums">
           <span className="m-0 p-0 text-sm font-bold leading-none tracking-tight">
             {clamped}
           </span>

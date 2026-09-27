@@ -1748,6 +1748,40 @@ partial_features:
       - teacher-layout-nav-bottom
       - teacher-header-back
 
+  - id: UI-024
+    name: Results Archive Preview & Full History
+    status: implemented
+    persona: [STUDENT]
+    routes: ["/results", "/results/history"]
+    extends: [UI-007, UI-019, DASH-001]
+    files:
+      - src/lib/student-quiz-ui.ts
+      - src/lib/student-nav.ts
+      - src/components/student/StudentResultsView.tsx
+      - src/components/student/AttemptResultCard.tsx
+      - src/components/student/StudentResultsHistoryView.tsx
+      - src/app/(student)/results/history/page.tsx
+      - src/app/(student)/results/history/loading.tsx
+      - src/lib/spekit-targets.ts
+      - .speckit/spekit-targets.yaml
+      - tests/features/ui-024-attempt-history.test.ts
+    acceptance:
+      - Quiz result card collapse shows only the last 3 previous attempts with score rings and dates
+      - «عرض كل المحاولات» CTA in the collapse links to /results/history?quizId=… for that quiz
+      - /results/history lists attempts with ASC/DESC date sort toggle (query ?sort=asc|desc)
+      - Attempt badges show per-quiz chronological number (محاولة N من M)
+      - Mobile chrome title for history is «كل المحاولات»; back returns to /results
+    spekit:
+      - student-results-page
+      - results-archive-toggle
+      - results-archive-list
+      - results-view-all-cta
+      - results-history-page
+      - results-history-list
+      - results-sort-toggle
+      - results-card
+      - results-score-badge
+
   - id: GAMIF-004
     name: Rewards Hall Horizontal Carousel
     status: done

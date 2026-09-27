@@ -133,7 +133,7 @@ export function WeakPointsCard({ categories }: WeakPointsCardProps) {
                     <div className="progress-ring-label">
                       <PercentText
                         value={Math.round(success)}
-                        className="text-[13px] font-black tracking-tighter text-foreground"
+                        className="ring-digits text-[13px] font-black tracking-tighter text-foreground"
                       />
                     </div>
                   </div>

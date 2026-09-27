@@ -34,6 +34,7 @@ const LevelProgressCard = dynamic(
 );
 import {
   QUIZ_CATEGORY_FILTERS,
+  STUDENT_RESULTS_ARCHIVE_PREVIEW_LIMIT,
   STUDENT_RESULTS_PAGE_SIZE,
   type QuizCategoryFilter,
   type QuizResultGroup,
@@ -42,6 +43,8 @@ import {
   getScoreGrade,
   gradePillClassName,
   groupResultsByQuiz,
+  previewArchiveAttempts,
+  resultsHistoryHref,
 } from "@/lib/student-quiz-ui";
 import { SPEKIT } from "@/lib/spekit-targets";
 import {
@@ -288,6 +291,22 @@ function QuizResultGroupCard({ group }: { group: QuizResultGroup }) {
   const grade = getScoreGrade(latest.score);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const attemptCount = archive.length + 1;
+  const allAttempts = useMemo(
+    () => [latest, ...archive],
+    [latest, archive]
+  );
+  const archivePreview = useMemo(
+    () =>
+      previewArchiveAttempts(
+        allAttempts,
+        archive,
+        STUDENT_RESULTS_ARCHIVE_PREVIEW_LIMIT
+      ),
+    [allAttempts, archive]
+  );
+  const hasMoreArchive =
+    archive.length > STUDENT_RESULTS_ARCHIVE_PREVIEW_LIMIT;
+  const historyHref = resultsHistoryHref(latest.quizId);
   const router = useRouter();
   const reviewHref = quizPlayerHref(latest.quizId, {
     reviewSubmissionId: latest.submissionId,
@@ -420,49 +439,77 @@ function QuizResultGroupCard({ group }: { group: QuizResultGroup }) {
               </button>
 
               {archiveOpen ? (
-                <ul
-                  className="space-y-1.5 rounded-xl border border-border/50 bg-muted/20 p-2 dark:border-slate-700 dark:bg-slate-950/40"
+                <div
+                  className="space-y-2 rounded-xl border border-border/50 bg-muted/20 p-2 dark:border-slate-700 dark:bg-slate-950/40"
                   data-spekit={SPEKIT.resultsArchiveList}
                 >
-                  {archive.map((row, index) => (
-                    <li key={row.submissionId}>
-                      <Link
-                        href={quizPlayerHref(row.quizId, {
-                          reviewSubmissionId: row.submissionId,
-                        })}
-                        prefetch
-                        onMouseEnter={() =>
-                          prefetchQuizRoute(
-                            router,
-                            quizPlayerHref(row.quizId, {
-                              reviewSubmissionId: row.submissionId,
-                            })
-                          )
-                        }
-                        className={cn(
-                          "flex items-center justify-between gap-3 rounded-lg px-2.5 py-2",
-                          "transition-colors hover:bg-background dark:hover:bg-slate-900"
-                        )}
-                      >
-                        <div className="min-w-0 flex-1 space-y-0.5 text-start">
-                          <p className="text-xs font-bold text-foreground">
-                            محاولة {archive.length - index}
-                          </p>
-                          <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
-                            <LocalDateTime iso={row.submittedAt} mode="date" />
-                            <span aria-hidden>·</span>
-                            <LocalDateTime iso={row.submittedAt} mode="time" />
-                          </p>
-                        </div>
-                        <ScoreRingBadge
-                          score={row.score}
-                          size="sm"
-                          className="shrink-0"
-                        />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                  <ul className="space-y-1.5">
+                    {archivePreview.map((row) => {
+                      const rowHref = quizPlayerHref(row.quizId, {
+                        reviewSubmissionId: row.submissionId,
+                      });
+                      return (
+                        <li key={row.submissionId}>
+                          <Link
+                            href={rowHref}
+                            prefetch
+                            onMouseEnter={() =>
+                              prefetchQuizRoute(router, rowHref)
+                            }
+                            className={cn(
+                              "flex items-center justify-between gap-3 rounded-lg px-2.5 py-2",
+                              "transition-colors hover:bg-background dark:hover:bg-slate-900"
+                            )}
+                          >
+                            <div className="min-w-0 flex-1 space-y-0.5 text-start">
+                              <p className="text-xs font-bold text-foreground">
+                                محاولة {row.attemptNumber}
+                                {row.attemptTotal > 1
+                                  ? ` من ${row.attemptTotal}`
+                                  : null}
+                              </p>
+                              <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                                <LocalDateTime
+                                  iso={row.submittedAt}
+                                  mode="date"
+                                />
+                                <span aria-hidden>·</span>
+                                <LocalDateTime
+                                  iso={row.submittedAt}
+                                  mode="time"
+                                />
+                              </p>
+                            </div>
+                            <ScoreRingBadge
+                              score={row.score}
+                              size="sm"
+                              className="shrink-0"
+                            />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  <Link
+                    href={historyHref}
+                    prefetch
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "flex h-10 w-full items-center justify-center gap-2 rounded-lg border-emerald-200/80 bg-emerald-50/60 text-xs font-bold text-emerald-900",
+                      "hover:bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-100 dark:hover:bg-emerald-950/50"
+                    )}
+                    data-spekit={SPEKIT.resultsViewAllCta}
+                  >
+                    <History className="size-3.5 shrink-0" aria-hidden />
+                    <span>عرض كل المحاولات</span>
+                    {hasMoreArchive ? (
+                      <span className="rounded-full bg-emerald-600/10 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
+                        {attemptCount}
+                      </span>
+                    ) : null}
+                  </Link>
+                </div>
               ) : null}
             </div>
           ) : null}
