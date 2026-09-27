@@ -10,7 +10,7 @@ export function PercentText({
   className?: string;
 }) {
   return (
-    <span dir="ltr" className={cn("inline-block tabular-nums", className)}>
+    <span dir="ltr" className={cn("inline-block leading-none tabular-nums", className)}>
       {formatPercent(value)}
     </span>
   );

@@ -7,6 +7,8 @@ export default function TeacherSettingsPage() {
     <SettingsPage
       backHref="/teacher/dashboard"
       backLabel="لوحة الأستاذ"
+      hideBackLink
+      hideTitleOnMobile
     />
   );
 }

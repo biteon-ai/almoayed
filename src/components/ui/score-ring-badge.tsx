@@ -10,19 +10,19 @@ const toneStyles = {
     well: "bg-emerald-50 dark:bg-emerald-950/50",
     track: "stroke-emerald-200/80 dark:stroke-emerald-800/70",
     bar: "stroke-emerald-500 dark:stroke-emerald-400",
-    text: "text-emerald-700 dark:text-emerald-200",
+    fill: "fill-emerald-700 dark:fill-emerald-200",
   },
   amber: {
     well: "bg-amber-50 dark:bg-amber-950/50",
     track: "stroke-amber-200/80 dark:stroke-amber-800/70",
     bar: "stroke-amber-500 dark:stroke-amber-400",
-    text: "text-amber-800 dark:text-amber-200",
+    fill: "fill-amber-800 dark:fill-amber-200",
   },
   red: {
     well: "bg-rose-50 dark:bg-rose-950/50",
     track: "stroke-rose-200/80 dark:stroke-rose-800/70",
     bar: "stroke-rose-500 dark:stroke-rose-400",
-    text: "text-rose-700 dark:text-rose-200",
+    fill: "fill-rose-700 dark:fill-rose-200",
   },
 } as const;
 
@@ -54,7 +54,7 @@ export function ScoreRingBadge({
     >
       <span
         className={cn(
-          "absolute inset-[6px] rounded-full shadow-inner",
+          "absolute inset-[4px] rounded-full shadow-inner",
           styles.well
         )}
         aria-hidden
@@ -83,19 +83,21 @@ export function ScoreRingBadge({
           strokeDashoffset={offset}
           className={cn(styles.bar, "transition-[stroke-dashoffset] duration-500")}
         />
+        <text
+          x="50%"
+          y="50%"
+          dy="0.8"
+          textAnchor="middle"
+          dominantBaseline="central"
+          transform="rotate(90 18 18)"
+          className={cn(
+            "text-[9px] font-bold tabular-nums",
+            styles.fill
+          )}
+        >
+          {clamped}%
+        </text>
       </svg>
-      <span
-        className={cn(
-          "pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-px",
-          "whitespace-nowrap leading-none",
-          styles.text
-        )}
-      >
-        <span className="text-sm font-bold tabular-nums tracking-tight">
-          {clamped}
-        </span>
-        <span className="text-[10px] font-bold leading-none">%</span>
-      </span>
     </span>
   );
 }

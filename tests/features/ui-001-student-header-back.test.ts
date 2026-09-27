@@ -32,6 +32,7 @@ describe(`${FEATURE} studentMobilePageTitle`, () => {
     expect(studentMobilePageTitle("/dashboard")).toBe("المؤيد");
     expect(studentMobilePageTitle("/quizzes")).toBe("الاختبارات");
     expect(studentMobilePageTitle("/results")).toBe("نتائجي");
+    expect(studentMobilePageTitle("/results/history")).toBe("كل المحاولات");
     expect(studentMobilePageTitle("/results/sub-1")).toBe("تفاصيل النتيجة");
     expect(studentMobilePageTitle("/settings")).toBe("الإعدادات");
     expect(studentMobilePageTitle("/quiz/abc")).toBe("الاختبار");

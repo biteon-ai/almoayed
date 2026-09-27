@@ -79,7 +79,7 @@ export function QuestionPager({
         aria-label={`السؤال ${index + 1}`}
         aria-current={index === activeIndex ? "step" : undefined}
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-xl border text-sm font-bold tabular-nums",
+          "digit-box shrink-0 rounded-xl border text-sm font-bold",
           "touch-manipulation transition-colors duration-200",
           "disabled:pointer-events-none disabled:opacity-40",
           box,
@@ -104,7 +104,7 @@ export function QuestionPager({
       <button
         type="button"
         className={cn(
-          "inline-flex shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40",
+          "digit-box shrink-0 rounded-xl border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40",
           box
         )}
         disabled={disabled || !slots.canGoLeft}
@@ -119,7 +119,7 @@ export function QuestionPager({
       <button
         type="button"
         className={cn(
-          "inline-flex shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40",
+          "digit-box shrink-0 rounded-xl border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40",
           box
         )}
         disabled={disabled || !slots.canGoRight}
