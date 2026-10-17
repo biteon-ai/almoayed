@@ -78,6 +78,9 @@ describe(`${FEATURE} teacher portal mobile chrome`, () => {
     expect(header).toContain("sticky top-0 z-50");
     expect(header).toContain("bg-background/90");
     expect(header).toContain("TeacherBackButton");
+    // Desktop header must include Settings (not bottom-nav-only).
+    expect(header).toContain("TEACHER_NAV_ITEMS.map");
+    expect(header).not.toContain('pathMatch !== "/teacher/settings"');
 
     const bottom = readFileSync(
       "src/components/layout/TeacherBottomNav.tsx",

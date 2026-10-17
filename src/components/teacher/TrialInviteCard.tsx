@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import {
   buildTrialJoinAbsoluteUrl,
 } from "@/lib/trial-join";
 import { TRIAL_JOIN_MESSAGES } from "@/lib/trial-join-messages";
+import { resolveShareOrigin } from "@/lib/app-origin";
 import { SPEKIT, spekit } from "@/lib/spekit-targets";
 import { Copy, MessageCircle, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,17 @@ interface TrialInviteCardProps {
   spekitRoot?: boolean;
 }
 
+/** Never emit localhost invite URLs — students cannot open them. */
+function useInviteOrigin(): string {
+  const [origin, setOrigin] = useState(() => resolveShareOrigin());
+
+  useEffect(() => {
+    setOrigin(resolveShareOrigin(window.location.origin));
+  }, []);
+
+  return origin;
+}
+
 export function TrialInviteCard({
   teacherCode,
   teacherName,
@@ -31,8 +43,9 @@ export function TrialInviteCard({
 }: TrialInviteCardProps) {
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const origin = useInviteOrigin();
 
-  const joinUrl = buildTrialJoinAbsoluteUrl(teacherCode);
+  const joinUrl = buildTrialJoinAbsoluteUrl(teacherCode, origin);
   const { whatsappHref } = buildTrialInviteShareUrl({
     teacherName,
     joinUrl,
