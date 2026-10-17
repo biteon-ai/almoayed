@@ -18,10 +18,16 @@ describe(`${FEATURE} trial join helpers`, () => {
     );
   });
 
-  it("buildTrialJoinAbsoluteUrl uses APP_URL origin", () => {
+  it("buildTrialJoinAbsoluteUrl uses the provided origin", () => {
     expect(
       buildTrialJoinAbsoluteUrl("AlMoayed-DEMO", "https://example.com")
     ).toBe("https://example.com/join/AlMoayed-DEMO");
+  });
+
+  it("buildTrialJoinAbsoluteUrl default never emits localhost", () => {
+    expect(buildTrialJoinAbsoluteUrl("AlMoayed-DEMO")).toBe(
+      "https://almoayed.app/join/AlMoayed-DEMO"
+    );
   });
 
   it("canSkipOtp is true only when profile does not exist", () => {

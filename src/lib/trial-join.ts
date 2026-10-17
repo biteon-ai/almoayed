@@ -1,4 +1,5 @@
-import { APP_URL, normalizeWhatsAppNumber } from "@/lib/constants";
+import { normalizeWhatsAppNumber } from "@/lib/constants";
+import { resolveShareOrigin } from "@/lib/app-origin";
 import { validateDisplayName } from "@/lib/profile-name";
 import type { EducationStage } from "@/types/database";
 import {
@@ -36,7 +37,7 @@ export function buildTrialJoinPath(teacherCode: string): string {
 
 export function buildTrialJoinAbsoluteUrl(
   teacherCode: string,
-  origin: string = APP_URL
+  origin: string = resolveShareOrigin()
 ): string {
   const base = origin.replace(/\/+$/, "");
   return `${base}${buildTrialJoinPath(teacherCode)}`;

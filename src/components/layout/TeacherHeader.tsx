@@ -90,9 +90,7 @@ export function TeacherHeader({ slogan }: { slogan: string }) {
             className="hidden items-center gap-1 md:flex"
             data-spekit={SPEKIT.teacherLayoutNav}
           >
-            {TEACHER_NAV_ITEMS.filter(
-              (item) => item.pathMatch !== "/teacher/settings"
-            ).map((item) => (
+            {TEACHER_NAV_ITEMS.map((item) => (
               <DesktopNavLink
                 key={item.href}
                 item={item}
