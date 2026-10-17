@@ -7,13 +7,44 @@ import {
 } from "@/lib/import-text";
 
 describe("[TEACH-016] paste normalize integration", () => {
-  it("LLM prompt forbids LaTeX and requires LMS structure + BiDi spaces", () => {
+  it("LLM prompt requires Plaintext asterisk format + BiDi + no LaTeX", () => {
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Plaintext/);
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/\(1\) Q:/);
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/\*b\)/);
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Explanation:/);
+    expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Category:/);
     expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Q1:/);
     expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Answer:/);
     expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Never use \$/i);
     expect(QUICK_PASTE_LLM_PROMPT).toMatch(/SPACE between every Arabic/i);
     expect(QUICK_PASTE_LLM_PROMPT).toMatch(/Un = 2n - 3/);
     expect(QUICK_PASTE_LLM_PROMPT).not.toMatch(/\\frac\{/);
+  });
+
+  it("parses Plaintext (n) Q: + *letter) blocks as valid drafts", () => {
+    const text = `(1) Q: ما ناتج 2 + 2؟
+a) 3
+*b) 4
+c) 5
+d) 6
+Explanation: جمع بسيط
+Category: حساب
+
+(2) Q: If Un = 2n - 3 then U1 equals:
+a) -3
+b) 0
+*c) -1
+d) 2
+Explanation: U1 = 2(1) - 3
+Category: Sequences`;
+
+    const doc = parseQuickPasteDocument(text);
+    const valid = doc.drafts.filter((d) => d.valid);
+    expect(valid).toHaveLength(2);
+    expect(valid[0]?.correct_answer).toBe("4");
+    expect(valid[0]?.category_tag).toBe("حساب");
+    expect(valid[1]?.correct_answer).toBe("-1");
+    expect(valid[1]?.question_text).toContain("Un = 2n - 3");
   });
 
   it("keeps plain Unicode LMS blocks valid and unchanged", () => {
